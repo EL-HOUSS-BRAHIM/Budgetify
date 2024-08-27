@@ -1,0 +1,15 @@
+/* src/css/Reports/ExpensesChart.module.css */
+
+/* Container for the expenses chart */
+.chart_container {
+    margin-top: 40px;
+    padding: 20px;
+    background-color: var(--card-background);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#expensesChart {
+    width: 100%;
+    height: 400px;
+}

@@ -1,0 +1,50 @@
+/* src/css/Reports/Reports.css */
+
+/* Main container for the reports page */
+.reports-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: var(--card-background);
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+/*
+background: var(--card-background);
+    color: var(--text-color)
+    */
+.reports-container h1 {
+  font-size: 2rem;
+  margin-bottom: 20px;
+  color: #333;
+  text-align: center;
+}
+
+#reportContent {
+  margin-top: 30px;
+}
+
+/* Hide the download PDF button by default */
+#downloadPdfBtn {
+  display: none;
+}
+
+.export-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.export-buttons button {
+  padding: 10px 20px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.export-buttons button {
+  background-color: #45a049;
+}

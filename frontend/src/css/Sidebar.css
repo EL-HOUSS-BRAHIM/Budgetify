@@ -1,0 +1,23 @@
+/* src/components/Sidebar.css */
+.sidebar {
+    width: 200px;
+    background-color: #222;
+    color: white;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    padding-top: 60px;
+  }
+  
+  .sidebar nav a {
+    color: white;
+    display: block;
+    padding: 1em;
+    text-decoration: none;
+  }
+  
+  .sidebar nav a:hover {
+    background-color: #444;
+  }
+  

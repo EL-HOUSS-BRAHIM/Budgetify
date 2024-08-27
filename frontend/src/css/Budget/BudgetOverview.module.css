@@ -1,0 +1,37 @@
+/* Budget Overview Section */
+section.budget_overview {
+  background-color: var(--card-background);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.total_budget {
+  text-align: center;
+}
+
+.amount {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #28a745;
+  margin-bottom: 1rem;
+}
+
+.edit_total_btn {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s;
+  display: inline-block;
+  margin: 0.5rem;
+}
+
+.edit_total_btn:hover {
+  background-color: #0056b3;
+}

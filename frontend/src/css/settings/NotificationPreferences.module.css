@@ -1,0 +1,15 @@
+/* notification-preferences.module.css */
+.notification_form {
+    display: flex;
+    flex-direction: column;
+}
+
+.notification_option {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.notification_option label {
+    margin-left: 0.5rem;
+}

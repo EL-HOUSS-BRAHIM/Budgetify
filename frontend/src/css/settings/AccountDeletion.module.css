@@ -1,0 +1,11 @@
+/* account-deletion.module.css */
+.delete_warning {
+    color: #dc3545;
+    font-weight: bold;
+    margin-bottom: 1rem;
+}
+
+.delete_btn {
+    background-color: #dc3545;
+    color: #fff;
+}

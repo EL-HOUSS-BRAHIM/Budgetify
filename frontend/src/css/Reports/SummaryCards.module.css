@@ -1,0 +1,29 @@
+/* src/css/Reports/SummaryCards.module.css */
+
+/* Container for the summary cards */
+.summary_cards {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.summary_card {
+    flex: 1;
+    padding: 20px;
+    background-color: #007bff;
+    color: #fff;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.summary_card h3 {
+    font-size: 1.25rem;
+    margin-bottom: 10px;
+}
+
+.summary_card .amount {
+    font-size: 2rem;
+    font-weight: bold;
+}

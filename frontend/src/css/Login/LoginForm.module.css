@@ -1,0 +1,107 @@
+.login_form h1 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    font-size: 1.75rem;
+    color: #333;
+}
+
+.form_group {
+    margin-bottom: 1rem;
+}
+
+.form_group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+    color: #333;
+}
+
+.form_group input[type="email"],
+.form_group input[type="password"] {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    transition: border-color 0.3s;
+}
+
+.form_group input[type="email"]:focus,
+.form_group input[type="password"]:focus {
+    outline: none;
+    border-color: #007bff;
+}
+.login_div_position {
+    position: relative;
+}
+.password_toggle {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #333;
+}
+
+.form_group input[type="checkbox"] {
+    margin-right: 0.5rem;
+}
+
+.login_btn {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-bottom: 1rem;
+    transition: background-color 0.3s;
+}
+
+.login_btn:hover {
+    background-color: #0056b3;
+}
+
+.forgot_password {
+    display: block;
+    text-align: center;
+    color: #007bff;
+    text-decoration: none;
+    margin-bottom: 1.5rem;
+    font-size: 1rem;
+}
+
+.forgot_password:hover {
+    text-decoration: underline;
+}
+
+body.login-page.dark_mode .form_group input[type="email"],
+body.login-page.dark_mode .form_group input[type="password"] {
+    background-color: #555;
+    color: #f4f4f4;
+    border-color: #666;
+}
+
+body.login-page.dark_mode .login_btn {
+    background-color: #0056b3;
+}
+
+body.login-page.dark_mode .login_btn:hover {
+    background-color: #003d82;
+}
+
+/* Error and success messages */
+.error_message {
+    color: #dc3545;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    text-align: center;
+}
+
+.success_message {
+    color: #28a745;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    text-align: center;
+}

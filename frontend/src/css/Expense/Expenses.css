@@ -1,0 +1,83 @@
+/* Global styles */
+
+/* Main and section styles */
+main {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+section {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+h1, h2 {
+  margin-bottom: 1.5rem;
+  color: #007bff;
+}
+
+
+/* Form styles */
+
+
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+}
+
+input, select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.add_btn {
+  background-color: #28a745;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s ease;
+}
+
+.add_btn:hover {
+  background-color: #218838;
+}
+
+
+/* Responsive design styles */
+@media (max-width: 768px) {
+  header {
+      flex-direction: column;
+      align-items: flex-start;
+  }
+
+  nav ul {
+      margin-top: 1rem;
+      flex-direction: column;
+  }
+
+  nav ul li {
+      margin-bottom: 0.5rem;
+  }
+
+  .user_profile {
+      margin-top: 1rem;
+  }
+}
+/* Additional styles */
+#total_expenses {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-top: 1rem;
+  text-align: right;
+}

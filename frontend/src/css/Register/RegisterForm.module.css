@@ -1,0 +1,62 @@
+.register_form h1 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.form_group {
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.form_group label {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.form_group input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  transition: border-color 0.3s;
+}
+
+.form_group input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.password_toggle {
+  position: absolute;
+  right: 10px;
+  top: 32px;
+  cursor: pointer;
+}
+
+.register_btn {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: var(--primary-color);
+  color: var(--background-color);
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-bottom: 1.5rem;
+  transition: background-color 0.3s;
+}
+
+.register_btn:hover {
+  background-color: #218838;
+}
+.error_message {
+  color: var(--error-color);
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+.success_message {
+  color: var(--success-color);
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}

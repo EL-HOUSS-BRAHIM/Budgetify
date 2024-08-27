@@ -1,0 +1,395 @@
+/* Global styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --primary-color: #007bff;
+  --secondary-color: #28a745;
+  --background-color: #f4f4f4;
+  --text-color: #333;
+  --card-background: #fff;
+}
+
+body {
+  font-family: 'Roboto', Arial, sans-serif;
+  line-height: 1.6;
+  color: var(--text-color);
+  background-color: var(--background-color);
+  transition: background-color 0.3s, color 0.3s;
+  margin: 0;
+}
+
+/* Header styles */
+header {
+  background-color: var(--card-background);
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.logo i {
+  margin-right: 0.5rem;
+  font-size: 1.8rem;
+  color: var(--primary-color);
+}
+
+/* Navigation styles */
+nav {
+  display: flex;
+  align-items: center;
+}
+
+.hamburger {
+  display: none;
+  flex-direction: column;
+  cursor: pointer;
+  margin-right: 1rem;
+}
+
+.hamburger-line {
+  height: 3px;
+  width: 25px;
+  background-color: var(--text-color);
+  margin: 3px 0;
+  transition: 0.3s;
+}
+
+nav ul {
+  display: flex;
+  list-style: none;
+}
+
+nav ul li {
+  margin-right: 1rem;
+}
+
+nav ul li a {
+  text-decoration: none;
+  color: var(--text-color);
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+nav ul li a:hover,
+nav ul li a.active {
+  background-color: var(--primary-color);
+  color: #fff;
+}
+
+/* User profile styles */
+.user-profile {
+  display: flex;
+  align-items: center;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 0.5rem;
+  object-fit: cover;
+}
+
+/* Dropdown styles */
+.dropdown {
+  position: relative;
+}
+
+.dropbtn {
+  background-color: var(--card-background);
+  color: var(--text-color);
+  padding: 0.5rem;
+  border: none;
+  cursor: pointer;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  right: 0;
+  background-color: var(--card-background);
+  min-width: 160px;
+  box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+  z-index: 1;
+}
+
+.dropdown-content a {
+  color: var(--text-color);
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+}
+
+.dropdown-content a:hover {
+  background-color: var(--background-color);
+}
+
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+
+/* Main and section styles */
+main {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+section {
+  background-color: var(--card-background);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s;
+}
+
+h2 {
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+  border-bottom: 2px solid var(--primary-color);
+  padding-bottom: 0.5rem;
+}
+
+.summary-cards {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.card {
+  background-color: var(--background-color);
+  padding: 1rem;
+  border-radius: 8px;
+  width: 30%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Table styles */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+}
+
+th,
+td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+/* Button styles */
+.add-expense-btn,
+.update-budget-btn {
+  background-color: var(--secondary-color);
+  color: #fff;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  font-size: 1rem;
+}
+
+.add-expense-btn:hover,
+.update-budget-btn:hover {
+  background-color: #218838;
+}
+
+/* Progress bar styles */
+.budget-progress {
+  margin-bottom: 1rem;
+}
+
+.progress-bar {
+  background-color: #e0e0e0;
+  height: 20px;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.progress {
+  background-color: var(--secondary-color);
+  height: 100%;
+  width: 65%;
+  transition: width 0.5s ease-in-out;
+}
+
+/* Chart styles */
+.chart {
+  background-color: var(--card-background);
+  padding: 1rem;
+  border-radius: 4px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Notification styles */
+.notifications ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.notifications li {
+  margin-bottom: 0.5rem;
+  background-color: var(--background-color);
+  padding: 0.75rem;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+/* Footer styles */
+footer {
+  text-align: center;
+  padding: 1rem;
+  background-color: #333;
+  color: #fff;
+}
+footer {
+  text-align: center;
+  padding: 1rem 2rem;
+  background-color: #333;
+  color: #fff;
+  position: sticky;
+}
+
+.footer-links a {
+  color: #fff;
+  margin: 0 0.5rem;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.footer-links a:hover {
+  color: #007bff;
+}
+
+.social-icons a {
+  margin: 0 0.5rem;
+  color: #fff;
+  text-decoration: none;
+  font-size: 1.5rem;
+  transition: color 0.3s;
+}
+
+.social-icons a:hover {
+  color: #007bff;
+}
+
+/* Media Queries */
+@media (max-width: 768px) {
+  .summary-cards {
+      flex-direction: column;
+  }
+
+  .card {
+      width: 100%;
+  }
+
+  nav ul {
+      flex-direction: column;
+      position: absolute;
+      top: 60px;
+      left: 0;
+      width: 100%;
+      background-color: var(--card-background);
+      display: none;
+  }
+
+  nav ul li {
+      width: 100%;
+      text-align: center;
+  }
+
+  nav ul li a {
+      padding: 1rem;
+      display: block;
+  }
+
+  nav ul.show {
+      display: block;
+  }
+
+  .menu-toggle {
+      display: block;
+      cursor: pointer;
+  }
+
+  .hamburger.active .hamburger-line:nth-child(1) {
+      transform: rotate(-45deg) translate(-5px, 6px);
+  }
+
+  .hamburger.active .hamburger-line:nth-child(2) {
+      opacity: 0;
+  }
+
+  .hamburger.active .hamburger-line:nth-child(3) {
+      transform: rotate(45deg) translate(-5px, -6px);
+  }
+}
+
+@media (min-width: 769px) {
+  .menu-toggle {
+      display: none;
+  }
+}
+
+/* Dark mode styles */
+body.dark-mode {
+  --background-color: #333;
+  --text-color: #f4f4f4;
+  --card-background: #444;
+}
+
+body.dark-mode header {
+  background-color: #222;
+}
+
+body.dark-mode .dropdown-content {
+  background-color: #333;
+}
+
+body.dark-mode .dropdown-content a {
+  color: #f4f4f4;
+}
+
+body.dark-mode .dropdown-content a:hover {
+  background-color: #444;
+}
+
+/* Dark mode toggle button */
+.dark-mode-toggle {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: none;
+  border: none;
+  color: var(--text-color);
+  font-size: 1.5rem;
+  cursor: pointer;
+  z-index: 1000;
+}

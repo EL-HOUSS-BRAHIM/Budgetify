@@ -1,0 +1,17 @@
+/* theme-selection.module.css */
+.theme_options {
+    display: flex;
+    gap: 1rem;
+}
+
+.theme_option {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+}
+
+.theme_option.active {
+    border-color: #007bff;
+}

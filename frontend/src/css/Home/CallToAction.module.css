@@ -1,0 +1,18 @@
+.cta {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+.cta_btn {
+  padding: 0.75rem 1.5rem;
+  background-color: var(--primary-color);
+  color: var(--background-color);
+  border: none;
+  border-radius: 4px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.cta_btn:hover {
+  transform: scale(1.05);
+}

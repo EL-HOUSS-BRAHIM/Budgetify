@@ -1,0 +1,148 @@
+
+.settings-page {
+  font-family: 'Arial', sans-serif;
+  line-height: 1.6;
+  color: var(--text-color);
+  background-color: var(--background-color);
+}
+
+body.dark-mode {
+  background-color: var(--dark-bg);
+  color: var(--dark-text);
+}
+
+.main {
+  padding: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.settings {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 2rem;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.settings__title {
+  margin-bottom: 1rem;
+  color: var(--primary-color);
+}
+
+.settings__form {
+  display: flex;
+  flex-direction: column;
+}
+
+.settings__item {
+  margin-bottom: 1rem;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 34px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: var(--primary-color);
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+.currency-selector__label {
+  margin-right: 0.5rem;
+}
+
+.currency-selector__select {
+  padding: 0.5rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.settings__button {
+  background-color: var(--primary-color);
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.settings__button:hover {
+  background-color: #2980b9;
+}
+
+.footer {
+  background-color: var(--secondary-color);
+  color: #fff;
+  text-align: center;
+  padding: 1rem;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+}
+
+.footer__list {
+  display: flex;
+  justify-content: center;
+  list-style: none;
+}
+
+.footer__item {
+  margin: 0 1rem;
+}
+
+.footer__link {
+  color: #fff;
+  text-decoration: none;
+}
+
+@media (max-width: 768px) {
+  .header {
+      flex-direction: column;
+      height: auto;
+  }
+
+  .nav__list {
+      margin-top: 1rem;
+  }
+
+  .user-menu {
+      margin-top: 1rem;
+  }
+}

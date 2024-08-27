@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta
+      name="description"
+      content="Automatic Budget Manager - Take control of your finances"
+    />
+    <style>
+      /* Dark mode toggle button */
+      .dark_mode_toggle {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: none;
+        border: none;
+        color: var(--text-color);
+        font-size: 1.5rem;
+        cursor: pointer;
+        z-index: 1000;
+    }
+    body.dark_mode .container {
+      background-color: #444;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+  }
+    </style>
+    <title>Automatic Budget Manager</title>
+  </head>
+  <body>
+    <button class="dark_mode_toggle" aria-label="Toggle dark mode">
+      <i class="fas fa-moon"></i>
+  </button>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <script>
+      // Dark mode toggle
+      const darkModeToggle = document.querySelector('.dark_mode_toggle');
+      const body = document.body;
+
+      darkModeToggle.addEventListener('click', () => {
+          body.classList.toggle('dark_mode');
+          const icon = darkModeToggle.querySelector('i');
+          icon.classList.toggle('fa-moon');
+          icon.classList.toggle('fa-sun');
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,109 @@
+/* Additional styles from the second document */
+.search_bar {
+    margin-bottom: 1rem;
+}
+
+.search_bar input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+/* Table styles */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+}
+
+th,
+td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.add_expense_btn {
+    background-color: var(--secondary-color);
+    color: #fff;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-size: 1rem;
+}
+
+.add_expense_btn:hover {
+    background-color: #218838;
+}
+.toggle_button {
+    margin-bottom: 10px;
+    padding: 5px 10px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    border-radius: 3px;
+    font-size: 1.5rem; /* Adjust size as needed */
+    text-align: center; /* Center icon */
+}
+
+/* FontAwesome icon styles */
+.fa-filter, .fa-times {
+    font-size: 1.5rem; /* Adjust size as needed */
+    vertical-align: middle; /* Align icon vertically */
+}
+
+.filters {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.filters label {
+    display: flex;
+    align-items: center;
+}
+
+.filters input {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+
+.apply_button {
+    padding: 5px 10px;
+    background-color: #28a745;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    border-radius: 3px;
+}
+
+.table_container {
+    max-height: 300px;
+    /* Adjust height as needed */
+    overflow-y: auto;
+}
+
+.table_container table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table_container th,
+.table_container td {
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.table_container th {
+    background-color: var(--card-background);
+}
+
+.table_container tr:hover {
+    background-color: var(--card-background);
+}

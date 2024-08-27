@@ -1,0 +1,41 @@
+.not_found_container {
+    text-align: center;
+    padding: 50px;
+}
+
+.not_found_container h1 {
+    font-size: 3em;
+    margin-bottom: 20px;
+}
+
+.not_found_container p {
+    font-size: 1.5em;
+    margin-bottom: 30px;
+}
+
+.not_found_container a {
+    font-size: 1.2em;
+    color: #3498db;
+    text-decoration: none;
+}
+
+.not_found_container {
+    text-align: center;
+    padding: 50px;
+}
+
+.not_found_container h1 {
+    font-size: 3em;
+    margin-bottom: 20px;
+}
+
+.not_found_container p {
+    font-size: 1.5em;
+    margin-bottom: 30px;
+}
+
+.not_found_container a {
+    font-size: 1.2em;
+    color: #3498db;
+    text-decoration: none;
+}

@@ -1,0 +1,56 @@
+.table_container {
+  max-height: 400px; /* Adjust height as needed */
+  overflow-y: auto; /* Enable vertical scrolling */
+  border: 1px solid #ddd; /* Optional: adds border for better visibility */
+  border-radius: 4px; /* Optional: adds rounded corners */
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+}
+
+th, td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+th {
+  background-color: var(--card-background);
+  font-weight: bold;
+}
+
+.edit_btn, .delete_btn {
+  padding: 0.25rem 0.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 0.5rem;
+  transition: background-color 0.3s ease;
+  font-size: 1rem; /* Adjust size as needed */
+}
+
+.edit_btn {
+  background-color: #ffc107;
+  color: #333;
+}
+
+.edit_btn:hover {
+  background-color: #e0a800;
+}
+
+.delete_btn {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+.delete_btn:hover {
+  background-color: #c82333;
+}
+
+#total-expenses {
+  margin-top: 1rem;
+  font-weight: bold;
+}
