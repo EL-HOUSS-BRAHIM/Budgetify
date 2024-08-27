@@ -146,4 +146,4 @@ ehthumbs.db
 .VolumeIcon.icns
 .com.apple.timemachine.donotpresent
 __pycache__/
-.pyc
+backend/app/services/service_account.json
