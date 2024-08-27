@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budgets - Automatic Budget Manager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+        }
+
+        header {
+            background-color: #fff;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+
+        nav ul li {
+            margin-right: 1rem;
+        }
+
+        nav ul li a {
+            text-decoration: none;
+            color: #333;
+            padding: 0.5rem 1rem;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        nav ul li a.active,
+        nav ul li a:hover {
+            background-color: #007bff;
+            color: #fff;
+            border-radius: 4px;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+            object-fit: cover;
+        }
+
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropbtn {
+            background-color: #f4f4f4;
+            color: #333;
+            padding: 0.5rem 1rem;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+        }
+
+        .dropbtn:hover {
+            background-color: #007bff;
+            color: #fff;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #fff;
+            min-width: 160px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            z-index: 1;
+            border-radius: 4px;
+            top: 100%;
+            right: 0;
+        }
+
+        .dropdown-content a {
+            color: #333;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            transition: background-color 0.3s;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #f4f4f4;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        section {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        h1,
+        h2 {
+            margin-bottom: 1.5rem;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .total-budget {
+            text-align: center;
+        }
+
+        .amount {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #28a745;
+            margin-bottom: 1rem;
+        }
+
+        .edit-total-btn,
+        .edit-category-btn,
+        .add-btn {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+            display: inline-block;
+            margin: 0.5rem;
+        }
+
+        .edit-total-btn:hover,
+        .edit-category-btn:hover,
+        .add-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .category-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .category-item {
+            background-color: #f9f9f9;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+
+        .category-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .progress-bar {
+            background-color: #e0e0e0;
+            height: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        .progress {
+            background-color: #28a745;
+            height: 100%;
+            transition: width 0.5s ease-in-out;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+
+        footer {
+            text-align: center;
+            padding: 1rem 2rem;
+            background-color: #333;
+            color: #fff;
+            position: sticky;
+        }
+
+        .footer-links a {
+            color: #fff;
+            margin: 0 0.5rem;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: #007bff;
+        }
+
+        .social-icons a {
+            margin: 0 0.5rem;
+            color: #fff;
+            text-decoration: none;
+            font-size: 1.5rem;
+            transition: color 0.3s;
+        }
+
+        .social-icons a:hover {
+            color: #007bff;
+        }
+
+        #modal {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 50%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            nav ul {
+                margin-top: 1rem;
+                flex-direction: column;
+                padding: 0;
+                width: 100%;
+            }
+
+            nav ul li {
+                margin-right: 0;
+                margin-bottom: 0.5rem;
+            }
+
+            .user-profile {
+                margin-top: 1rem;
+            }
+
+            .category-list {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-content {
+                width: 90%;
+            }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .auth-token-form {
+            margin-bottom: 2rem;
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .auth-token-form label {
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .auth-token-form input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            }
+            </style>
+            
+            </head>
+            <body>
+                <header>
+                    <div class="logo">Budget Manager</div>
+                    <nav>
+                        <ul>
+                            <li><a href="dashboard.html">Dashboard</a></li>
+                            <li><a href="expenses.html">Expenses</a></li>
+                            <li><a href="#" class="active">Budgets</a></li>
+                            <li><a href="#">Reports</a></li>
+                        </ul>
+                    </nav>
+                    <div class="user-profile">
+                        <img src="user-avatar.jpg" alt="User Avatar" class="avatar">
+                        <div class="dropdown">
+                            <button class="dropbtn">John Doe <i class="fas fa-chevron-down"></i></button>
+                            <div class="dropdown-content">
+                                <a href="profile.html"><i class="fas fa-user"></i> Profile</a>
+                                <a href="#"><i class="fas fa-cog"></i> Settings</a>
+                                <a href="#"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+                <main>
+                    <div class="auth-token-form">
+                        <h2>Enter Authentication Token</h2>
+                        <label for="auth-token">Token:</label>
+                        <input type="text" id="auth-token" placeholder="Enter your token here">
+                        <button class="add-btn" onclick="setToken()">Set Token</button>
+                    </div>
+                
+                    <section class="budget-overview">
+                        <h1>Budget Overview</h1>
+                        <div class="total-budget">
+                            <h2>Total Monthly Budget</h2>
+                            <p class="amount" id="total-budget-amount">$5,000</p>
+                            <button class="edit-total-btn" onclick="openModal('total')">Edit Total Budget</button>
+                        </div>
+                    </section>
+                
+                    <section class="budget-categories">
+                        <h2>Budget Categories</h2>
+                        <div class="category-list" id="category-list">
+                            <!-- Categories will be dynamically added here -->
+                        </div>
+                        <button class="add-btn" onclick="openModal('category')">Add New Category</button>
+                    </section>
+                </main>
+                
+                <footer>
+                    <p>&copy; 2024 Budget Manager. All rights reserved.</p>
+                    <div class="footer-links">
+                        <a href="#">Privacy Policy</a>
+                        <a href="#">Terms of Service</a>
+                        <a href="#">Support</a>
+                    </div>
+                    <div class="social-icons">
+                        <a href="#" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" title="Twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="#" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </footer>
+                
+                <div id="modal">
+                    <div class="modal-content">
+                        <span class="close" onclick="closeModal()">&times;</span>
+                        <h2 id="modal-title"></h2>
+                        <form id="modal-form">
+                            <div class="form-group">
+                                <label for="modal-input">Amount:</label>
+                                <input type="number" id="modal-input" required>
+                            </div>
+                            <div class="form-group hidden" id="category-name-group">
+                                <label for="category-name">Category Name:</label>
+                                <input type="text" id="category-name" required>
+                            </div>
+                            <button type="submit" class="add-btn">Save</button>
+                        </form>
+                    </div>
+                </div>
+                
+                <script>
+                    let token = '';
+                    let totalBudget = 5000;
+                    let categories = [
+                        { name: 'Groceries', budget: 1000, spent: 700 },
+                        { name: 'Utilities', budget: 500, spent: 250 },
+                        { name: 'Entertainment', budget: 300, spent: 90 },
+                        { name: 'Transportation', budget: 250, spent: 200 }
+                    ];
+                
+                    function setToken() {
+                        token = document.getElementById('auth-token').value;
+                        fetchBudgets();
+                    }
+                
+                    function fetchBudgets() {
+                        fetch('/budget', {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': `Bearer ${token}`
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            totalBudget = data.totalBudget;
+                            categories = data.categories;
+                            document.getElementById('total-budget-amount').textContent = `$${totalBudget}`;
+                            renderCategories();
+                        })
+                        .catch(error => console.error('Error fetching budgets:', error));
+                    }
+                
+                    function renderCategories() {
+                        const categoryList = document.getElementById('category-list');
+                        categoryList.innerHTML = '';
+                
+                        categories.forEach((category, index) => {
+                            const percentage = (category.spent / category.budget) * 100;
+                            const categoryItem = document.createElement('div');
+                            categoryItem.className = 'category-item';
+                            categoryItem.innerHTML = `
+                                <h3>${category.name}</h3>
+                                <div class="progress-bar">
+                                    <div class="progress" style="width: ${percentage}%"></div>
+                                </div>
+                                <p>$${category.spent} / $${category.budget}</p>
+                                <button class="edit-category-btn" onclick="openModal('category', ${index})">Edit</button>
+                            `;
+                            categoryList.appendChild(categoryItem);
+                        });
+                    }
+                
+                    function openModal(type, index) {
+                        const modal = document.getElementById('modal');
+                        const modalTitle = document.getElementById('modal-title');
+                        const modalInput = document.getElementById('modal-input');
+                        const categoryNameGroup = document.getElementById('category-name-group');
+                        const modalForm = document.getElementById('modal-form');
+                
+                        if (type === 'total') {
+                            modalTitle.textContent = 'Edit Total Budget';
+                            modalInput.value = totalBudget;
+                            categoryNameGroup.style.display = 'none';
+                        } else if (type === 'category') {
+                            if (index !== undefined) {
+                                modalTitle.textContent = `Edit ${categories[index].name} Budget`;
+                                modalInput.value = categories[index].budget;
+                                categoryNameGroup.style.display = 'none';
+                            } else {
+                                modalTitle.textContent = 'Add New Category';
+                                modalInput.value = '';
+                                categoryNameGroup.style.display = 'block';
+                            }
+                        }
+                
+                        modal.style.display = 'block';
+                
+                        modalForm.onsubmit = function(e) {
+                            e.preventDefault();
+                            if (type === 'total') {
+                                const newTotalBudget = parseFloat(modalInput.value);
+                                fetch('/budget/total', {
+                                    method: 'PUT',
+                                    headers: {
+                                        'Authorization': `Bearer ${token}`,
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify({ totalBudget: newTotalBudget })
+                                })
+                                .then(response => response.json())
+                                .then(data => {
+                                    totalBudget = data.totalBudget;
+                                    document.getElementById('total-budget-amount').textContent = `$${totalBudget}`;
+                                    closeModal();
+                                })
+                                .catch(error => console.error('Error updating total budget:', error));
+                            } else if (type === 'category') {
+                                const categoryName = document.getElementById('category-name').value;
+                                const newBudget = parseFloat(modalInput.value);
+                                if (index !== undefined) {
+                                    fetch(`/budget/category/${categories[index].id}`, {
+                                        method: 'PUT',
+                                        headers: {
+                                            'Authorization': `Bearer ${token}`,
+                                            'Content-Type': 'application/json'
+                                        },
+                                        body: JSON.stringify({ budget: newBudget })
+                                    })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        categories[index].budget = newBudget;
+                                        renderCategories();
+                                        closeModal();
+                                    })
+                                    .catch(error => console.error('Error updating category:', error));
+                                } else {
+                                    fetch('/budget/category', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Authorization': `Bearer ${token}`,
+                                            'Content-Type': 'application/json'
+                                        },
+                                        body: JSON.stringify({ name: categoryName, budget: newBudget })
+                                    })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        categories.push(data);
+                                        renderCategories();
+                                        closeModal();
+                                    })
+                                    .catch(error => console.error('Error adding category:', error));
+                                }
+                            }
+                        };
+                    }
+                
+                    function closeModal() {
+                        document.getElementById('modal').style.display = 'none';
+                    }
+                
+                    window.onclick = function(event) {
+                        if (event.target == document.getElementById('modal')) {
+                            closeModal();
+                        }
+                    };
+                </script>
+            </body>
+            </html>                
