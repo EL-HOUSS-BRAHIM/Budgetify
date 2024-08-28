@@ -10,6 +10,8 @@ class User(db.Model):
     expenses = db.relationship('Expense', backref='user', lazy=True)
     budgets = db.relationship('Budget', backref='user', lazy=True)
     goals = db.relationship('Goal', backref='user', lazy=True)
+    profile = db.relationship('Profile', backref='user', uselist=False, lazy=True)
+    settings = db.relationship('Settings', backref='user', uselist=False, lazy=True)
 
 class Expense(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -36,8 +38,7 @@ class Goal(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
 class Profile(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
     first_name = db.Column(db.String(50))
     last_name = db.Column(db.String(50))
     email = db.Column(db.String(100), unique=True, nullable=False)
@@ -48,8 +49,7 @@ class Profile(db.Model):
     two_factor_auth = db.Column(db.Boolean, default=False)
     login_alerts = db.Column(db.Boolean, default=False)
     password_expiry = db.Column(db.Integer, default=90)
-    avatar = db.Column(db.String(200), nullable=True, default=None)
-    
+    avatar = db.Column(db.TEXT, nullable=True)  # Storing the avatar as binary data
 
 class Settings(db.Model):
     id = db.Column(db.Integer, primary_key=True)

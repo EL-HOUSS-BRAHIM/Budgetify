@@ -1,8 +1,11 @@
-import os
+import io
+import base64
+from PIL import Image
 import random
-from .drive_service import upload_avatar, delete_avatar
-from ..models import Profile
+from ..models import Profile, User
+from sqlalchemy.exc import SQLAlchemyError
 from .. import db
+
 
 def generate_svg_avatar(username):
     colors = ['#FF5733', '#33FF57', '#3357FF', '#FF33A6', '#FF8F33']
@@ -17,41 +20,51 @@ def generate_svg_avatar(username):
     """
     return svg_avatar
 
+
 def create_profile(user_id, first_name, last_name, email, phone, currency, language, timezone, two_factor_auth, login_alerts, password_expiry, avatar=None):
-    if not avatar:
-        # Generate SVG avatar if no file is provided
-        svg_avatar = generate_svg_avatar(first_name)
-        avatar_url = svg_avatar  # Store the SVG string directly in the database
-    else:
-        # Upload the provided avatar file to Google Drive
-        avatar_id = upload_avatar(avatar, f'avatar_{user_id}.png')
-        avatar_url = f'https://drive.google.com/uc?id={avatar_id}'
+    try:
+        two_factor_auth = two_factor_auth if isinstance(
+            two_factor_auth, bool) else two_factor_auth.lower() == 'true'
+        login_alerts = login_alerts if isinstance(
+            login_alerts, bool) else login_alerts.lower() == 'true'
+        password_expiry = int(
+            password_expiry) if password_expiry is not None else 90
 
-    # Create the new profile with the avatar
-    new_profile = Profile(
-        user_id=user_id,
-        first_name=first_name,
-        last_name=last_name,
-        email=email,
-        phone=phone,
-        currency=currency,
-        language=language,
-        timezone=timezone,
-        two_factor_auth=two_factor_auth,
-        login_alerts=login_alerts,
-        password_expiry=password_expiry,
-        avatar=avatar_url  # Save the avatar URL or SVG
-    )
-    db.session.add(new_profile)
-    db.session.commit()
-    return new_profile
+        if not avatar:
+            user = User.query.get(user_id)
+            avatar = generate_svg_avatar(user.username)
 
+        # Convert SVG string to bytes if it's not already
+        if isinstance(avatar, str):
+            avatar = avatar.encode('utf-8')
+
+        new_profile = Profile(
+            user_id=user_id,
+            first_name=first_name,
+            last_name=last_name,
+            email=email,
+            phone=phone,
+            currency=currency,
+            language=language,
+            timezone=timezone,
+            two_factor_auth=two_factor_auth,
+            login_alerts=login_alerts,
+            password_expiry=password_expiry,
+            avatar=avatar
+        )
+        db.session.add(new_profile)
+        db.session.commit()
+        return new_profile
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        raise Exception(f"Database error: {str(e)}")
+    except Exception as e:
+        raise Exception(f"Unexpected error: {str(e)}")
 
 def get_profile(user_id):
     profile = Profile.query.filter_by(user_id=user_id).first()
     if profile:
-        # Convert Profile object to dictionary
-        profile_data = {
+        return {
             'user_id': profile.user_id,
             'first_name': profile.first_name,
             'last_name': profile.last_name,
@@ -63,61 +76,74 @@ def get_profile(user_id):
             'two_factor_auth': profile.two_factor_auth,
             'login_alerts': profile.login_alerts,
             'password_expiry': profile.password_expiry,
-            'avatar': profile.avatar
+            'avatar': base64.b64encode(profile.avatar).decode('utf-8') if isinstance(profile.avatar, bytes) else profile.avatar
         }
-        return profile_data
-    return {'error': 'Profile not found'}, 404
+    return None
 
 def update_profile(user_id, data):
     profile = Profile.query.filter_by(user_id=user_id).first()
     if not profile:
-        return {'error': 'Profile not found'}, 404
+        return None
 
     for key, value in data.items():
         if hasattr(profile, key):
+            if key in ['two_factor_auth', 'login_alerts']:
+                value = value if isinstance(
+                    value, bool) else value.lower() == 'true'
+            elif key == 'password_expiry':
+                value = int(value) if value is not None else 90
             setattr(profile, key, value)
-    
+
     db.session.commit()
     return profile
+
 
 def delete_profile(user_id):
     profile = Profile.query.filter_by(user_id=user_id).first()
     if not profile:
-        return {'error': 'Profile not found'}, 404
+        return False
 
-    if profile.avatar and "drive.google.com" in profile.avatar:
-        avatar_id = profile.avatar.split('id=')[1]
-        delete_avatar(avatar_id)
-    
     db.session.delete(profile)
     db.session.commit()
-    return {'success': True, 'message': 'Profile deleted successfully'}
+    return True
 
-def update_profile_avatar(user_id, avatar_file=None):
+
+def update_profile_avatar(user_id, avatar_file):
     profile = Profile.query.filter_by(user_id=user_id).first()
+    if not profile:
+        return None
 
-    if profile.avatar and "drive.google.com" in profile.avatar:
-        avatar_id = profile.avatar.split('id=')[1]
-        delete_avatar(avatar_id)
-
-    if not avatar_file:
-        svg_avatar = generate_svg_avatar(profile.first_name)
-        profile.avatar = svg_avatar
+    if avatar_file:
+        img = Image.open(avatar_file)
+        img_byte_arr = io.BytesIO()
+        img.save(img_byte_arr, format='PNG')
+        img_binary = img_byte_arr.getvalue()
+        profile.avatar = img_binary
+        avatar_data = base64.b64encode(img_binary).decode('utf-8')
+        avatar_url = f"data:image/png;base64,{avatar_data}"
     else:
-        file_path = avatar_file
-        avatar_id = upload_avatar(file_path, f'avatar_{user_id}.png')
-        profile.avatar = f'https://drive.google.com/uc?id={avatar_id}'
+        user = User.query.get(user_id)
+        svg_avatar = generate_svg_avatar(user.username)
+        profile.avatar = svg_avatar.encode('utf-8')
+        avatar_url = svg_avatar
 
     db.session.commit()
-    return profile.avatar
+    return avatar_url
 
-def delete_profile_avatar(user_id):
+
+def get_profile_avatar(user_id):
     profile = Profile.query.filter_by(user_id=user_id).first()
-
-    if profile.avatar and "drive.google.com" in profile.avatar:
-        avatar_id = profile.avatar.split('id=')[1]
-        delete_avatar(avatar_id)
-
-    profile.avatar = None
-    db.session.commit()
-    return {'success': True, 'message': 'Avatar deleted successfully'}
+    if profile and profile.avatar:
+        if isinstance(profile.avatar, bytes):
+            return f"data:image/png;base64,{base64.b64encode(profile.avatar).decode('utf-8')}"
+        else:
+            return profile.avatar.decode('utf-8')
+    return None
+    profile = Profile.query.filter_by(user_id=user_id).first()
+    if profile and profile.avatar:
+        if isinstance(profile.avatar, bytes):
+            import base64
+            return f"data:image/png;base64,{base64.b64encode(profile.avatar).decode('utf-8')}"
+        else:
+            return profile.avatar
+    return None

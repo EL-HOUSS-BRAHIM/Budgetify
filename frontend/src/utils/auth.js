@@ -7,7 +7,7 @@ export const login = async (credentials) => {
   try {
     const response = await api.post('/auth/login', credentials);
     setToken(response.data.access_token);
-    console.log('Token set after login:', response.data.access_token); // Add this line for debugging
+    //console.log('Token set after login:', response.data.access_token); // Add this line for debugging
     return response.data;
   } catch (error) {
     console.error('Login failed:', error);

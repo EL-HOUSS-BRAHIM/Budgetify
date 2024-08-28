@@ -1,8 +1,8 @@
-"""Initial migration
+"""Initial migration after reset
 
-Revision ID: 4fee85a3ee66
+Revision ID: f358d25af628
 Revises: 
-Create Date: 2024-08-25 11:19:23.556628
+Create Date: 2024-08-27 22:26:49.179763
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '4fee85a3ee66'
+revision = 'f358d25af628'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -59,7 +59,6 @@ def upgrade():
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('profile',
-    sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('first_name', sa.String(length=50), nullable=True),
     sa.Column('last_name', sa.String(length=50), nullable=True),
@@ -71,9 +70,9 @@ def upgrade():
     sa.Column('two_factor_auth', sa.Boolean(), nullable=True),
     sa.Column('login_alerts', sa.Boolean(), nullable=True),
     sa.Column('password_expiry', sa.Integer(), nullable=True),
-    sa.Column('avatar', sa.String(length=200), nullable=True),
+    sa.Column('avatar', sa.LargeBinary(), nullable=True),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
-    sa.PrimaryKeyConstraint('id'),
+    sa.PrimaryKeyConstraint('user_id'),
     sa.UniqueConstraint('email')
     )
     op.create_table('settings',

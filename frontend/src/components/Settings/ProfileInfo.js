@@ -24,6 +24,13 @@ const ProfileInfo = ({
     }
   };
 
+  const getAvatarSrc = (avatar) => {
+    if (avatar && avatar.includes('<svg')) {
+      return avatar;
+    }
+    return avatar ? `data:image/png;base64,${avatar}` : "/default-avatar.jpg";
+  };
+
   return (
     <section className={styles.profile_info}>
       <h1><i className="fas fa-user"></i> Profile Information</h1>
@@ -35,7 +42,7 @@ const ProfileInfo = ({
           />
         ) : (
           <img
-            src={user.avatar || "/default-avatar.jpg"}
+            src={getAvatarSrc(user.avatar)}
             alt={`${user.first_name}'s profile`}
             className={styles.profile_picture}
             id="profilePicture"

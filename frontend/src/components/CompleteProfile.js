@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createUserProfile } from '../utils/api'; // Adjusted the API function for POST request
+import { createUserProfile, uploadProfileAvatar, getProfileAvatar } from '../utils/api';
 import styles from '../css/CompleteProfile.module.css';
 
 const CompleteProfile = () => {
@@ -15,11 +15,27 @@ const CompleteProfile = () => {
         two_factor_auth: false,
         login_alerts: false,
         password_expiry: 90,
-        avatar: '',
+        avatar: null,
     });
     const [currentStep, setCurrentStep] = useState(1);
     const [error, setError] = useState(null);
+    const [profileCreated, setProfileCreated] = useState(false);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        if (profileCreated) {
+            fetchAvatar();
+        }
+    }, [profileCreated]);
+
+    const fetchAvatar = async () => {
+        try {
+            const response = await getProfileAvatar();
+            setUser(prevUser => ({ ...prevUser, avatar: response.avatar }));
+        } catch (error) {
+            console.error('Error fetching avatar:', error);
+        }
+    };
 
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -29,60 +45,65 @@ const CompleteProfile = () => {
         }));
     };
 
-    const handleFileUpload = (e) => {
-        const file = e.target.files[0];
+    const handleFileUpload = async (event) => {
+        const file = event.target.files[0];
         if (file) {
-            // Create a FileReader object
-            const reader = new FileReader();
+            const formData = new FormData();
+            formData.append('avatar', file);
 
-            // Set up the FileReader onload event handler
-            reader.onload = (event) => {
-                setUser(prevState => ({
-                    ...prevState,
-                    avatar: event.target.result // This will be a data URL representing the file
-                }));
-            };
-
-            // Read the file as a data URL
-            reader.readAsDataURL(file);
+            try {
+                const response = await uploadProfileAvatar(formData);
+                setUser(prevUser => ({ ...prevUser, avatar: response.avatar }));
+            } catch (error) {
+                console.error('Error uploading avatar:', error);
+                setError('There was an error uploading your avatar. Please try again.');
+            }
         }
     };
 
     const handleProfileSubmit = async (e) => {
         e.preventDefault();
+        setError(null);
         try {
-            await createUserProfile(user); // Using the POST request to create the profile
-            navigate('/dashboard'); // Redirect to the dashboard after successful profile creation
+            const profileData = {
+                first_name: user.first_name,
+                last_name: user.last_name,
+                email: user.email,
+                phone: user.phone,
+                currency: user.currency,
+                language: user.language,
+                timezone: user.timezone,
+                two_factor_auth: user.two_factor_auth,
+                login_alerts: user.login_alerts,
+                password_expiry: user.password_expiry,
+            };
+            
+            await createUserProfile(profileData);
+            setProfileCreated(true);
+            setCurrentStep(4); // Move to the optional image upload step
         } catch (err) {
             setError('There was an error creating your profile. Please try again.');
+            console.error('Profile creation error:', err);
         }
     };
 
+    const renderAvatar = () => {
+        if (user.avatar) {
+            if (user.avatar.startsWith('data:image/png;base64,') || user.avatar.startsWith('data:image/jpeg;base64,')) {
+                return <img src={user.avatar} alt="User Avatar" className={styles.profile_picture} />;
+            } else if (user.avatar.startsWith('<svg')) {
+                return <div dangerouslySetInnerHTML={{ __html: user.avatar }} className={styles.profile_picture} />;
+            }
+        }
+        return <div className={styles.profile_picture}>No avatar available</div>;
+    };
+
+    const handleFinish = () => {
+        navigate('/dashboard');
+    };
     return (
         <section className={styles.profile_info}>
             <h1><i className="fas fa-user"></i> Profile Information</h1>
-            <div className={styles.avatar_container}>
-                <img
-                    src={user.avatar || "/default-avatar.jpg"}
-                    alt={`${user.first_name}'s profile`}
-                    className={styles.profile_picture}
-                    id="profilePicture"
-                />
-                <input
-                    type="file"
-                    id="profilePictureUpload"
-                    accept="image/*"
-                    onChange={handleFileUpload}
-                    style={{ display: 'none' }}
-                />
-                <button
-                    className={styles.upload_btn}
-                    onClick={() => document.getElementById('profilePictureUpload').click()}
-                >
-                    Upload New Picture
-                </button>
-            </div>
-
             <form id="profile-form" className={styles.multi_step_form} onSubmit={handleProfileSubmit}>
                 {currentStep === 1 && (
                     <div className={styles.step} id="step1">
@@ -222,8 +243,34 @@ const CompleteProfile = () => {
                     </div>
                 )}
 
+{currentStep === 4 && (
+                    <div className={styles.step} id="step4">
+                        <h2>Profile Picture (Optional)</h2>
+                        <div className={styles.avatar_container}>
+                            {renderAvatar()}
+                            <input
+                                type="file"
+                                id="profilePictureUpload"
+                                accept="image/*"
+                                onChange={handleFileUpload}
+                                style={{ display: 'none' }}
+                            />
+                            <button
+                                type="button"
+                                className={styles.upload_btn}
+                                onClick={() => document.getElementById('profilePictureUpload').click()}
+                            >
+                                Upload Profile Picture
+                            </button>
+                        </div>
+                        <button type="button" className={styles.finish_btn} onClick={handleFinish}>
+                            Finish
+                        </button>
+                    </div>
+                )}
+
                 <div className={styles.form_nav}>
-                    {currentStep > 1 && (
+                    {currentStep > 1 && currentStep < 4 && (
                         <button
                             type="button"
                             className={styles.prev_step}

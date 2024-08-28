@@ -33,6 +33,38 @@ function Navbar() {
     setIsMenuOpen(!isMenuOpen);
   };
 
+  const getAvatarSrc = (avatar) => {
+    if (avatar && avatar.startsWith('<svg')) {
+      return avatar;
+    }
+    return avatar ? `data:image/png;base64,${avatar}` : null;
+  };
+
+  const renderAvatar = () => {
+    if (!profile || !profile.avatar) {
+      return <div className={styles.placeholder_avatar}></div>;
+    }
+
+    const avatarSrc = getAvatarSrc(profile.avatar);
+
+    if (avatarSrc && avatarSrc.startsWith('<svg')) {
+      return (
+        <div
+          className={styles.avatar}
+          dangerouslySetInnerHTML={{ __html: avatarSrc }}
+        />
+      );
+    } else {
+      return (
+        <img
+          src={avatarSrc || "/default-avatar.jpg"}
+          alt="User Avatar"
+          className={styles.avatar}
+        />
+      );
+    }
+  };
+
   return (
     <header className={styles.header}>
       <div className={styles.logo}>
@@ -56,12 +88,11 @@ function Navbar() {
         <div className={styles.placeholder_avatar}></div>
       ) : (
         <div className={styles.user_profile}>
-          <div
-            className={styles.avatar}
-            dangerouslySetInnerHTML={{ __html: profile.avatar }}
-          />
+          {renderAvatar()}
           <div className={styles.dropdown}>
-            <button className={styles.dropbtn}>{profile.first_name} {profile.last_name}</button>
+            <button className={styles.dropbtn}>
+              {profile ? `${profile.first_name} ${profile.last_name}` : 'User'}
+            </button>
             <div className={styles.dropdown_content}>
               <Link to="/settings" onClick={toggleMenu}><i className="fas fa-cog"></i> Settings</Link>
               <button onClick={handleLogout} className={styles.logout_btn}>
