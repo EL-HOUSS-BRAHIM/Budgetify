@@ -46,8 +46,8 @@ Expense Tracker is powered by the following technologies:
 
 To run Expense Tracker locally on your machine, follow these steps:
 
-1. Clone the repository: `git clone https://github.com/EL-HOUSS-BRAHIM/ALX-MVP-Project.git`
-2. Navigate to the project directory: `cd ALX-MVP-Project`
+1. Clone the repository: `git clone https://github.com/EL-HOUSS-BRAHIM/Budgetify.git`
+2. Navigate to the project directory: `cd Budgetify`
 3. Install dependencies for the frontend and backend:
    - Frontend: `cd frontend && npm install`
    - Backend: `pip install -r requirements.txt`
