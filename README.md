@@ -1,8 +1,8 @@
-# Expense Tracker 📊💰
+# Expense Tracker 📊💰 (Budgetify)
 
-Welcome to Expense Tracker, your personal finance companion! Manage your expenses, set budgets, and stay on top of your finances with ease.
+Welcome to Expense Tracker (Budgetify), your personal finance companion! Manage your expenses, set budgets, and stay on top of your finances with ease.
 
-![Expense Tracker Demo](demo.gif)
+![Budgetify Demo](demo.gif)
 
 ## Table of Contents
 - [Introduction](#introduction)
@@ -15,9 +15,9 @@ Welcome to Expense Tracker, your personal finance companion! Manage your expense
 
 ## Introduction
 
-Expense Tracker is a feature-rich web application designed to simplify your financial management. Whether you're a budgeting pro or just starting, Expense Tracker offers intuitive tools to help you stay organized and in control of your finances.
+Budgetify is a feature-rich web application designed to simplify your financial management. Whether you're a budgeting pro or just starting, Expense Tracker offers intuitive tools to help you stay organized and in control of your finances.
 
-With Expense Tracker, you can:
+With Budgetify, you can:
 - **Track Expenses**: Add, view, update, and delete expenses effortlessly.
 - **Set Budgets**: Establish spending limits and monitor your progress.
 - **Receive Reminders**: Never miss a bill payment or an upcoming expense again.
@@ -35,28 +35,28 @@ Say goodbye to the hassle of managing spreadsheets or keeping receipts in shoebo
 
 ## Technologies Used
 
-Expense Tracker is powered by the following technologies:
+Budgetify is powered by the following technologies:
 
 - **Backend**: Python Flask, SQLAlchemy
 - **Frontend**: ReactJS, JavaScript, HTML, CSS
-- **Database**: SQLite (for development), PostgreSQL (for production)
-- **Deployment**: Heroku
+- **Database**: SQLite (for development), MySQL Cluster (for production)
+- **Deployment**: Degitalociane
 
 ## Installation
 
-To run Expense Tracker locally on your machine, follow these steps:
+To run Budgetify locally on your machine, follow these steps:
 
 1. Clone the repository: `git clone https://github.com/EL-HOUSS-BRAHIM/Budgetify.git`
 2. Navigate to the project directory: `cd Budgetify`
 3. Install dependencies for the frontend and backend:
    - Frontend: `cd frontend && npm install`
-   - Backend: `pip install -r requirements.txt`
+   - Backend: `pip install -r requirements.txt` (use venv for better production environment)
 4. Set up the database:
-   - Run migrations: `flask db upgrade`
-5. Start the backend server: `flask run`
-6. Start the frontend server: `npm start`
+   - Run migrations: `flask db upgrade`(run config script to save your secret key's and create .env file)
+5. Start the backend server: `flask run`(in production you can use gunicorn and nginx)
+6. Start the frontend server: `npm start`(use nginx and socket on linux for production)
 
-That's it! You can now access Expense Tracker in your web browser at `http://localhost:3000`.
+That's it! You can now access Budgetify in your web browser at `http://localhost:3000` or at your public IP address.
 
 ## Usage
 
@@ -68,9 +68,9 @@ That's it! You can now access Expense Tracker in your web browser at `http://loc
 
 ## Contributing
 
-Expense Tracker is an ALX MVP project by [Brahim El Houss](https://github.com/EL-HOUSS-BRAHIM). Contributions are welcome! If you'd like to contribute to Expense Tracker, please fork the repository, make your changes, and submit a pull request. Be sure to follow the project's coding conventions and guidelines.
+Budgetify is an ALX MVP project by [Brahim El Houss](https://github.com/EL-HOUSS-BRAHIM). Contributions are welcome! If you'd like to contribute to Expense Tracker, please fork the repository, make your changes, and submit a pull request. Be sure to follow the project's coding conventions and guidelines.
 
 ## License
 
-Expense Tracker is licensed under the [MIT License](#). Feel free to use, modify, and distribute the code as per the terms of the license.
+Budgetify is licensed under the [MIT License](#). Feel free to use, modify, and distribute the code as per the terms of the license.
 
