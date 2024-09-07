@@ -40,7 +40,7 @@ Budgetify is powered by the following technologies:
 - **Backend**: Python Flask, SQLAlchemy
 - **Frontend**: ReactJS, JavaScript, HTML, CSS
 - **Database**: SQLite (for development), MySQL Cluster (for production)
-- **Deployment**: Degitalociane
+- **Deployment**: Degitalociane, 2 droplets and one db cluster.
 
 ## Installation
 
