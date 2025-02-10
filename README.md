@@ -2,7 +2,8 @@
 
 Welcome to Expense Tracker (Budgetify), your personal finance companion! Manage your expenses, set budgets, and stay on top of your finances with ease.
 
-![Budgetify Demo](demo.gif)
+[![Watch the demo](https://img.youtube.com/vi/IqNBjMrFzSg/0.jpg)](https://youtu.be/IqNBjMrFzSg)
+
 
 ## Table of Contents
 - [Introduction](#introduction)
