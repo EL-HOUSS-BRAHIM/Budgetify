@@ -12,11 +12,11 @@
  * Default path: docs/brand-guidelines.md
  */
 
-const fs = require("fs");
-const path = require("path");
+const fs = require('fs');
+const path = require('path');
 
 // Default brand guidelines path
-const DEFAULT_GUIDELINES_PATH = "docs/brand-guidelines.md";
+const DEFAULT_GUIDELINES_PATH = 'docs/brand-guidelines.md';
 
 /**
  * Extract hex colors from text
@@ -38,18 +38,10 @@ function extractColorsFromTable(content) {
   };
 
   // Find color tables
-  const primaryMatch = content.match(
-    /### Primary Colors[\s\S]*?\|[\s\S]*?(?=###|$)/i
-  );
-  const secondaryMatch = content.match(
-    /### Secondary Colors[\s\S]*?\|[\s\S]*?(?=###|$)/i
-  );
-  const neutralMatch = content.match(
-    /### Neutral[\s\S]*?\|[\s\S]*?(?=###|$)/i
-  );
-  const semanticMatch = content.match(
-    /### Semantic[\s\S]*?\|[\s\S]*?(?=###|$)/i
-  );
+  const primaryMatch = content.match(/### Primary Colors[\s\S]*?\|[\s\S]*?(?=###|$)/i);
+  const secondaryMatch = content.match(/### Secondary Colors[\s\S]*?\|[\s\S]*?(?=###|$)/i);
+  const neutralMatch = content.match(/### Neutral[\s\S]*?\|[\s\S]*?(?=###|$)/i);
+  const semanticMatch = content.match(/### Semantic[\s\S]*?\|[\s\S]*?(?=###|$)/i);
 
   if (primaryMatch) colors.primary = extractHexColors(primaryMatch[0]);
   if (secondaryMatch) colors.secondary = extractHexColors(secondaryMatch[0]);
@@ -99,52 +91,44 @@ function extractVoice(content) {
   const voice = {
     traits: [],
     prohibited: [],
-    personality: "",
+    personality: '',
   };
 
   // Extract personality traits from table
-  const personalityMatch = content.match(
-    /### Brand Personality[\s\S]*?\|[\s\S]*?(?=###|##|$)/i
-  );
+  const personalityMatch = content.match(/### Brand Personality[\s\S]*?\|[\s\S]*?(?=###|##|$)/i);
   if (personalityMatch) {
-    const traits = personalityMatch[0].match(
-      /\*\*([^*]+)\*\*\s*\|\s*([^|]+)/g
-    );
+    const traits = personalityMatch[0].match(/\*\*([^*]+)\*\*\s*\|\s*([^|]+)/g);
     if (traits) {
-      voice.traits = traits.map((t) => {
-        const match = t.match(/\*\*([^*]+)\*\*/);
-        return match ? match[1].trim() : "";
-      }).filter(Boolean);
-    }
-  }
-
-  // Extract prohibited terms
-  const prohibitedMatch = content.match(
-    /### Prohibited[\s\S]*?(?=###|##|$)/i
-  );
-  if (prohibitedMatch) {
-    const terms = prohibitedMatch[0].match(/\|\s*([^|]+)\s*\|/g);
-    if (terms) {
-      voice.prohibited = terms
-        .map((t) => t.replace(/\|/g, "").trim())
-        .filter((t) => t && !t.includes("Avoid") && !t.includes("---"));
-    }
-  }
-
-  // Fallback: look for Forbidden Phrases
-  const forbiddenMatch = content.match(
-    /### Forbidden Phrases[\s\S]*?(?=###|##|$)/i
-  );
-  if (forbiddenMatch && voice.prohibited.length === 0) {
-    const items = forbiddenMatch[0].match(/-\s*["']?([^"'\n(]+)/g);
-    if (items) {
-      voice.prohibited = items
-        .map((item) => item.replace(/^-\s*["']?/, "").trim())
+      voice.traits = traits
+        .map((t) => {
+          const match = t.match(/\*\*([^*]+)\*\*/);
+          return match ? match[1].trim() : '';
+        })
         .filter(Boolean);
     }
   }
 
-  voice.personality = voice.traits.join(", ");
+  // Extract prohibited terms
+  const prohibitedMatch = content.match(/### Prohibited[\s\S]*?(?=###|##|$)/i);
+  if (prohibitedMatch) {
+    const terms = prohibitedMatch[0].match(/\|\s*([^|]+)\s*\|/g);
+    if (terms) {
+      voice.prohibited = terms
+        .map((t) => t.replace(/\|/g, '').trim())
+        .filter((t) => t && !t.includes('Avoid') && !t.includes('---'));
+    }
+  }
+
+  // Fallback: look for Forbidden Phrases
+  const forbiddenMatch = content.match(/### Forbidden Phrases[\s\S]*?(?=###|##|$)/i);
+  if (forbiddenMatch && voice.prohibited.length === 0) {
+    const items = forbiddenMatch[0].match(/-\s*["']?([^"'\n(]+)/g);
+    if (items) {
+      voice.prohibited = items.map((item) => item.replace(/^-\s*["']?/, '').trim()).filter(Boolean);
+    }
+  }
+
+  voice.personality = voice.traits.join(', ');
 
   return voice;
 }
@@ -155,13 +139,9 @@ function extractVoice(content) {
 function extractCoreAttributes(content) {
   const attributes = [];
 
-  const attributesMatch = content.match(
-    /### Core Attributes[\s\S]*?\|[\s\S]*?(?=###|##|$)/i
-  );
+  const attributesMatch = content.match(/### Core Attributes[\s\S]*?\|[\s\S]*?(?=###|##|$)/i);
   if (attributesMatch) {
-    const rows = attributesMatch[0].match(
-      /\|\s*\*\*([^*]+)\*\*\s*\|\s*([^|]+)\|/g
-    );
+    const rows = attributesMatch[0].match(/\|\s*\*\*([^*]+)\*\*\s*\|\s*([^|]+)\|/g);
     if (rows) {
       rows.forEach((row) => {
         const match = row.match(/\*\*([^*]+)\*\*\s*\|\s*([^|]+)/);
@@ -183,7 +163,7 @@ function extractCoreAttributes(content) {
  */
 function extractImageStyle(content) {
   const imageStyle = {
-    basePrompt: "",
+    basePrompt: '',
     keywords: [],
     mood: [],
     donts: [],
@@ -191,24 +171,23 @@ function extractImageStyle(content) {
   };
 
   // Extract base prompt template (content between ``` blocks after "Base Prompt Template")
-  const basePromptMatch = content.match(
-    /### Base Prompt Template[\s\S]*?```\n?([\s\S]*?)```/i
-  );
+  const basePromptMatch = content.match(/### Base Prompt Template[\s\S]*?```\n?([\s\S]*?)```/i);
   if (basePromptMatch) {
-    imageStyle.basePrompt = basePromptMatch[1].trim().replace(/\n/g, " ");
+    imageStyle.basePrompt = basePromptMatch[1].trim().replace(/\n/g, ' ');
   }
 
   // Extract style keywords from table
-  const keywordsMatch = content.match(
-    /### Style Keywords[\s\S]*?\|[\s\S]*?(?=###|##|$)/i
-  );
+  const keywordsMatch = content.match(/### Style Keywords[\s\S]*?\|[\s\S]*?(?=###|##|$)/i);
   if (keywordsMatch) {
     const keywordRows = keywordsMatch[0].match(/\|\s*\*\*[^*]+\*\*\s*\|\s*([^|]+)\|/g);
     if (keywordRows) {
       keywordRows.forEach((row) => {
         const match = row.match(/\|\s*\*\*[^*]+\*\*\s*\|\s*([^|]+)\|/);
         if (match) {
-          const keywords = match[1].split(",").map((k) => k.trim()).filter(Boolean);
+          const keywords = match[1]
+            .split(',')
+            .map((k) => k.trim())
+            .filter(Boolean);
           imageStyle.keywords.push(...keywords);
         }
       });
@@ -216,26 +195,22 @@ function extractImageStyle(content) {
   }
 
   // Extract visual mood descriptors (bullet points)
-  const moodMatch = content.match(
-    /### Visual Mood Descriptors[\s\S]*?(?=###|##|$)/i
-  );
+  const moodMatch = content.match(/### Visual Mood Descriptors[\s\S]*?(?=###|##|$)/i);
   if (moodMatch) {
     const moodItems = moodMatch[0].match(/-\s*([^\n]+)/g);
     if (moodItems) {
-      imageStyle.mood = moodItems.map((item) => item.replace(/^-\s*/, "").trim());
+      imageStyle.mood = moodItems.map((item) => item.replace(/^-\s*/, '').trim());
     }
   }
 
   // Extract visual don'ts from table
-  const dontsMatch = content.match(
-    /### Visual Don'ts[\s\S]*?\|[\s\S]*?(?=###|##|$)/i
-  );
+  const dontsMatch = content.match(/### Visual Don'ts[\s\S]*?\|[\s\S]*?(?=###|##|$)/i);
   if (dontsMatch) {
     const dontRows = dontsMatch[0].match(/\|\s*([^|]+)\s*\|\s*([^|]+)\s*\|/g);
     if (dontRows) {
       dontRows.forEach((row) => {
         const match = row.match(/\|\s*([^|]+)\s*\|\s*([^|]+)\s*\|/);
-        if (match && !match[1].includes("Avoid") && !match[1].includes("---")) {
+        if (match && !match[1].includes('Avoid') && !match[1].includes('---')) {
           imageStyle.donts.push(match[1].trim());
         }
       });
@@ -252,7 +227,7 @@ function extractImageStyle(content) {
         if (match) {
           imageStyle.examplePrompts.push({
             type: match[1].trim(),
-            prompt: match[2].trim().replace(/\n/g, " "),
+            prompt: match[2].trim().replace(/\n/g, ' '),
           });
         }
       });
@@ -273,16 +248,16 @@ BRAND CONTEXT:
 ==============
 
 VISUAL IDENTITY:
-- Primary Colors: ${colors.primary.join(", ") || "Not specified"}
-- Secondary Colors: ${colors.secondary.join(", ") || "Not specified"}
-- Typography: ${typography.heading || typography.body || "System fonts"}
+- Primary Colors: ${colors.primary.join(', ') || 'Not specified'}
+- Secondary Colors: ${colors.secondary.join(', ') || 'Not specified'}
+- Typography: ${typography.heading || typography.body || 'System fonts'}
 
 BRAND VOICE:
-- Personality: ${voice.personality || "Professional"}
-- Core Attributes: ${attributes.map((a) => a.name).join(", ") || "Not specified"}
+- Personality: ${voice.personality || 'Professional'}
+- Core Attributes: ${attributes.map((a) => a.name).join(', ') || 'Not specified'}
 
 CONTENT RULES:
-- Prohibited Terms: ${voice.prohibited.join(", ") || "None specified"}
+- Prohibited Terms: ${voice.prohibited.join(', ') || 'None specified'}
 `;
 
   // Add image style context if available
@@ -290,9 +265,9 @@ CONTENT RULES:
     prompt += `
 IMAGE GENERATION:
 - Base Prompt: ${imageStyle.basePrompt}
-- Style Keywords: ${imageStyle.keywords.slice(0, 10).join(", ") || "Not specified"}
-- Visual Mood: ${imageStyle.mood.slice(0, 5).join("; ") || "Not specified"}
-- Avoid: ${imageStyle.donts.join(", ") || "None specified"}
+- Style Keywords: ${imageStyle.keywords.slice(0, 10).join(', ') || 'Not specified'}
+- Visual Mood: ${imageStyle.mood.slice(0, 5).join('; ') || 'Not specified'}
+- Avoid: ${imageStyle.donts.join(', ') || 'None specified'}
 `;
   }
 
@@ -309,8 +284,8 @@ Maintain consistent voice, colors, and messaging.
  */
 function main() {
   const args = process.argv.slice(2);
-  const jsonOutput = args.includes("--json");
-  const guidelinesPath = args.find((a) => !a.startsWith("--")) || DEFAULT_GUIDELINES_PATH;
+  const jsonOutput = args.includes('--json');
+  const guidelinesPath = args.find((a) => !a.startsWith('--')) || DEFAULT_GUIDELINES_PATH;
 
   // Resolve path
   const resolvedPath = path.isAbsolute(guidelinesPath)
@@ -325,7 +300,7 @@ function main() {
   }
 
   // Read file
-  const content = fs.readFileSync(resolvedPath, "utf-8");
+  const content = fs.readFileSync(resolvedPath, 'utf-8');
 
   // Extract brand context
   const brandContext = {

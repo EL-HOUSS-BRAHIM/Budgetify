@@ -1,77 +1,121 @@
-# Expense Tracker 📊💰 (Budgetify)
+# Budgetify
 
-Welcome to Expense Tracker (Budgetify), your personal finance companion! Manage your expenses, set budgets, and stay on top of your finances with ease.
-## Demo YouTube Video :
-[![Watch the demo](https://img.youtube.com/vi/IqNBjMrFzSg/0.jpg)](https://youtu.be/IqNBjMrFzSg)
+Voice-assisted personal budgeting for Android. Talk to it, and it records the
+spend, ticks off the bill, or tells you what is left in a category.
 
+Budgetify began as an ALX project — a Flask and React web app, now archived in
+[`legacy/`](legacy/README.md) at tag `v1.0-legacy-web`. This is the rebuild: an
+Expo mobile app on Supabase, with an assistant that can actually change your
+budget rather than just talk about it.
 
-## Table of Contents
-- [Introduction](#introduction)
-- [Key Features](#key-features)
-- [Technologies Used](#technologies-used)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Contributing](#contributing)
-- [License](#license)
+---
 
-## Introduction
+## ⚠️ Outstanding security issue
 
-Budgetify is a feature-rich web application designed to simplify your financial management. Whether you're a budgeting pro or just starting, Expense Tracker offers intuitive tools to help you stay organized and in control of your finances.
+An unencrypted private key (`backend/conf/certs/certificates.key`) was committed
+to this **public** repository and is present in git history from commit
+`e21b27c` onward. It has been removed from the working tree, but removal does
+not undo the exposure.
 
-With Budgetify, you can:
-- **Track Expenses**: Add, view, update, and delete expenses effortlessly.
-- **Set Budgets**: Establish spending limits and monitor your progress.
-- **Receive Reminders**: Never miss a bill payment or an upcoming expense again.
-- **Secure Authentication**: Keep your financial data safe with our robust authentication system.
+Still required:
 
-Say goodbye to the hassle of managing spreadsheets or keeping receipts in shoeboxes. Expense Tracker puts your finances at your fingertips, allowing you to focus on what matters most.
+1. Revoke the key and rotate the credentials for the DigitalOcean MySQL cluster
+   it authenticated against.
+2. Purge it from history with `git filter-repo` and force-push.
+3. Rotate any other secret that lived in that environment.
 
-## Key Features
+Until step 1 is done, treat those credentials as compromised.
 
-- **User Authentication**: Secure login and registration system to protect your financial data.
-- **Expense Management**: Add, view, update, and delete expenses with ease.
-- **Budget Tracking**: Set budgets and track your spending against them to stay within your financial goals.
-- **Reminder System**: Receive timely reminders for upcoming bills and expenses.
-- **Responsive Design**: Access Expense Tracker on any device, whether it's your desktop, tablet, or smartphone.
+---
 
-## Technologies Used
+## Status
 
-Budgetify is powered by the following technologies:
+`platform-foundation` is in progress. Nothing is user-facing yet.
 
-- **Backend**: Python Flask, SQLAlchemy
-- **Frontend**: ReactJS, JavaScript, HTML, CSS
-- **Database**: SQLite (for development), MySQL Cluster (for production)
-- **Deployment**: Degitalociane, 2 droplets and one db cluster.
+| Module | Release | State |
+|---|---|---|
+| `platform-foundation` | V1 | in progress — core, AI service and database scaffolded; mobile app blocked on the Node upgrade |
+| `identity` | V1 | not started |
+| `consent-onboarding` | V1 | not started |
+| `ledger` | V1 | not started |
+| `budgeting` | V1 | not started |
+| `notifications` | V1 | not started |
+| `planning`, `sheet-view`, `assistant` | V2 | not started |
+| `insights`, `goals`, `data-io`, `offline-sync` | V3 | not started |
 
-## Installation
+Full breakdown: [`docs/CAPABILITY-MAP.md`](docs/CAPABILITY-MAP.md).
 
-To run Budgetify locally on your machine, follow these steps:
+## Getting started
 
-1. Clone the repository: `git clone https://github.com/EL-HOUSS-BRAHIM/Budgetify.git`
-2. Navigate to the project directory: `cd Budgetify`
-3. Install dependencies for the frontend and backend:
-   - Frontend: `cd frontend && npm install`
-   - Backend: `pip install -r requirements.txt` (use venv for better production environment)
-4. Set up the database:
-   - Run migrations: `flask db upgrade`(run config script to save your secret key's and create .env file)
-5. Start the backend server: `flask run`(in production you can use gunicorn and nginx)
-6. Start the frontend server: `npm start`(use nginx and socket on linux for production)
+**Requires Node >= 20.19.4** (see `.nvmrc`; Node 22 LTS recommended). Expo 57
+will not install below this.
 
-That's it! You can now access Budgetify in your web browser at `http://localhost:3000` or at your public IP address.
+```bash
+npm install
+npm run db:start      # local Supabase — needs Docker
+npm run db:reset      # apply migrations and seed
+npm run db:types      # regenerate packages/types from the schema
+npm run dev           # Expo dev server
+npm run dev:api       # AI service on :8787
+```
 
-## Usage
+No Docker? Point `SUPABASE_URL` at a hosted Supabase branch and skip
+`db:start` / `db:reset`.
 
-1. **Register/Login**: Create an account or log in to your existing account.
-2. **Add Expenses**: Record your expenses by entering details such as the amount, category, and date.
-3. **Set Budgets**: Define spending limits for different categories to manage your finances effectively.
-4. **Receive Reminders**: Stay on top of your bills and payments with timely reminders.
-5. **Explore More**: Discover additional features like expense analytics, budget insights, and more!
+### Verifying
 
-## Contributing
+```bash
+npm run verify        # format + lint + typecheck + test + expo version check
+npm run test:core     # fast domain-logic loop for TDD
+npm run coverage      # enforces the 90% threshold on packages/core
+npm run db:test       # pgTAP tests, including RLS denial tests
+```
 
-Budgetify is an ALX MVP project by [Brahim El Houss](https://github.com/EL-HOUSS-BRAHIM). Contributions are welcome! If you'd like to contribute to Expense Tracker, please fork the repository, make your changes, and submit a pull request. Be sure to follow the project's coding conventions and guidelines.
+`verify` is the pre-push gate and is what CI runs.
 
-## License
+## Layout
 
-Budgetify is licensed under the [MIT License](#). Feel free to use, modify, and distribute the code as per the terms of the license.
+```
+apps/mobile/      Expo app. Routes in app/, everything else in src/
+packages/core/    Pure domain logic. No React, no I/O, no Supabase.
+packages/types/   Generated from the Supabase schema. Never hand-edited.
+services/ai/      Hono service for the assistant's tool-calling.
+supabase/         Migrations, RLS policies, pgTAP tests, seed data.
+docs/             Specs, ADRs, capability map, reuse ledger, legacy audit.
+tasks/            Plan and task list for the module in flight.
+legacy/           Archived web app. Never built, never imported.
+```
 
+## Rules that are enforced, not just documented
+
+- **Money is integer minor units.** The legacy app used SQL `FLOAT` and the
+  error compounds across a month. `packages/core` rejects a non-integer amount.
+- **`packages/core` has no I/O.** Lint blocks importing `@supabase/supabase-js`,
+  `react`, `react-native` or Node I/O modules there. It is what lets one
+  function back a UI form, an RPC and an assistant tool without drifting.
+- **`legacy/` is never imported.** Lint blocks it and points at the reuse ledger.
+- **Every RLS policy has a denial test.** Ownership was a convention in the
+  legacy code; under RLS a forgotten check is a cross-tenant leak.
+- **The service-role key never enters the app.** It bypasses RLS, and anything
+  in an app binary is public.
+
+## Documentation
+
+Every decision is written down before it is built, and no feature is
+reimplemented without first checking whether it already exists.
+
+| Document | Purpose |
+|---|---|
+| [`docs/CAPABILITY-MAP.md`](docs/CAPABILITY-MAP.md) | Module boundaries, dependencies, build order |
+| [`docs/REUSE-LEDGER.md`](docs/REUSE-LEDGER.md) | One verdict per legacy artefact: port, rewrite or drop |
+| [`docs/LEGACY-AUDIT.md`](docs/LEGACY-AUDIT.md) | What the old app actually did |
+| [`docs/SPEC-platform-foundation.md`](docs/SPEC-platform-foundation.md) | Spec for the module in flight |
+| [`docs/adr/`](docs/adr/) | Architecture decision records |
+| [`tasks/plan.md`](tasks/plan.md), [`tasks/todo.md`](tasks/todo.md) | Current plan and task list |
+
+Before writing a function, search the reuse ledger for the capability. If it has
+a row, the verdict is already decided. If it has no row, it is new — add one.
+
+## Licence
+
+MIT

@@ -1,0 +1,45 @@
+{
+  "name": "budgetify",
+  "private": true,
+  "version": "2.0.0",
+  "description": "Voice-assisted personal budgeting for Android. Expo + Supabase.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.19.4",
+    "npm": ">=10.0.0"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "services/*"
+  ],
+  "scripts": {
+    "dev": "npm run start --workspace apps/mobile",
+    "dev:api": "npm run dev --workspace services/ai",
+    "android": "npm run android --workspace apps/mobile",
+    "db:start": "supabase start",
+    "db:stop": "supabase stop",
+    "db:reset": "supabase db reset",
+    "db:types": "supabase gen types typescript --local > packages/types/src/database.ts",
+    "db:test": "supabase test db",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --build --force",
+    "test": "npm run test --workspaces --if-present",
+    "test:core": "npm run test --workspace packages/core",
+    "coverage": "npm run test:coverage --workspace packages/core",
+    "expo:check": "npm run expo:check --workspaces --if-present",
+    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run expo:check"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "eslint": "^9.0.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.3.0",
+    "typescript": "^5.6.0",
+    "typescript-eslint": "^8.0.0",
+    "vitest": "^2.1.0"
+  }
+}

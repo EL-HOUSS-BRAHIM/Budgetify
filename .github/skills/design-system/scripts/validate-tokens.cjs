@@ -19,7 +19,7 @@ function parseArgs() {
   const options = {
     dir: null,
     fix: false,
-    ignore: ['node_modules', '.git', 'dist', 'build', '.next']
+    ignore: ['node_modules', '.git', 'dist', 'build', '.next'],
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -58,23 +58,23 @@ const patterns = {
   hexColor: {
     regex: /#([0-9A-Fa-f]{3}){1,2}\b/g,
     message: 'Hardcoded hex color',
-    suggestion: 'Use var(--color-*) token'
+    suggestion: 'Use var(--color-*) token',
   },
   rgbColor: {
     regex: /rgb\s*\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\)/gi,
     message: 'Hardcoded RGB color',
-    suggestion: 'Use var(--color-*) token'
+    suggestion: 'Use var(--color-*) token',
   },
   pixelValue: {
     regex: /:\s*(\d{2,})px/g, // 2+ digit px values
     message: 'Hardcoded pixel value',
-    suggestion: 'Use var(--space-*) or var(--radius-*) token'
+    suggestion: 'Use var(--space-*) or var(--radius-*) token',
   },
   remValue: {
     regex: /:\s*\d+\.?\d*rem(?![^{]*\$value)/g, // rem not in token definition
     message: 'Hardcoded rem value',
-    suggestion: 'Use var(--space-*) or var(--font-size-*) token'
-  }
+    suggestion: 'Use var(--space-*) or var(--font-size-*) token',
+  },
 };
 
 /**
@@ -89,7 +89,7 @@ const skipPatterns = [
   /\.min\.(css|js)$/,
   /tailwind\.config/,
   /globals\.css/, // Token definitions
-  /tokens\.(css|json)/
+  /tokens\.(css|json)/,
 ];
 
 /**
@@ -120,7 +120,7 @@ function getFiles(dir, ignore, files = []) {
  * Check if file should be skipped
  */
 function shouldSkip(filePath) {
-  return skipPatterns.some(pattern => pattern.test(filePath));
+  return skipPatterns.some((pattern) => pattern.test(filePath));
 }
 
 /**
@@ -140,9 +140,12 @@ function scanFile(filePath) {
     for (const [name, pattern] of Object.entries(patterns)) {
       const matches = line.match(pattern.regex);
       if (matches) {
-        matches.forEach(match => {
+        matches.forEach((match) => {
           // Skip common exceptions
-          if (name === 'hexColor' && ['#000', '#fff', '#FFF', '#000000', '#FFFFFF'].includes(match.toUpperCase())) {
+          if (
+            name === 'hexColor' &&
+            ['#000', '#fff', '#FFF', '#000000', '#FFFFFF'].includes(match.toUpperCase())
+          ) {
             return; // Skip black/white, often intentional
           }
 
@@ -154,7 +157,7 @@ function scanFile(filePath) {
             type: name,
             message: pattern.message,
             suggestion: pattern.suggestion,
-            context: line.trim().substring(0, 80)
+            context: line.trim().substring(0, 80),
           });
         });
       }
@@ -176,14 +179,14 @@ function formatReport(violations) {
 
   // Group by file
   const byFile = {};
-  violations.forEach(v => {
+  violations.forEach((v) => {
     if (!byFile[v.file]) byFile[v.file] = [];
     byFile[v.file].push(v);
   });
 
   for (const [file, fileViolations] of Object.entries(byFile)) {
     report += `📁 ${file}\n`;
-    fileViolations.forEach(v => {
+    fileViolations.forEach((v) => {
       report += `   Line ${v.line}: ${v.message}\n`;
       report += `   Found: ${v.value}\n`;
       report += `   Suggestion: ${v.suggestion}\n`;
@@ -193,7 +196,7 @@ function formatReport(violations) {
 
   // Summary
   const byType = {};
-  violations.forEach(v => {
+  violations.forEach((v) => {
     byType[v.type] = (byType[v.type] || 0) + 1;
   });
 

@@ -1,0 +1,5 @@
+-- Local development seed. Runs after migrations on `npm run db:reset`.
+--
+-- Intentionally empty: seeding users requires auth.users rows, which the
+-- ledger module will add alongside the data that depends on them. Seeding
+-- fake financial data before the schema exists would only have to be redone.

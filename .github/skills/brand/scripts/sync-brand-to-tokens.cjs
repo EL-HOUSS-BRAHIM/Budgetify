@@ -26,7 +26,7 @@ function extractColorsFromMarkdown(content) {
   const colors = {
     primary: { name: 'primary', shades: {} },
     secondary: { name: 'secondary', shades: {} },
-    accent: { name: 'accent', shades: {} }
+    accent: { name: 'accent', shades: {} },
   };
 
   // Match a "| Label | #hex |" markdown table row. Bold around the label
@@ -38,7 +38,7 @@ function extractColorsFromMarkdown(content) {
   const quickRef = {
     primary: /Primary Color\s*\|\s*#([A-Fa-f0-9]{6})/i,
     secondary: /Secondary Color\s*\|\s*#([A-Fa-f0-9]{6})/i,
-    accent: /Accent Color\s*\|\s*#([A-Fa-f0-9]{6})/i
+    accent: /Accent Color\s*\|\s*#([A-Fa-f0-9]{6})/i,
   };
   for (const key of Object.keys(quickRef)) {
     const m = content.match(quickRef[key]);
@@ -82,16 +82,16 @@ function extractColorsFromMarkdown(content) {
 function generateColorScale(baseHex, darkHex, lightHex) {
   // Use provided shades or generate approximations
   return {
-    "50": { "$value": lightHex || adjustBrightness(baseHex, 0.9), "$type": "color" },
-    "100": { "$value": lightHex || adjustBrightness(baseHex, 0.8), "$type": "color" },
-    "200": { "$value": adjustBrightness(baseHex, 0.6), "$type": "color" },
-    "300": { "$value": adjustBrightness(baseHex, 0.4), "$type": "color" },
-    "400": { "$value": adjustBrightness(baseHex, 0.2), "$type": "color" },
-    "500": { "$value": baseHex, "$type": "color" },
-    "600": { "$value": darkHex || adjustBrightness(baseHex, -0.15), "$type": "color" },
-    "700": { "$value": adjustBrightness(baseHex, -0.3), "$type": "color" },
-    "800": { "$value": adjustBrightness(baseHex, -0.45), "$type": "color" },
-    "900": { "$value": adjustBrightness(baseHex, -0.6), "$type": "color" }
+    50: { $value: lightHex || adjustBrightness(baseHex, 0.9), $type: 'color' },
+    100: { $value: lightHex || adjustBrightness(baseHex, 0.8), $type: 'color' },
+    200: { $value: adjustBrightness(baseHex, 0.6), $type: 'color' },
+    300: { $value: adjustBrightness(baseHex, 0.4), $type: 'color' },
+    400: { $value: adjustBrightness(baseHex, 0.2), $type: 'color' },
+    500: { $value: baseHex, $type: 'color' },
+    600: { $value: darkHex || adjustBrightness(baseHex, -0.15), $type: 'color' },
+    700: { $value: adjustBrightness(baseHex, -0.3), $type: 'color' },
+    800: { $value: adjustBrightness(baseHex, -0.45), $type: 'color' },
+    900: { $value: adjustBrightness(baseHex, -0.6), $type: 'color' },
   };
 }
 
@@ -102,8 +102,8 @@ function adjustBrightness(hex, percent) {
   if (typeof hex !== 'string') return '#000000';
   const num = parseInt(hex.replace('#', ''), 16);
   const r = Math.min(255, Math.max(0, (num >> 16) + Math.round(255 * percent)));
-  const g = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + Math.round(255 * percent)));
-  const b = Math.min(255, Math.max(0, (num & 0x0000FF) + Math.round(255 * percent)));
+  const g = Math.min(255, Math.max(0, ((num >> 8) & 0x00ff) + Math.round(255 * percent)));
+  const b = Math.min(255, Math.max(0, (num & 0x0000ff) + Math.round(255 * percent)));
   return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0').toUpperCase()}`;
 }
 
@@ -112,7 +112,10 @@ function adjustBrightness(hex, percent) {
  */
 function updateDesignTokens(tokens, colors) {
   // Update brand name
-  const brandName = `ClaudeKit Marketing - ${colors.primary.name.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}`;
+  const brandName = `ClaudeKit Marketing - ${colors.primary.name
+    .split('-')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ')}`;
   tokens.brand = brandName;
 
   // Update primitive colors with new names
@@ -145,39 +148,39 @@ function updateDesignTokens(tokens, colors) {
     const a = colors.accent.name;
 
     // Primary variants
-    sem.primary = { "$value": `{primitive.color.${p}.500}`, "$type": "color" };
-    sem['primary-hover'] = { "$value": `{primitive.color.${p}.600}`, "$type": "color" };
-    sem['primary-active'] = { "$value": `{primitive.color.${p}.700}`, "$type": "color" };
-    sem['primary-light'] = { "$value": `{primitive.color.${p}.400}`, "$type": "color" };
-    sem['primary-lighter'] = { "$value": `{primitive.color.${p}.100}`, "$type": "color" };
-    sem['primary-dark'] = { "$value": `{primitive.color.${p}.600}`, "$type": "color" };
+    sem.primary = { $value: `{primitive.color.${p}.500}`, $type: 'color' };
+    sem['primary-hover'] = { $value: `{primitive.color.${p}.600}`, $type: 'color' };
+    sem['primary-active'] = { $value: `{primitive.color.${p}.700}`, $type: 'color' };
+    sem['primary-light'] = { $value: `{primitive.color.${p}.400}`, $type: 'color' };
+    sem['primary-lighter'] = { $value: `{primitive.color.${p}.100}`, $type: 'color' };
+    sem['primary-dark'] = { $value: `{primitive.color.${p}.600}`, $type: 'color' };
 
     // Secondary variants
-    sem.secondary = { "$value": `{primitive.color.${s}.500}`, "$type": "color" };
-    sem['secondary-hover'] = { "$value": `{primitive.color.${s}.600}`, "$type": "color" };
-    sem['secondary-light'] = { "$value": `{primitive.color.${s}.300}`, "$type": "color" };
-    sem['secondary-dark'] = { "$value": `{primitive.color.${s}.600}`, "$type": "color" };
+    sem.secondary = { $value: `{primitive.color.${s}.500}`, $type: 'color' };
+    sem['secondary-hover'] = { $value: `{primitive.color.${s}.600}`, $type: 'color' };
+    sem['secondary-light'] = { $value: `{primitive.color.${s}.300}`, $type: 'color' };
+    sem['secondary-dark'] = { $value: `{primitive.color.${s}.600}`, $type: 'color' };
 
     // Accent variants
-    sem.accent = { "$value": `{primitive.color.${a}.500}`, "$type": "color" };
-    sem['accent-hover'] = { "$value": `{primitive.color.${a}.600}`, "$type": "color" };
-    sem['accent-light'] = { "$value": `{primitive.color.${a}.300}`, "$type": "color" };
+    sem.accent = { $value: `{primitive.color.${a}.500}`, $type: 'color' };
+    sem['accent-hover'] = { $value: `{primitive.color.${a}.600}`, $type: 'color' };
+    sem['accent-light'] = { $value: `{primitive.color.${a}.300}`, $type: 'color' };
 
     // Status colors (use accent for success, primary for error/info)
-    sem.success = { "$value": `{primitive.color.${a}.500}`, "$type": "color" };
-    sem['success-light'] = { "$value": `{primitive.color.${a}.300}`, "$type": "color" };
-    sem.error = { "$value": `{primitive.color.${p}.500}`, "$type": "color" };
-    sem['error-light'] = { "$value": `{primitive.color.${p}.300}`, "$type": "color" };
-    sem.info = { "$value": `{primitive.color.${s}.500}`, "$type": "color" };
-    sem['info-light'] = { "$value": `{primitive.color.${s}.300}`, "$type": "color" };
+    sem.success = { $value: `{primitive.color.${a}.500}`, $type: 'color' };
+    sem['success-light'] = { $value: `{primitive.color.${a}.300}`, $type: 'color' };
+    sem.error = { $value: `{primitive.color.${p}.500}`, $type: 'color' };
+    sem['error-light'] = { $value: `{primitive.color.${p}.300}`, $type: 'color' };
+    sem.info = { $value: `{primitive.color.${s}.500}`, $type: 'color' };
+    sem['info-light'] = { $value: `{primitive.color.${s}.300}`, $type: 'color' };
   }
 
   // Update component references (button uses primary color with opacity)
   if (tokens.component?.button?.secondary && colors.primary.base) {
     const primaryBase = colors.primary.base;
     tokens.component.button.secondary['bg-hover'] = {
-      "$value": `${primaryBase}1A`,
-      "$type": "color"
+      $value: `${primaryBase}1A`,
+      $type: 'color',
     };
   }
 
@@ -232,10 +235,14 @@ function main() {
   const generateScript = path.resolve(process.cwd(), GENERATE_TOKENS_SCRIPT);
   if (fs.existsSync(generateScript)) {
     try {
-      execFileSync('node', [generateScript, '--config', DESIGN_TOKENS_JSON, '-o', DESIGN_TOKENS_CSS], {
-        cwd: process.cwd(),
-        stdio: 'inherit'
-      });
+      execFileSync(
+        'node',
+        [generateScript, '--config', DESIGN_TOKENS_JSON, '-o', DESIGN_TOKENS_CSS],
+        {
+          cwd: process.cwd(),
+          stdio: 'inherit',
+        },
+      );
       console.log(`✅ Regenerated: ${DESIGN_TOKENS_CSS}`);
     } catch (e) {
       console.error('⚠️  Failed to regenerate CSS:', e.message);

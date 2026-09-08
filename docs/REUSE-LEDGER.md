@@ -34,7 +34,7 @@ Verdicts:
 | Month/year filtering of budgets and expenses | `frontend/src/utils/helpers.js` | PORT | pending | `packages/core` |
 | Category totals aggregation | `frontend/src/utils/helpers.js` | PORT | pending | `packages/core` |
 | Date-range expense filtering | `frontend/src/utils/helpers.js` | PORT | pending | `packages/core` |
-| Currency formatting (`Intl.NumberFormat`) | `frontend/src/utils/helpers.js::formatCurrency` | PORT | pending | `packages/core` |
+| Currency formatting (`Intl.NumberFormat`) | `frontend/src/utils/helpers.js::formatCurrency` | PORT | **done** | `packages/core/src/money/format.ts` — parity locked by `format.test.ts` |
 | Date formatting | `frontend/src/utils/helpers.js::formatDate` | PORT | pending | `packages/core` |
 | Goal progress percentage | `backend/app/services/goal_service.py` | PORT | pending | `packages/core` (module `goals`, V3) |
 | Net worth calculation | `backend/app/utils/financial_utils.py::calculate_net_worth` | DROP | pending | — assets/liabilities were never modelled; the function had no callers |

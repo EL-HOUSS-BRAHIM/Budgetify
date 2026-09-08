@@ -1,0 +1,6 @@
+legacy/
+node_modules/
+**/dist/
+**/.expo/
+packages/types/src/database.ts
+*.md

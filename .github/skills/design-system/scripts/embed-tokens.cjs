@@ -66,9 +66,7 @@ function extractTokens(css, minimal = false) {
   }
 
   if (minimal) {
-    allVars = allVars.filter(v =>
-      MINIMAL_TOKENS.some(token => v.includes(token))
-    );
+    allVars = allVars.filter((v) => MINIMAL_TOKENS.some((token) => v.includes(token)));
   }
 
   // Dedupe
