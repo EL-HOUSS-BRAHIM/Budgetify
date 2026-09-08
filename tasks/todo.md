@@ -2,6 +2,25 @@
 
 Plan: `tasks/plan.md` · Spec: `docs/SPEC-platform-foundation.md`
 
+## Progress
+
+| Task | State | Evidence |
+|---|---|---|
+| T0 Node toolchain | **blocked — user action** | machine is on v20.3.1, Expo 57 needs >= 20.19.4 |
+| T1 Workspace root | done | `npm install` exits 0 |
+| T2 TS / lint / format config | done | `npm run lint` and `typecheck` exit 0 |
+| T3 core + money primitives | done | 65 tests, 100% line coverage |
+| T4 verify + CI | written, **unproven** | `npm run verify` exits 0 locally; CI has never run — no push yet |
+| T5 Supabase local stack | written, **unverified** | `supabase start` not run; needs Docker |
+| T6 Baseline migration + RLS tests | written, **unverified** | SQL not yet executed against a database |
+| T7 Generated types | placeholder only | real generation needs T5 |
+| T8 Expo app shell | **not started** | blocked by T0 |
+| T9 Supabase client in the app | **not started** | blocked by T8 |
+| T10 services/ai health endpoint | done | 2 tests passing |
+
+Anything marked "written, unverified" is a claim, not a fact. It becomes done
+when its verification command has actually been run.
+
 ---
 
 ## T0: Upgrade the Node toolchain
