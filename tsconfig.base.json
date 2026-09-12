@@ -20,11 +20,6 @@
     "noUnusedParameters": true,
     "exactOptionalPropertyTypes": true,
 
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "composite": true,
-
     "baseUrl": ".",
     "paths": {
       "@budgetify/core": ["./packages/core/src/index.ts"],

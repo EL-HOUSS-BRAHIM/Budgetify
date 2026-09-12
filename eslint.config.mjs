@@ -14,6 +14,9 @@ export default tseslint.config(
       '**/.expo/**',
       '**/node_modules/**',
       'packages/types/src/database.ts',
+      '**/*.d.ts',
+      '**/*.js.map',
+      '**/*.d.ts.map',
     ],
   },
   js.configs.recommended,
@@ -99,8 +102,14 @@ export default tseslint.config(
     // type-aware rules cannot run against them.
     files: ['**/*.config.{js,mjs,cjs,ts}', 'eslint.config.mjs', '**/*.cjs'],
     extends: [tseslint.configs.disableTypeChecked],
-    languageOptions: { parserOptions: { projectService: false, project: false } },
-    rules: { 'no-restricted-syntax': 'off' },
+    languageOptions: {
+      parserOptions: { projectService: false, project: false },
+    },
+    rules: {
+      'no-restricted-syntax': 'off',
+      'no-undef': 'off',
+      '@typescript-eslint/no-require-imports': 'off',
+    },
   },
   prettier,
 );

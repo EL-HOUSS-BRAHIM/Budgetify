@@ -3,6 +3,7 @@
   "references": [
     { "path": "./packages/core" },
     { "path": "./packages/types" },
-    { "path": "./services/ai" }
+    { "path": "./services/ai" },
+    { "path": "./apps/mobile" }
   ]
 }

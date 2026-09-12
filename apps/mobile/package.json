@@ -1,0 +1,46 @@
+{
+  "name": "@budgetify/mobile",
+  "version": "0.1.0",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "typecheck": "tsc --noEmit",
+    "expo:check": "npx expo install --check"
+  },
+  "dependencies": {
+    "@budgetify/core": "*",
+    "@budgetify/types": "*",
+    "@supabase/supabase-js": "^2.48.0",
+    "expo": "~52.0.30",
+    "expo-constants": "~17.0.5",
+    "expo-font": "~13.0.3",
+    "expo-haptics": "~14.0.1",
+    "expo-linking": "~7.0.4",
+    "expo-local-authentication": "~15.0.2",
+    "expo-router": "~4.0.17",
+    "expo-secure-store": "~14.0.1",
+    "expo-splash-screen": "~0.29.21",
+    "expo-status-bar": "~2.0.1",
+    "expo-symbols": "~0.2.2",
+    "expo-system-ui": "~4.0.7",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-native": "0.76.9",
+    "react-native-gesture-handler": "~2.20.2",
+    "react-native-reanimated": "~3.16.1",
+    "react-native-safe-area-context": "4.12.0",
+    "react-native-screens": "~4.4.0",
+    "react-native-web": "~0.19.13",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@types/react": "~18.3.12",
+    "@types/react-native": "^0.72.8",
+    "typescript": "^5.6.0"
+  }
+}
