@@ -113,6 +113,7 @@ export default function TabLayout(): React.ReactElement {
         name="goals"
         options={{
           title: 'Goals',
+          headerShown: false,
           tabBarAccessibilityLabel: 'Goals tab',
           tabBarIcon: ({ focused, color }) => (
             <Ionicons name={focused ? 'flag' : 'flag-outline'} size={20} color={color} />

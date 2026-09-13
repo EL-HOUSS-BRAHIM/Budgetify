@@ -16,10 +16,10 @@ an accessibility/state audit. Preview data must always be visibly labeled.
 | 2     | Money & Net Worth                 | `40843dfb2ec94ce09a8e98f8b17787be` | `/(tabs)/expenses`     | existing route |
 | 3     | AI Assistant Copilot              | `c1ebf1f50bb445608868d67e176ab9cf` | `/(tabs)/assistant`    | in progress    |
 | 4     | Plan & Adaptive Budgeting         | `d1c7b9b7c95e4d86a788d576b2c561f4` | `/(tabs)/planning`     | finished       |
-| 5     | Goals & What-If Simulator         | `791f50a241a948799589dd4dc5cee56a` | `/(tabs)/goals`        | existing route |
+| 5     | Goals & What-If Simulator         | `791f50a241a948799589dd4dc5cee56a` | `/(tabs)/goals`        | finished       |
 | 6     | Financial Forecast Calendar       | `6b09ce157a4545559c30b623d8d582ed` | `/forecast`            | scaffolded     |
-| 7     | Subscriptions & Bills Center      | `b550d1f3a69b4c21a86ad98564d95200` | `/bills`               | scaffolded     |
-| 8     | Smart Transaction Detail          | `0a642d28536542da9021761a86bbd44a` | `/transaction/[id]`    | scaffolded     |
+| 7     | Subscriptions & Bills Center      | `b550d1f3a69b4c21a86ad98564d95200` | `/bills`               | finished       |
+| 8     | Smart Transaction Detail          | `0a642d28536542da9021761a86bbd44a` | `/transaction/[id]`    | finished       |
 | 9     | Salary Day Flow                   | `0f71adbe6f394e81abaabfc9f3e2ec29` | `/salary-day`          | scaffolded     |
 | 10    | Privacy & AI Access Control       | `776daf01b46a4836b5d77d10b7e27ceb` | `/privacy`             | scaffolded     |
 | 11    | Irregular Income Mode             | `5a255302725745f5ab85ae33d4d44583` | `/income-mode`         | queued         |
@@ -88,6 +88,63 @@ they are not converted to completion claims.
   it does not claim to move money or execute a bank transfer.
 - Static checks: mobile TypeScript, focused ESLint, Prettier, and editor
   diagnostics passed. No React Native JavaScript errors were reported.
+
+### 5. Goals & What-If Simulator - finished 2026-09-13
+
+- Implementation: rebuilt the generic goal list into the Lyvora future-horizon
+  view with aggregate capital, capital-target cards, progress states, and the
+  Opportunity Cost Engine. Live Supabase goals retain loading, refresh, empty,
+  and error states; unauthenticated design-preview goals are visibly labeled.
+- Stitch comparison: matched the reference's target hierarchy, reserved-capital
+  summary, goal health labels, simulator presets, impact telemetry, verdict,
+  and five-item navigation. The default Expo header was removed for the compact
+  Lyvora goal header.
+- Android emulator: verified the native Goals tab at 411 dp width and confirmed
+  readable goal cards, untruncated allocation pill, named controls, and 48 dp
+  or larger targets for simulator actions.
+- Behavior: selecting a 7,000 MAD what-if updates the local horizon projection
+  to `+3 months`; Queue Wishlist confirms that no purchase was created.
+- Static checks: mobile TypeScript, focused ESLint, Prettier, and editor
+  diagnostics passed. No React Native JavaScript errors were reported.
+
+### 7. Subscriptions & Bills Center - finished 2026-09-13
+
+- Implementation: replaced the route scaffold with the Lyvora recurring-load
+  view, urgent bill review, leak detector, active contract list, and
+  Zero-Leak Shield summary. Authenticated sessions query recurring `plan_items`;
+  unauthenticated sessions receive visibly labeled preview contracts.
+- Stitch comparison: matched the source hierarchy for recurring-load health,
+  urgent commitment, liquidity verification, leak review, active subscriptions,
+  and surveillance summary. Lyvora replaces the source Aura product name.
+- Android emulator: rendered `/bills` at native width. Urgent review, reminder,
+  cancellation proposal, and service-retention controls expose clear labels and
+  48 dp or larger target heights.
+- Behavior: Review payment displays `Payment review prepared locally. No payment
+was sent.` Cancellation actions likewise only prepare local review state; the
+  app does not claim to execute external money movement or cancellation.
+- Static checks: mobile TypeScript, Prettier, editor diagnostics, and React
+  Native runtime error log passed. Focused ESLint completed cleanly before
+  removal of an appended duplicate scaffold; the subsequent retry was blocked
+  by ESLint's terminal base-path resolution, not a source finding.
+
+### 8. Smart Transaction Detail - finished 2026-09-13
+
+- Implementation: replaced the route scaffold with a transaction-by-ID detail
+  view featuring settlement status, classification confidence, behavioral
+  context, envelope health, parsed receipt items, and transaction metadata.
+  Authenticated sessions query the requested transaction; `/transaction/preview`
+  intentionally shows visibly labeled sample data.
+- Stitch comparison: matched the source detail hierarchy for merchant summary,
+  AI classification, confidence, behavior insight, grocery envelope, OCR
+  receipt, and conservative review actions. Lyvora replaces the source Aura
+  engine label.
+- Android emulator: rendered the preview route at native width. Back, settings,
+  category retraining, and expense split controls have descriptive labels and
+  48 dp or larger targets.
+- Behavior: Re-train label confirms `Category training review prepared locally.`
+  It does not modify the transaction or claim to train a model.
+- Static checks: mobile TypeScript, root-scoped focused ESLint, Prettier, editor
+  diagnostics, and React Native runtime error log passed.
 
 ### Scaffold Coverage - 2026-09-13
 
