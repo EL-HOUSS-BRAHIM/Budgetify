@@ -1,51 +1,130 @@
 import { formatMoney, money } from '@budgetify/core';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { supabase } from '../../src/lib/supabase';
 import { useTheme } from '../../src/theme/ThemeProvider';
+
+interface TransactionItem {
+  id: string;
+  title: string;
+  category: string;
+  amount: number;
+  date: string;
+  type: 'expense' | 'income';
+}
 
 export default function DashboardScreen(): React.ReactElement {
   const { colors, spacing, typography } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
-  // Active currency
   const [currency] = useState('USD');
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  // Real amounts calculated via @budgetify/core (in minor units / cents)
-  const totalBudget = money(320000, currency); // $3,200.00
-  const totalSpent = money(184050, currency); // $1,840.50
-  const remaining = money(135950, currency); // $1,359.50
-
-  const spentPercent = Math.min(100, Math.round((totalSpent.amount / totalBudget.amount) * 100));
-
-  const recentTransactions = [
+  const [totalBudgetCents, setTotalBudgetCents] = useState(320000); // $3,200.00
+  const [totalSpentCents, setTotalSpentCents] = useState(184050); // $1,840.50
+  const [transactions, setTransactions] = useState<TransactionItem[]>([
     {
       id: '1',
       title: 'Groceries & Supplies',
-      category: 'Food',
-      amount: money(8520, currency),
+      category: 'Food & Dining',
+      amount: 8520,
       date: 'Today, 2:30 PM',
       type: 'expense',
     },
     {
       id: '2',
       title: 'Monthly Metro Pass',
-      category: 'Transport',
-      amount: money(4500, currency),
+      category: 'Transportation',
+      amount: 4500,
       date: 'Yesterday',
       type: 'expense',
     },
     {
       id: '3',
       title: 'Salary Deposit',
-      category: 'Income',
-      amount: money(350000, currency),
+      category: 'Salary & Income',
+      amount: 350000,
       date: 'Sep 1',
       type: 'income',
     },
-  ];
+  ]);
+
+  const loadData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const { data: txData, error: txError } = await supabase
+        .from('transactions')
+        .select('*')
+        .order('date', { ascending: false })
+        .limit(10);
+
+      if (!txError && txData && txData.length > 0) {
+        let spentSum = 0;
+        const mapped = (
+          txData as Array<{
+            id: string;
+            description: string;
+            category_name: string;
+            amount: number;
+            date: string;
+            type: 'expense' | 'income';
+          }>
+        ).map((row) => {
+          if (row.type === 'expense') spentSum += Number(row.amount);
+          return {
+            id: String(row.id),
+            title: row.description || 'Expense',
+            category: row.category_name || 'General',
+            amount: Number(row.amount),
+            date: new Date(row.date).toLocaleDateString(),
+            type: row.type || 'expense',
+          };
+        });
+        setTransactions(mapped);
+        setTotalSpentCents(spentSum);
+      }
+
+      const { data: bgData, error: bgError } = await supabase.from('budgets').select('amount');
+
+      if (!bgError && bgData && bgData.length > 0) {
+        const bgSum = (bgData as Array<{ amount: number }>).reduce((s, b) => s + Number(b.amount), 0);
+        if (bgSum > 0) setTotalBudgetCents(bgSum);
+      }
+    } catch {
+      // Offline fallback is preserved
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadData();
+  }, [loadData]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    void loadData();
+  };
+
+  const remainingCents = Math.max(0, totalBudgetCents - totalSpentCents);
+  const totalBudget = money(totalBudgetCents, currency);
+  const totalSpent = money(totalSpentCents, currency);
+  const remaining = money(remainingCents, currency);
+  const spentPercent =
+    totalBudgetCents > 0 ? Math.min(100, Math.round((totalSpentCents / totalBudgetCents) * 100)) : 0;
 
   return (
     <ScrollView
@@ -136,49 +215,53 @@ export default function DashboardScreen(): React.ReactElement {
         </TouchableOpacity>
       </View>
 
-      <View
-        style={[
-          styles.listContainer,
-          { backgroundColor: colors.background.card, borderColor: colors.border.default },
-        ]}
-      >
-        {recentTransactions.map((tx, idx) => (
-          <View
-            key={tx.id}
-            style={[
-              styles.txRow,
-              idx < recentTransactions.length - 1 && {
-                borderBottomColor: colors.border.subtle,
-                borderBottomWidth: 1,
-              },
-            ]}
-          >
-            <View style={styles.txInfo}>
-              <Text
-                style={[typography.bodyMedium, { color: colors.text.primary, fontWeight: '600' }]}
-              >
-                {tx.title}
-              </Text>
-              <Text style={[typography.bodySmall, { color: colors.text.tertiary, marginTop: 2 }]}>
-                {tx.category} • {tx.date}
-              </Text>
-            </View>
-
-            <Text
+      {loading && !refreshing ? (
+        <ActivityIndicator size="small" color={colors.brand.primary} style={{ marginVertical: 20 }} />
+      ) : (
+        <View
+          style={[
+            styles.listContainer,
+            { backgroundColor: colors.background.card, borderColor: colors.border.default },
+          ]}
+        >
+          {transactions.map((tx, idx) => (
+            <View
+              key={tx.id}
               style={[
-                typography.bodyLarge,
-                {
-                  fontWeight: '700',
-                  color: tx.type === 'income' ? colors.semantic.income : colors.text.primary,
+                styles.txRow,
+                idx < transactions.length - 1 && {
+                  borderBottomColor: colors.border.subtle,
+                  borderBottomWidth: 1,
                 },
               ]}
             >
-              {tx.type === 'income' ? '+' : '-'}
-              {formatMoney(tx.amount)}
-            </Text>
-          </View>
-        ))}
-      </View>
+              <View style={styles.txInfo}>
+                <Text
+                  style={[typography.bodyMedium, { color: colors.text.primary, fontWeight: '600' }]}
+                >
+                  {tx.title}
+                </Text>
+                <Text style={[typography.bodySmall, { color: colors.text.tertiary, marginTop: 2 }]}>
+                  {tx.category} • {tx.date}
+                </Text>
+              </View>
+
+              <Text
+                style={[
+                  typography.bodyLarge,
+                  {
+                    fontWeight: '700',
+                    color: tx.type === 'income' ? colors.semantic.income : colors.text.primary,
+                  },
+                ]}
+              >
+                {tx.type === 'income' ? '+' : '-'}
+                {formatMoney(money(tx.amount, currency))}
+              </Text>
+            </View>
+          ))}
+        </View>
+      )}
     </ScrollView>
   );
 }

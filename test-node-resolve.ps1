@@ -1,0 +1,6 @@
+$env:PATH = "C:\Program Files\nodejs;$env:PATH"
+Set-Location "C:\dev\Budgetify\apps\mobile\android"
+$res = node --print "require.resolve('@react-native/gradle-plugin/package.json', { paths: [require.resolve('react-native/package.json')] })"
+Write-Output "Resolved plugin: $res"
+$expo = node --print "require.resolve('expo/package.json')"
+Write-Output "Resolved expo: $expo"
