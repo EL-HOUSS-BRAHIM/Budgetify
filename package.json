@@ -20,8 +20,8 @@
     "db:start": "npx supabase start",
     "db:stop": "npx supabase stop",
     "db:reset": "npx supabase db reset",
-    "db:types": "npx supabase gen types typescript --local > packages/types/src/database.ts",
-    "db:test": "npx supabase test db",
+    "db:types": "npx supabase gen types typescript --linked --schema public > packages/types/src/database.ts",
+    "db:test": "npx supabase test db --linked",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
@@ -44,6 +44,6 @@
     "supabase": "^2.0.0",
     "typescript": "^5.6.0",
     "typescript-eslint": "^8.0.0",
-    "vitest": "^2.1.0"
+    "vitest": "^5.0.0"
   }
 }

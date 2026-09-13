@@ -5,7 +5,7 @@
 -- 1. ACCOUNTS (Cash, Checking, Credit, Savings, etc.)
 create table if not exists public.accounts (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users (id) on delete cascade,
+  user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
   name text not null,
   type text not null default 'checking' check (type in ('checking', 'savings', 'credit', 'cash', 'investment', 'other')),
   currency char(3) not null default 'USD' check (currency ~ '^[A-Z]{3}$'),
@@ -64,7 +64,7 @@ create policy "categories_delete_own" on public.categories for delete to authent
 -- 3. BUDGETS
 create table if not exists public.budgets (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users (id) on delete cascade,
+  user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
   category_id uuid references public.categories (id) on delete set null,
   category_name text not null,
   amount bigint not null check (amount >= 0), -- monthly limit in minor units (cents)
@@ -93,7 +93,7 @@ create trigger budgets_set_updated_at
 -- 4. TRANSACTIONS
 create table if not exists public.transactions (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users (id) on delete cascade,
+  user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
   account_id uuid references public.accounts (id) on delete set null,
   category_id uuid references public.categories (id) on delete set null,
   category_name text not null,
@@ -125,7 +125,7 @@ create trigger transactions_set_updated_at
 -- 5. PLAN ITEMS (Checklist, Recurring Bills, Planned/Unplanned Spend)
 create table if not exists public.plan_items (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users (id) on delete cascade,
+  user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
   title text not null,
   expected_amount bigint not null check (expected_amount >= 0), -- in minor units
   currency char(3) not null default 'USD' check (currency ~ '^[A-Z]{3}$'),
@@ -159,7 +159,7 @@ create trigger plan_items_set_updated_at
 -- 6. GOALS (Savings Goals)
 create table if not exists public.goals (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users (id) on delete cascade,
+  user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
   name text not null,
   target_amount bigint not null check (target_amount > 0),
   current_amount bigint not null default 0 check (current_amount >= 0),

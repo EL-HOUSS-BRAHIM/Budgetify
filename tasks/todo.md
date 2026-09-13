@@ -11,15 +11,213 @@ Plan: `tasks/plan.md` · Spec: `docs/SPEC-platform-foundation.md`
 | T2 TS / lint / format config | done | `npm run lint` and `typecheck` exit 0 |
 | T3 core + money primitives | done | 65 tests, 100% line coverage |
 | T4 verify + CI | done | `npm run verify` exits 0 locally with all gates clean |
-| T5 Supabase local stack | ready | config.toml configured, dedicated remote project `hnlieepsxoqeebkreugt` |
-| T6 Baseline migration + RLS tests | ready | `20260908000000_baseline_profiles.sql` & `profiles_rls_test.sql` |
-| T7 Generated types | done | `packages/types` scaffolded and typed |
+| T5 Supabase local stack | superseded | Hosted-only workflow requested; no Docker/local stack |
+| T6 Baseline migration + RLS tests | written, unverified remotely | Two migrations exist but are not applied on hosted Budgetify |
+| T7 Generated types | stale | Must be regenerated from the hosted schema after migration push |
 | T8 Expo app shell | done | Expo Router tab shell, tokens, dark/light theme, dashboard, budgets, expenses, planning checklist, modal |
 | T9 Supabase client in the app | done | `src/lib/supabase.ts` with SecureStore session persistence |
-| T10 services/ai health endpoint | done | Hono server + health tests passing |
+| T10 services/ai health endpoint | blocked | 4 tests pass; typecheck and production start fail |
+| T11 Safe hosted target | ready | Project ref known; credential rotation and CLI verification pending |
+| T12 Shippable server baseline | ready | Compile/start/dependency defects reproduced |
+| T13 Hosted auth configuration | blocked | Depends on T11 and T12 |
+| T14 Push hosted migrations | blocked | Depends on T11 target gate |
+| T15 Generate hosted types | blocked | Depends on T14 |
+| T16 Authenticated backend smoke | blocked | Depends on T13 and T15 |
+| T17 Public API deployment | deferred | Begins only after T16 passes and host is selected |
 
 Anything marked "written, unverified" is a claim, not a fact. It becomes done
 when its verification command has actually been run.
+
+---
+
+## Hosted backend launch — current priority
+
+No task in this phase starts local Supabase or downloads Docker images. Commands
+must use the Supabase CLI already installed in `node_modules`.
+
+## T11: Establish the safe hosted target
+
+**Description:** Rotate the database password previously exposed in chat, sign in
+to Supabase without sharing credentials, and link only the Budgetify project
+`hnlieepsxoqeebkreugt`. Retrieve its publishable key into ignored local environment
+files. The unrelated shared MCP is excluded from this workflow.
+
+**Acceptance criteria:**
+- [ ] The database password has been rotated in the Supabase Dashboard
+- [ ] CLI project output and linked migration output show `hnlieepsxoqeebkreugt`
+- [ ] `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` are stored outside git
+- [ ] No secret/service-role key is used by the mobile app or AI service
+
+**Verification:** Run the installed CLI's project and linked migration listing;
+inspect `git status` and staged diffs for secrets.
+
+**Dependencies:** None · **Scope:** S · **Owner:** user + agent
+
+**Files likely touched:**
+- `services/ai/.env.example`
+- `apps/mobile/.env.example`
+- ignored local `.env` files
+
+---
+
+## T12: Make the AI service compile and boot
+
+**Description:** Declare every runtime dependency, fix the three current strict
+TypeScript errors, and use a production build/start path that resolves modules
+under supported Node releases. Keep `/health` independent of LLM configuration.
+
+**Acceptance criteria:**
+- [ ] `@supabase/supabase-js` and `zod` are direct service dependencies
+- [ ] Service type-check and route tests pass
+- [ ] Production start serves `GET /health` with HTTP 200
+- [ ] Container build/start uses the same proven production artifact
+
+**Verification:** `npm run typecheck --workspace services/ai`; `npm run test
+--workspace services/ai`; production start followed by a `/health` request.
+
+**Dependencies:** None · **Scope:** M
+
+**Files likely touched:**
+- `services/ai/package.json`
+- `services/ai/tsconfig.json`
+- `services/ai/src/app.ts`
+- `services/ai/src/executor.ts`
+- `services/ai/Dockerfile`
+
+---
+
+## T13: Wire hosted Supabase auth safely
+
+**Description:** Replace the placeholder API key with validated hosted
+configuration. The service uses a publishable key to identify the application and
+the caller's Supabase access token to preserve RLS. Validate HTTP input and make
+CORS explicit before public deployment.
+
+**Acceptance criteria:**
+- [ ] Missing/invalid hosted configuration fails clearly at startup
+- [ ] No project URL, placeholder key, or elevated key is hard-coded
+- [ ] Invalid/expired caller tokens return 401 and never execute a tool
+- [ ] Chat payloads are schema-validated and CORS is allowlisted
+
+**Verification:** Focused tests cover missing config, invalid payload, invalid JWT,
+and successful forwarding of a caller-scoped token.
+
+**Dependencies:** T11, T12 · **Scope:** M
+
+**Files likely touched:**
+- `services/ai/.env.example`
+- `services/ai/src/app.ts`
+- `services/ai/src/executor.ts`
+- `services/ai/src/server.ts`
+- `services/ai/src/app.test.ts`
+
+---
+
+## T14: Apply migrations to hosted Budgetify
+
+**Description:** Inspect the hosted migration history and public schema, run a
+remote dry run, and apply the two committed migrations to the verified project.
+No linked reset, schema pull, local stack, or Docker command is permitted.
+
+**Acceptance criteria:**
+- [ ] Preflight confirms the exact project ref and expected remote state
+- [ ] Dry run contains only the two expected migrations and no destructive SQL
+- [ ] Push succeeds and both timestamps appear in remote migration history
+- [ ] Remote database lint reports no errors
+
+**Verification:** Installed CLI `migration list --linked`, `db push --dry-run`,
+`db push`, then `db lint --linked --fail-on error`.
+
+**Dependencies:** T11 · **Scope:** S
+
+**Files likely touched:**
+- `supabase/migrations/20260908000000_baseline_profiles.sql`
+- `supabase/migrations/20260913000000_schema_budgetify.sql`
+
+---
+
+## Checkpoint E — hosted schema and runtime
+- [ ] T11 target gate passed before any remote write
+- [ ] T12 production server boots and passes tests/type-check
+- [ ] T13 has no elevated Supabase key and rejects invalid callers
+- [ ] T14 migration history and remote lint are clean
+
+---
+
+## T15: Generate types from hosted schema
+
+**Description:** Regenerate the committed database types directly from the hosted
+Budgetify project after migration deployment, replacing the local-only workflow.
+
+**Acceptance criteria:**
+- [ ] Type generation explicitly targets `hnlieepsxoqeebkreugt`
+- [ ] Generated tables and RPCs match the hosted public schema
+- [ ] Workspace type-check and tests pass with the regenerated file
+
+**Verification:** Generate types with `--project-id` or `--linked`; run workspace
+type-check and tests; inspect the generated diff.
+
+**Dependencies:** T14 · **Scope:** S
+
+**Files likely touched:**
+- `package.json`
+- `packages/types/src/database.ts`
+
+---
+
+## T16: Run an authenticated hosted-backend smoke test
+
+**Description:** Start Hono locally on port 8787 using hosted Supabase values. Use
+a dedicated test account to exercise one read and one write through `/api/chat`,
+then prove a second account cannot access the first account's data.
+
+**Acceptance criteria:**
+- [ ] `/health` returns 200 and `/api/chat` without a token returns 401
+- [ ] A caller-scoped expense command creates the expected hosted row
+- [ ] Summary reads only that caller's data
+- [ ] A second user cannot read or mutate the first user's rows
+
+**Verification:** HTTP smoke script against localhost plus read-only confirmation
+in the Supabase Dashboard. Tokens and financial payloads are not logged.
+
+**Dependencies:** T13, T15 · **Scope:** M
+
+**Files likely touched:**
+- `services/ai/.env.example`
+- `services/ai/src/app.test.ts`
+- optional smoke-test script under `services/ai`
+
+---
+
+## Checkpoint F — backend usable now
+- [ ] Hosted schema is applied and typed
+- [ ] Local Hono server talks to hosted Supabase
+- [ ] Authenticated write/read works end to end
+- [ ] Cross-user RLS denial is proven
+
+---
+
+## T17: Deploy the API publicly
+
+**Description:** Select a managed Node/Docker host, configure environment values in
+its secret store, deploy the verified artifact, and repeat the smoke tests over
+HTTPS. This task is intentionally after the local-to-hosted proof.
+
+**Acceptance criteria:**
+- [ ] Deployment builds from the repository without local machine state
+- [ ] Hosted `/health` returns 200 over HTTPS
+- [ ] Authenticated smoke and RLS isolation tests pass against the public URL
+- [ ] Logs expose neither credentials nor user financial data
+
+**Verification:** Provider deployment status plus external health/auth/write/RLS
+smoke checks and a rollback rehearsal.
+
+**Dependencies:** T16, deployment-host decision · **Scope:** M
+
+**Files likely touched:**
+- provider deployment configuration
+- `services/ai/Dockerfile`
+- `README.md`
 
 ---
 

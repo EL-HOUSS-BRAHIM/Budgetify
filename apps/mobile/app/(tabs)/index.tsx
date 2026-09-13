@@ -130,6 +130,14 @@ export default function DashboardScreen(): React.ReactElement {
     <ScrollView
       style={[styles.container, { backgroundColor: colors.background.primary }]}
       contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 32 }]}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={[colors.brand.primary]}
+          tintColor={colors.brand.primary}
+        />
+      }
     >
       {/* Overview Card */}
       <View

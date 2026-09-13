@@ -20,7 +20,6 @@
     "noUnusedParameters": true,
     "exactOptionalPropertyTypes": true,
 
-    "baseUrl": ".",
     "paths": {
       "@budgetify/core": ["./packages/core/src/index.ts"],
       "@budgetify/core/*": ["./packages/core/src/*"],

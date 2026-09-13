@@ -23,7 +23,12 @@ export function createApp(): Hono {
       return c.json({ error: 'Missing or invalid Authorization header' }, 401);
     }
     const userJwt = authHeader.replace('Bearer ', '');
-    const supabaseUrl = process.env['SUPABASE_URL'] || 'https://hnlieepsxoqeebkreugt.supabase.co';
+    const supabaseUrl = process.env['SUPABASE_URL'];
+    const supabasePublishableKey = process.env['SUPABASE_PUBLISHABLE_KEY'];
+    if (!supabaseUrl || !supabasePublishableKey) {
+      return c.json({ error: 'Supabase server configuration is missing' }, 503);
+    }
+    const executionContext = { supabaseUrl, supabasePublishableKey, userJwt };
 
     try {
       const body = await c.req.json<{
@@ -59,7 +64,7 @@ export function createApp(): Hono {
         const result = await executeToolCall(
           'record_expense',
           { amount, category, description },
-          { supabaseUrl, userJwt },
+          executionContext,
         );
         return c.json({
           reply: `Recorded an expense of $${amount.toFixed(2)} for ${description} under ${category}.`,
@@ -69,16 +74,24 @@ export function createApp(): Hono {
       }
 
       // 2. Mark checklist / bill done or undone (e.g. "mark rent done", "paid wifi bill", "mark electricity undone")
-      const isMarkDone = /mark\s+([a-zA-Z0-9\s]+)\s+(?:done|paid|complete)|paid\s+([a-zA-Z0-9\s]+)/i.exec(lower);
-      const isMarkUndone = /mark\s+([a-zA-Z0-9\s]+)\s+(?:undone|unpaid|pending)|unpay\s+([a-zA-Z0-9\s]+)/i.exec(lower);
+      const isMarkDone =
+        /mark\s+([a-zA-Z0-9\s]+)\s+(?:done|paid|complete)|paid\s+([a-zA-Z0-9\s]+)/i.exec(lower);
+      const isMarkUndone =
+        /mark\s+([a-zA-Z0-9\s]+)\s+(?:undone|unpaid|pending)|unpay\s+([a-zA-Z0-9\s]+)/i.exec(lower);
 
       if (isMarkDone || isMarkUndone) {
-        const targetTitle = (isMarkDone ? isMarkDone[1] || isMarkDone[2] : isMarkUndone ? isMarkUndone[1] || isMarkUndone[2] : '').trim();
+        const targetTitle = (
+          isMarkDone?.[1] ??
+          isMarkDone?.[2] ??
+          isMarkUndone?.[1] ??
+          isMarkUndone?.[2] ??
+          ''
+        ).trim();
         const isDone = Boolean(isMarkDone);
         const result = await executeToolCall(
           'toggle_plan_item_status',
           { title_or_id: targetTitle, is_done: isDone },
-          { supabaseUrl, userJwt },
+          executionContext,
         );
         return c.json({
           reply: result.success
@@ -100,7 +113,7 @@ export function createApp(): Hono {
         const result = await executeToolCall(
           'add_planned_item',
           { title, expected_amount: amount, is_unplanned: isUnplanned },
-          { supabaseUrl, userJwt },
+          executionContext,
         );
         return c.json({
           reply: `Added ${isUnplanned ? 'unplanned' : 'planned'} item "${title}" for $${amount.toFixed(2)}.`,
@@ -117,7 +130,7 @@ export function createApp(): Hono {
         lower.includes('spent') ||
         lower.includes('how much')
       ) {
-        const result = await executeToolCall('get_financial_summary', {}, { supabaseUrl, userJwt });
+        const result = await executeToolCall('get_financial_summary', {}, executionContext);
         return c.json({
           reply: `Retrieved your current monthly financial overview.`,
           toolCalled: 'get_financial_summary',
@@ -130,9 +143,8 @@ export function createApp(): Hono {
         reply: `I can help manage your finances! You can say things like:\n• "Spent $18 on lunch"\n• "Mark Internet bill done"\n• "Add unplanned expense $50 for pharmacy"\n• "Show my monthly summary"`,
         toolCalled: null,
       });
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      return c.json({ error: message }, 500);
+    } catch {
+      return c.json({ error: 'Unable to process request' }, 500);
     }
   });
 

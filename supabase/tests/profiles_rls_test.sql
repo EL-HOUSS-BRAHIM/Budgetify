@@ -7,6 +7,8 @@
 -- Run with: npm run db:test
 
 begin;
+set local role postgres;
+set local search_path = public, extensions;
 select plan(9);
 
 select has_table('public', 'profiles', 'profiles table exists');
@@ -59,12 +61,13 @@ select lives_ok(
   'alice can update her own profile'
 );
 
+with affected as (
+  update public.profiles set display_name = 'hacked'
+   where id = '22222222-2222-2222-2222-222222222222'
+  returning 1
+)
 select is(
-  (select count(*)::int from (
-     update public.profiles set display_name = 'hacked'
-     where id = '22222222-2222-2222-2222-222222222222'
-     returning 1
-   ) as affected),
+  (select count(*)::int from affected),
   0,
   'alice cannot update bob''s profile'
 );
