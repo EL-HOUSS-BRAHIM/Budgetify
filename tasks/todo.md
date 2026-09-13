@@ -449,3 +449,123 @@ this proves the deploy path before `assistant` needs it.
 - [ ] `npm run verify` green from a clean clone
 - [ ] Reuse-ledger rows actioned in this module marked `done`
 - [ ] Review with the user, then start `SPEC-identity.md`
+
+---
+
+## Financial OS core — current product phase
+
+The earlier platform tasks remain as historical implementation evidence. These
+tasks implement the accepted product direction in `docs/DESIGN-GUIDE.md` and
+`docs/CAPABILITY-MAP.md`.
+
+## T18: Product contract and five-tab shell
+
+**State:** done
+
+**Description:** Establish the Financial OS product promise, Safe-to-Spend trust
+rules, AI authority levels, shared mobile primitives, and the visible `Home`,
+`Money`, `Plan`, `Goals`, `AI` navigation. Add a live, fixture-free Goals read.
+
+**Acceptance criteria:**
+- [x] Design guide and capability map encode the accepted direction
+- [x] Visible navigation contains exactly five product jobs
+- [x] Goals has loading, empty, error, refresh, and live-data states
+- [x] Changed mobile files pass focused lint, formatting, and typechecking
+
+**Verification:** `npx prettier --check` and `npx eslint` on changed files;
+`npm run typecheck --workspace apps/mobile`.
+
+**Dependencies:** Hosted platform foundation · **Scope:** M
+
+---
+
+## T19: Authentication and session gate
+
+**Description:** Restore persisted sessions before routing and provide sign-in,
+registration, verification, reset-password, and sign-out flows. Unauthenticated
+users cannot enter financial tabs or call AI tools.
+
+**Acceptance criteria:**
+- [ ] Cold start routes deterministically after session restoration
+- [ ] Auth forms validate input and preserve safe error messages
+- [ ] Authenticated sessions survive restart; sign-out clears local session data
+
+**Verification:** Focused auth tests, mobile typecheck, and emulator flows for new,
+returning, expired-session, and signed-out users.
+
+**Dependencies:** T18 · **Scope:** M
+
+---
+
+## T20: Safe-to-Spend domain contract
+
+**Description:** Define and test pure minor-unit math for liquid funds, reliable
+income, due obligations, committed saving, safety buffer, and forecast essentials.
+Return readiness, confidence, horizon, included inputs, and missing inputs.
+
+**Acceptance criteria:**
+- [ ] Complete inputs produce a deterministic signed amount without losing units
+- [ ] Missing required inputs return `not_ready`, never a fabricated zero
+- [ ] Mixed currencies and invalid horizons fail with typed errors
+
+**Verification:** Test-first focused core suite with boundary, negative, and
+missing-input cases; core coverage remains above the enforced threshold.
+
+**Dependencies:** T19 · **Scope:** M
+
+---
+
+## T21: Persist the financial baseline
+
+**Description:** Add the minimum user-scoped data needed by T20: safety buffer,
+income cadence/next expected income, and planning horizon. Provide a focused setup
+flow and regenerate hosted types after a forward-only migration.
+
+**Acceptance criteria:**
+- [ ] Migration is additive and every new row/field remains user-scoped under RLS
+- [ ] Setup stores integer minor units and original currency
+- [ ] Generated types match hosted schema and setup can be resumed safely
+
+**Verification:** Migration dry-run, pgTAP cross-user denial, generated-type diff,
+mobile typecheck, and emulator setup flow.
+
+**Dependencies:** T20 · **Scope:** M
+
+---
+
+## T22: Home command center
+
+**Description:** Replace dashboard fixtures with Safe-to-Spend, financial snapshot,
+attention queue, upcoming commitments, and an actual/scheduled timeline sourced
+from hosted data.
+
+**Acceptance criteria:**
+- [ ] No mock amount is presented as current user data
+- [ ] Safe-to-Spend shows horizon, confidence, provenance, and missing-input state
+- [ ] Loading, empty, error, stale/offline, refresh, and negative-shortfall states work
+
+**Verification:** Focused data-mapping tests, mobile checks, and emulator screenshots
+at light/dark 360 dp plus large text.
+
+**Dependencies:** T21 · **Scope:** M
+
+---
+
+## T23-T26: Complete the Core tabs
+
+- [ ] **T23 Money:** live accounts and transaction ledger with search and honest states
+- [ ] **T24 Plan:** live allocations, budgets, bills, commitments, and completion flow
+- [ ] **T25 Goals:** validated create/edit/contribution flows and target alternatives
+- [ ] **T26 AI:** structured action proposals, “Why?”, confirmation, result links, and undo
+
+Each task is a separate medium vertical slice with focused tests, typecheck, lint,
+and Android emulator verification. T26 depends on the domain operations from
+T23-T25 and never implements a parallel write path.
+
+## Checkpoint G — Financial OS core
+
+- [ ] Fresh-user authentication and baseline setup pass end to end
+- [ ] All five tabs use hosted user-scoped data and shared primitives
+- [ ] Safe-to-Spend is explainable and refuses incomplete calculations
+- [ ] AI Inform/Suggest/Prepare flows are reviewed; external execution is disabled
+- [ ] Full `npm run verify` and Expo compatibility checks pass

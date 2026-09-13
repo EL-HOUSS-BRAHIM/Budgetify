@@ -1,27 +1,28 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
+import { useRouter } from 'expo-router';
 import React from 'react';
-import { Text, View, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { useTheme } from '../../src/theme/ThemeProvider';
 
-function TabIcon({ name, focused }: { name: string; focused: boolean; color?: string }) {
-  // Simple icon indicator with label / symbol
-  const symbols: Record<string, string> = {
-    index: '📊',
-    budgets: '🎯',
-    expenses: '💳',
-    planning: '📝',
-    settings: '⚙️',
-  };
+function HeaderProfileButton(): React.ReactElement {
+  const router = useRouter();
+  const { colors } = useTheme();
 
   return (
-    <View style={styles.iconContainer}>
-      <Text style={[styles.iconText, { opacity: focused ? 1 : 0.65 }]}>{symbols[name] || '•'}</Text>
-    </View>
+    <Pressable
+      accessibilityLabel="Open settings"
+      hitSlop={8}
+      onPress={() => router.push('/settings')}
+      style={styles.profileButton}
+    >
+      <Ionicons name="person-circle-outline" size={28} color={colors.text.secondary} />
+    </Pressable>
   );
 }
 
 export default function TabLayout(): React.ReactElement {
-  const { colors } = useTheme();
+  const { colors, fontFamily } = useTheme();
 
   return (
     <Tabs
@@ -29,76 +30,115 @@ export default function TabLayout(): React.ReactElement {
         tabBarActiveTintColor: colors.brand.primary,
         tabBarInactiveTintColor: colors.text.tertiary,
         tabBarStyle: {
-          backgroundColor: colors.background.card,
-          borderTopColor: colors.border.default,
-          height: 64,
-          paddingBottom: 8,
-          paddingTop: 8,
+          backgroundColor: colors.background.primary,
+          borderTopColor: colors.border.subtle,
+          height: 74,
+          paddingBottom: 9,
+          paddingTop: 7,
         },
+        tabBarLabelStyle: {
+          fontFamily: fontFamily.medium,
+          fontSize: 10,
+        },
+        tabBarHideOnKeyboard: true,
         headerStyle: {
           backgroundColor: colors.background.card,
         },
+        headerShadowVisible: false,
         headerTintColor: colors.text.primary,
         headerTitleStyle: {
-          fontWeight: '700',
+          fontFamily: fontFamily.bold,
+          fontSize: 20,
         },
+        headerRight: () => <HeaderProfileButton />,
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Dashboard',
+          title: 'Home',
+          headerShown: false,
+          tabBarAccessibilityLabel: 'Home tab',
           tabBarIcon: ({ focused, color }) => (
-            <TabIcon name="index" focused={focused} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="budgets"
-        options={{
-          title: 'Budgets',
-          tabBarIcon: ({ focused, color }) => (
-            <TabIcon name="budgets" focused={focused} color={color} />
+            <Ionicons name={focused ? 'home' : 'home-outline'} size={20} color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="expenses"
         options={{
-          title: 'Expenses',
+          title: 'Money',
+          tabBarAccessibilityLabel: 'Money tab',
           tabBarIcon: ({ focused, color }) => (
-            <TabIcon name="expenses" focused={focused} color={color} />
+            <Ionicons name={focused ? 'wallet' : 'wallet-outline'} size={20} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="assistant"
+        options={{
+          title: 'AI',
+          tabBarAccessibilityLabel: 'AI assistant tab',
+          tabBarIcon: ({ focused }) => (
+            <View
+              style={[
+                styles.aiTab,
+                {
+                  backgroundColor: focused ? colors.text.primary : colors.background.tertiary,
+                  borderColor: focused ? colors.text.primary : colors.border.strong,
+                },
+              ]}
+            >
+              <Ionicons
+                name="sparkles"
+                size={18}
+                color={focused ? colors.text.inverse : colors.text.primary}
+              />
+            </View>
           ),
         }}
       />
       <Tabs.Screen
         name="planning"
         options={{
-          title: 'Planning',
+          title: 'Plan',
+          tabBarAccessibilityLabel: 'Plan tab',
           tabBarIcon: ({ focused, color }) => (
-            <TabIcon name="planning" focused={focused} color={color} />
+            <Ionicons name={focused ? 'compass' : 'compass-outline'} size={20} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="settings"
+        name="goals"
         options={{
-          title: 'Settings',
+          title: 'Goals',
+          tabBarAccessibilityLabel: 'Goals tab',
           tabBarIcon: ({ focused, color }) => (
-            <TabIcon name="settings" focused={focused} color={color} />
+            <Ionicons name={focused ? 'flag' : 'flag-outline'} size={20} color={color} />
           ),
         }}
       />
+      <Tabs.Screen name="budgets" options={{ href: null }} />
+      <Tabs.Screen name="settings" options={{ href: null }} />
     </Tabs>
   );
 }
 
 const styles = StyleSheet.create({
-  iconContainer: {
+  profileButton: {
+    width: 40,
+    height: 40,
+    marginRight: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  iconText: {
-    fontSize: 20,
+  aiTab: {
+    width: 42,
+    height: 42,
+    marginTop: -16,
+    borderRadius: 21,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

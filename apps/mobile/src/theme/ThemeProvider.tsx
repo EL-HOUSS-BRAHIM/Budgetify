@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState } from 'react';
 import { useColorScheme } from 'react-native';
 import {
   darkColors,
+  fontFamily,
   lightColors,
   radius,
   spacing,
@@ -15,6 +16,7 @@ interface ThemeContextType {
   mode: ThemeMode;
   isDark: boolean;
   colors: ColorSchemeTokens;
+  fontFamily: typeof fontFamily;
   spacing: typeof spacing;
   radius: typeof radius;
   typography: typeof typography;
@@ -26,7 +28,7 @@ const ThemeContext = createContext<ThemeContextType | null>(null);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }): React.ReactElement {
   const systemScheme = useColorScheme();
-  const [mode, setMode] = useState<ThemeMode>('system');
+  const [mode, setMode] = useState<ThemeMode>('dark');
 
   const isDark = mode === 'system' ? systemScheme === 'dark' : mode === 'dark';
   const colors = isDark ? darkColors : lightColors;
@@ -41,6 +43,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }): Reac
         mode,
         isDark,
         colors,
+        fontFamily,
         spacing,
         radius,
         typography,

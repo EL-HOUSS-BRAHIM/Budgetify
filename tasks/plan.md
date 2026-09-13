@@ -194,3 +194,74 @@ T12 make the service compile and boot ──────────────
 - Supabase type generation: https://supabase.com/docs/guides/api/rest/generating-types
 - Supabase API keys: https://supabase.com/docs/guides/api/api-keys
 - Supabase JWTs: https://supabase.com/docs/guides/auth/jwts
+
+---
+
+## Financial OS core — 2026-09-13
+
+### Goal
+
+Turn the proven Expo/Supabase foundation into the first trustworthy Financial OS
+experience: `Home`, `Money`, `Plan`, `Goals`, and `AI`, centered on an explainable
+Safe-to-Spend value rather than a renamed balance.
+
+### Architecture decisions
+
+- The five-tab shell is fixed. Detailed capabilities are secondary routes within
+    those jobs, not additional permanent tabs.
+- Safe-to-Spend is pure domain math over explicit inputs. It returns an amount,
+    horizon, confidence, included sources, and missing inputs. The UI cannot
+    substitute budget remaining or fixture data.
+- Actual, scheduled, and predicted timeline events are distinct data states.
+- UI and AI call the same validated domain operations. AI output is untrusted
+    until parsed, authorized, and reviewed.
+- AI authority progresses through Inform, Suggest, Prepare, and Execute. External
+    money movement remains out of the Core release.
+- Money is always integer minor units with its original currency. Mixed currencies
+    are never summed without an explicit conversion quote and timestamp.
+
+### Dependency graph
+
+```text
+T18 product contract + five-tab shell
+    └─ T19 authentication + session gate
+             └─ T20 Safe-to-Spend domain contract
+                        └─ T21 financial baseline persistence
+                                 └─ T22 Home command center
+                                            ├─ T23 Money hub
+                                            ├─ T24 Plan hub
+                                            ├─ T25 Goals write flow
+                                            └─ T26 AI action review
+                                                     └─ Core release checkpoint
+
+After Core: forecasting → AI Inbox → voice → automation → connected ingestion
+```
+
+### Delivery strategy
+
+Each task is a vertical slice with honest loading, empty, error, and success
+states. Domain math is test-first in `packages/core`; schema changes are forward
+migrations with pgTAP RLS coverage; mobile work is typechecked, linted, and
+verified on the Android emulator before the next screen begins.
+
+### Risks and mitigations
+
+| Risk | Impact | Mitigation |
+| --- | --- | --- |
+| Safe-to-Spend appears authoritative with incomplete inputs | Harmful financial decisions | Return readiness/confidence and missing inputs from the domain contract; render “not ready” when required data is absent |
+| AI writes a plausible but wrong action | User data corruption or money loss | Parse structured proposals, authorize server-side, require review, audit writes, and keep external transfers disabled |
+| Predicted events look like posted transactions | User cannot trust the timeline | Persist event kind and provenance; use explicit text labels in addition to styling |
+| Bank or document ingestion expands the attack surface | Sensitive-data exposure | Keep it outside Core; require a separate threat model, consent scope, provider review, and retention policy |
+| Broad screen rebuild hides regressions | Unverifiable UI | Ship one screen at a time and run focused checks plus emulator screenshots at each checkpoint |
+
+### Core release checkpoint
+
+- A fresh user can authenticate and establish currency, accounts, income cadence,
+    commitments, and a safety buffer.
+- Home either shows a sourced Safe-to-Spend value with horizon/confidence or says
+    exactly why it is not ready.
+- Money, Plan, and Goals read and write hosted user-scoped data without fixtures.
+- AI can explain state and prepare reviewed app writes; it cannot silently commit
+    ambiguous actions or initiate external money movement.
+- Light/dark, 360 dp width, large text, offline/stale, and Android emulator checks
+    pass for every primary tab.

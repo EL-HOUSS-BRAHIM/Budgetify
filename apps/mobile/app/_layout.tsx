@@ -1,16 +1,26 @@
 import {
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+  useFonts,
+} from '@expo-google-fonts/inter';
+import {
   DarkTheme,
   DefaultTheme,
   ThemeProvider as NavigationThemeProvider,
 } from '@react-navigation/native';
 import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider, useTheme } from '../src/theme/ThemeProvider';
 
+void SplashScreen.preventAutoHideAsync();
+
 function RootLayoutNav() {
-  const { isDark, colors } = useTheme();
+  const { isDark, colors, fontFamily } = useTheme();
 
   const navigationTheme = isDark
     ? {
@@ -38,11 +48,19 @@ function RootLayoutNav() {
 
   return (
     <NavigationThemeProvider value={navigationTheme}>
-      <StatusBar style={isDark ? 'light' : 'dark'} />
+      <StatusBar
+        backgroundColor={colors.background.primary}
+        style={isDark ? 'light' : 'dark'}
+        translucent={false}
+      />
       <Stack
         screenOptions={{
           headerShown: false,
           contentStyle: { backgroundColor: colors.background.primary },
+          headerStyle: { backgroundColor: colors.background.card },
+          headerTintColor: colors.text.primary,
+          headerTitleStyle: { fontFamily: fontFamily.semibold },
+          headerShadowVisible: false,
         }}
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -54,12 +72,40 @@ function RootLayoutNav() {
             title: 'Add Transaction',
           }}
         />
+        <Stack.Screen
+          name="settings"
+          options={{
+            headerShown: true,
+            title: 'Settings',
+          }}
+        />
       </Stack>
     </NavigationThemeProvider>
   );
 }
 
-export default function RootLayout(): React.ReactElement {
+export default function RootLayout(): React.ReactElement | null {
+  const [fontsLoaded, fontError] = useFonts({
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
+  });
+
+  useEffect(() => {
+    if (fontsLoaded || fontError) {
+      void SplashScreen.hideAsync();
+    }
+  }, [fontError, fontsLoaded]);
+
+  if (!fontsLoaded && !fontError) {
+    return null;
+  }
+
+  if (fontError) {
+    throw fontError;
+  }
+
   return (
     <SafeAreaProvider>
       <ThemeProvider>

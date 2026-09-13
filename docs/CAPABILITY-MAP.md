@@ -1,6 +1,7 @@
 # Capability Map: Budgetify Mobile
 
-Status: **proposed** — awaiting sign-off before any module spec is written.
+Status: **accepted product direction** — revised for the Financial OS vision on
+2026-09-13. Individual module specs still require review before implementation.
 
 The rebuild bundles many independently testable capabilities. Each row below is a
 module with a stable kebab-case id. Ids are chosen once and never renamed; specs,
@@ -11,18 +12,23 @@ plans and tasks select work by id, so `SPEC-ledger.md` is always the ledger spec
 | Module id | Responsibility | Depends on | Release |
 |---|---|---|---|
 | `platform-foundation` | Monorepo, Expo app shell, TypeScript config, design tokens, navigation skeleton, CI, Supabase project + migration tooling | — | V1 |
-| `identity` | Supabase Auth: email/password, Google and Facebook OAuth, session persistence, biometric unlock, RLS base policies | `platform-foundation` | V1 |
-| `consent-onboarding` | First-run flow, GDPR consent capture, privacy/terms acceptance, data-rights surface (export + erase), currency/locale setup | `identity` | V1 |
-| `ledger` | Accounts, categories, transactions. The single source of truth for money movement. Every other money feature reads from here. | `identity` | V1 |
-| `budgeting` | Monthly per-category budgets, period math, spent/remaining/over-budget derivation | `ledger` | V1 |
-| `notifications` | Expo push tokens, budget-threshold and bill-due alerts, quiet hours, per-channel preferences | `ledger`, `budgeting` | V1 |
-| `planning` | Planned items and recurring bills with due dates; mark done/undone; completing a planned item materialises a transaction in `ledger` | `budgeting` | V2 |
-| `sheet-view` | Spreadsheet-style editable grid over budget lines and transactions — keyboard/gesture cell editing, bulk edit, column sort | `budgeting`, `ledger` | V2 |
-| `assistant` | Voice + text chatbot. On-device STT → LLM tool-calling → TTS. Tools are thin wrappers over the other modules' public operations. | `ledger`, `budgeting`, `planning` | V2 |
-| `insights` | Reports, charts, trends, month-over-month comparison, PDF share | `ledger`, `budgeting` | V3 |
-| `goals` | Savings goals with target amount, deadline, contribution tracking | `ledger` | V3 |
-| `data-io` | CSV/XLSX import of bank statements with column mapping, and export of reports | `ledger` | V3 |
-| `offline-sync` | Local-first cache, optimistic writes, conflict resolution, background sync | `ledger` | V3 |
+| `identity` | Supabase Auth, session persistence, device security, and RLS identity boundary | `platform-foundation` | Core |
+| `consent-onboarding` | First-run profile, currency, safety buffer, income cadence, consent, privacy controls, export, and erase | `identity` | Core |
+| `ledger` | Accounts, cash, categories, and transactions: the single source of truth for money movement | `identity` | Core |
+| `budgeting` | Category allocations, period math, spending pace, and adaptive adjustment proposals | `ledger` | Core |
+| `planning` | Bills, subscriptions, planned purchases, recurring commitments, salary allocation, and completion state | `ledger`, `budgeting` | Core |
+| `goals` | Savings goals, contribution plans, milestones, and target-date alternatives | `ledger` | Core |
+| `financial-intelligence` | Safe-to-Spend, affordability, financial health, anomaly detection, and explainable recommendations | `ledger`, `budgeting`, `planning`, `goals` | Core |
+| `assistant` | Context-aware text and voice orchestration. Tools call reviewed domain operations and return action proposals. | `ledger`, `budgeting`, `planning`, `goals`, `financial-intelligence` | Core |
+| `forecasting` | Future timeline, projected balances, confidence, cash-flow risks, and What If scenarios | `ledger`, `planning`, `goals`, `financial-intelligence` | Intelligence |
+| `automation` | Opt-in natural-language rules, recurring categorization, reminders, prepared actions, approvals, undo, and audit history | `ledger`, `planning`, `financial-intelligence` | Intelligence |
+| `notifications` | AI Inbox, push tokens, decision queues, budget and bill alerts, quiet hours, and preferences | `financial-intelligence`, `automation` | Intelligence |
+| `insights` | Explainable trends, money-leak detection, monthly reports, comparisons, and report export | `financial-intelligence`, `forecasting` | Intelligence |
+| `data-io` | CSV/XLSX import, receipt scanning, document extraction, report export, and read-only bank ingestion | `ledger`, `consent-onboarding` | Connected |
+| `shared-finance` | Households, member permissions, shared obligations, reimbursements, and AI-assisted splits | `identity`, `ledger` | Connected |
+| `payment-execution` | Provider-backed transfers and bill payment with step-up authorization, idempotency, and audit controls | `identity`, `automation`, `data-io` | Later |
+| `offline-sync` | Local-first cache, optimistic writes, conflict resolution, and background sync | `ledger` | Later |
+| `sheet-view` | Optional dense editable grid for power users; not part of primary mobile navigation | `budgeting`, `ledger` | Later |
 
 ## Dependency graph
 
@@ -32,56 +38,88 @@ graph TD
     ID --> CO[consent-onboarding]
     ID --> LG[ledger]
     LG --> BG[budgeting]
-    BG --> NT[notifications]
-    LG --> NT
     BG --> PL[planning]
-    BG --> SV[sheet-view]
-    LG --> SV
-    PL --> AS[assistant]
-    BG --> AS
-    LG --> AS
-    LG --> IN[insights]
-    BG --> IN
     LG --> GL[goals]
+     LG --> FI[financial-intelligence]
+     BG --> FI
+     PL --> FI
+     GL --> FI
+     FI --> AS[assistant]
+     LG --> AS
+     BG --> AS
+     PL --> AS
+     GL --> AS
+     FI --> FC[forecasting]
+     LG --> FC
+     PL --> FC
+     GL --> FC
+     FI --> AU[automation]
+     LG --> AU
+     PL --> AU
+     FI --> NT[notifications]
+     AU --> NT
+     FI --> IN[insights]
+     FC --> IN
+     CO --> IO[data-io]
     LG --> IO[data-io]
+     ID --> SF[shared-finance]
+     LG --> SF
+     ID --> PE[payment-execution]
+     AU --> PE
+     IO --> PE
     LG --> OS[offline-sync]
+     BG --> SV[sheet-view]
+     LG --> SV
 ```
 
-No cycles. `assistant` depends on the money modules and never the reverse — the
-chatbot is a client of domain operations, not a participant in them. This is the
-load-bearing constraint of the whole design: if the assistant is ever allowed to
-write to Postgres directly, its tool surface and the app's business rules drift
-apart and the two disagree about what a valid budget is.
+No cycles. `assistant` depends on the money modules and never the reverse. The AI
+is a client and orchestrator of domain operations, not an alternative financial
+system. If it writes to Postgres directly, bypasses the approval model, or owns a
+second implementation of financial math, the product becomes untrustworthy.
 
 ## Build order
 
 ```
 platform-foundation
-  └─ identity
-       ├─ consent-onboarding
+  └─ identity + consent-onboarding
        └─ ledger
-            └─ budgeting
-                 └─ notifications          ← V1 ships here
-                      ├─ planning
-                      │    └─ assistant
-                      └─ sheet-view        ← V2 ships here
-                           ├─ insights
-                           ├─ goals
-                           ├─ data-io
-                           └─ offline-sync ← V3
+            ├─ budgeting
+            ├─ planning
+            └─ goals
+                 └─ financial-intelligence
+                      ├─ assistant          ← Core experience
+                      ├─ forecasting
+                      └─ automation
+                           ├─ notifications
+                           └─ insights      ← Intelligence experience
+                                ├─ data-io
+                                └─ shared-finance
+                                     ├─ payment-execution
+                                     ├─ offline-sync
+                                     └─ sheet-view
 ```
 
-`consent-onboarding` and `ledger` can be built in parallel once `identity` lands.
-`insights`, `goals`, `data-io` and `offline-sync` are mutually independent.
+After `ledger`, budgeting, planning, and goals can advance as separate vertical
+slices. Forecasting and automation remain separate from assistant presentation,
+so their calculations and authorization rules can be tested without an LLM.
 
 ## Scope boundaries
 
-V1 is defined as: a user can sign up, consent, add accounts and categories,
-record transactions, set monthly budgets, and get pushed when a budget is
-breached. Anything not on that list is out of V1 — including the assistant.
+The **Core experience** is complete when a user can authenticate, establish
+accounts and preferences, record money movement, maintain plans and goals, see a
+truthful Safe-to-Spend state, and use text AI to understand or prepare those same
+operations for review.
 
-The assistant is the headline feature, so V1 must not architecturally preclude
-it. The mitigation is that every V1 domain operation is written as a pure,
-callable function in `packages/core` with an explicit input schema. When
-`assistant` is built, its tool definitions are generated from those same schemas
-rather than hand-written a second time.
+The **Intelligence experience** adds recurring detection, future timeline,
+forecasting, financial health, voice input, adaptive proposals, automations,
+Inbox, and explainable reports.
+
+The **Connected experience** adds read-only financial ingestion, receipt and
+document understanding, and shared finances. External money movement remains a
+separate Later capability and cannot be implied by an in-app automation.
+
+Every domain operation is a typed, validated operation shared by UI and AI.
+Financial recommendations show their inputs and confidence. Writes are
+user-scoped under RLS, prepared actions require review, external money movement
+requires explicit authenticated approval, and all reversible actions expose an
+undo path.
