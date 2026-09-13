@@ -102,6 +102,7 @@ export default function TabLayout(): React.ReactElement {
         name="planning"
         options={{
           title: 'Plan',
+          headerShown: false,
           tabBarAccessibilityLabel: 'Plan tab',
           tabBarIcon: ({ focused, color }) => (
             <Ionicons name={focused ? 'compass' : 'compass-outline'} size={20} color={color} />
