@@ -13,7 +13,7 @@ export interface HomeTimelineEntry {
   amount: number;
   currency: string;
   direction: 'income' | 'expense';
-  state: 'settled' | 'queued' | 'automated';
+  state: 'settled' | 'queued' | 'automated' | 'direct_debit' | string;
   projected: boolean;
 }
 
@@ -51,7 +51,7 @@ interface HomeDataState {
 const previewModel: HomeViewModel = {
   status: 'preview',
   displayName: 'Brahim',
-  locationLabel: 'Design preview · sample data',
+  locationLabel: 'Liquidity synced · Casablanca, 21:14',
   currency: 'MAD',
   safeToSpend: 116000,
   safeToSpendLabel: 'Safe-to-Spend',
@@ -62,10 +62,11 @@ const previewModel: HomeViewModel = {
   savings: 120000,
   healthScore: 82,
   healthInsight:
-    'Spending is 8% below your monthly average, and you have achieved 70% of your active motorcycle savings reserve.',
+    "Spending is 8% below your monthly average, and you've achieved 70% of your active motorcycle savings reserve.",
   inboxItem: {
     title: 'Netflix subscription price increase',
-    detail: 'Rate adjusts from 98 MAD to 120 MAD starting next billing cycle.',
+    detail:
+      'Auto-detected notice: rate adjusts from 98 MAD to 120 MAD starting next billing cycle (Sep 15).',
   },
   timeline: [
     {
@@ -98,13 +99,13 @@ const previewModel: HomeViewModel = {
       amount: 19900,
       currency: 'MAD',
       direction: 'expense',
-      state: 'automated',
+      state: 'direct_debit',
       projected: true,
     },
     {
       id: 'preview-goal',
       title: 'Auto-Transfer: Moto Goal',
-      subtitle: 'Goal · Smart Vault Reserve',
+      subtitle: 'Smart Vault Reserve',
       dateLabel: 'Sep 24',
       amount: 80000,
       currency: 'MAD',

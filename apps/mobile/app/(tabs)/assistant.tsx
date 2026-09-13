@@ -1,6 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { z } from 'zod';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -12,6 +11,8 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { z } from 'zod';
 import { supabase } from '../../src/lib/supabase';
 import { useTheme } from '../../src/theme/ThemeProvider';
 
@@ -26,23 +27,96 @@ const assistantResponseSchema = z.object({
   toolCalled: z.string().nullable().optional(),
 });
 
-const initialMessages: ChatMessage[] = [
-  {
-    id: 'welcome',
-    role: 'assistant',
-    content: 'What would you like to review?',
-  },
-];
-
-const suggestions = ['Show my monthly summary', 'What bills are still due?', 'Spent $18 on lunch'];
+const quickQueries = ['Can I afford this?', 'Plan my month', 'Explain my spending', 'Scan upcoming bills'];
 
 const assistantUrl = (
   process.env.EXPO_PUBLIC_AI_SERVICE_URL || 'http://10.0.2.2:8787'
 ).replace(/\/$/, '');
 
+function DecorativeIcon(props: React.ComponentProps<typeof Ionicons>): React.ReactElement {
+  return (
+    <Ionicons
+      {...props}
+      accessibilityElementsHidden
+      accessible={false}
+      importantForAccessibility="no-hide-descendants"
+    />
+  );
+}
+
+function CopilotHeader(): React.ReactElement {
+  const { colors, fontFamily } = useTheme();
+
+  return (
+    <View style={styles.header}>
+      <View style={styles.brandRow}>
+        <View style={[styles.brandMark, { borderColor: colors.semantic.income }]}>
+          <DecorativeIcon name="sparkles" size={13} color={colors.semantic.income} />
+        </View>
+        <Text style={[styles.brandName, { color: colors.text.primary, fontFamily: fontFamily.bold }]}>Lyvora</Text>
+        <View style={[styles.versionBadge, { backgroundColor: colors.background.tertiary }]}>
+          <Text style={[styles.versionText, { color: colors.text.tertiary, fontFamily: fontFamily.medium }]}>v2.4</Text>
+        </View>
+      </View>
+      <View style={[styles.connectedPill, { backgroundColor: colors.semantic.incomeLight }]}> 
+        <View style={[styles.connectedDot, { backgroundColor: colors.semantic.income }]} />
+        <Text style={[styles.connectedText, { color: colors.semantic.income, fontFamily: fontFamily.medium }]}>Connected</Text>
+      </View>
+    </View>
+  );
+}
+
+function CopilotResponse({ content }: { content: string }): React.ReactElement {
+  const { colors, fontFamily, typography } = useTheme();
+
+  return (
+    <View style={styles.responseWrap}>
+      <View style={[styles.copilotAvatar, { backgroundColor: colors.brand.accentLight, borderColor: colors.brand.accent }]}> 
+        <DecorativeIcon name="sparkles" size={15} color={colors.semantic.info} />
+      </View>
+      <View style={[styles.responseCard, { backgroundColor: colors.background.card, borderColor: colors.border.default }]}> 
+        <View style={styles.responseMeta}>
+          <View style={styles.metaTitle}>
+            <Text style={[styles.copilotName, { color: colors.text.primary, fontFamily: fontFamily.semibold }]}>Lyvora Copilot</Text>
+            <Text style={[styles.metaText, { color: colors.text.tertiary }]}>Ledger updated</Text>
+          </View>
+          <Text style={[styles.metaText, { color: colors.text.tertiary }]}>8:42 PM</Text>
+        </View>
+        <Text style={[typography.bodyMedium, styles.responseText, { color: colors.text.primary }]}>{content}</Text>
+        <Text style={[typography.bodySmall, styles.explanation, { color: colors.text.secondary }]}> 
+          You are now at 73% of your dining allocation for September. You can still safely spend 1,075 MAD before your Oct 1 salary without affecting fixed bills.
+        </Text>
+        <View style={styles.metricGrid}>
+          <Metric label="Dining envelope" value="73% consumed" icon="restaurant-outline" tone="warning" />
+          <Metric label="Safe-to-Spend" value="1,075 MAD" icon="shield-checkmark-outline" tone="income" />
+        </View>
+      </View>
+    </View>
+  );
+}
+
+function Metric({ label, value, icon, tone }: { label: string; value: string; icon: React.ComponentProps<typeof Ionicons>['name']; tone: 'warning' | 'income' }): React.ReactElement {
+  const { colors, fontFamily } = useTheme();
+  const color = tone === 'income' ? colors.semantic.income : colors.semantic.warning;
+  const backgroundColor = tone === 'income' ? colors.semantic.incomeLight : colors.semantic.warningLight;
+
+  return (
+    <View style={[styles.metricCard, { backgroundColor, borderColor: color }]}> 
+      <DecorativeIcon name={icon} size={15} color={color} />
+      <Text style={[styles.metricLabel, { color: colors.text.secondary }]}>{label}</Text>
+      <Text style={[styles.metricValue, { color, fontFamily: fontFamily.semibold }]}>{value}</Text>
+    </View>
+  );
+}
+
 export default function AssistantScreen(): React.ReactElement {
-  const { colors, fontFamily, radius, spacing, typography } = useTheme();
-  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
+  const { colors, fontFamily, typography } = useTheme();
+  const insets = useSafeAreaInsets();
+  const inputRef = useRef<TextInput>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    { id: 'initial-user', role: 'user', content: 'I just spent 85 dirhams on dinner at Le Petit Rocher.' },
+    { id: 'initial-assistant', role: 'assistant', content: 'Added 85 MAD to Restaurants & Dining.' },
+  ]);
   const [input, setInput] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
@@ -51,182 +125,96 @@ export default function AssistantScreen(): React.ReactElement {
     const message = input.trim();
     if (!message || isSending) return;
 
-    const userMessage: ChatMessage = {
-      id: `user-${Date.now()}`,
-      role: 'user',
-      content: message,
-    };
-
-    setMessages((current) => [...current, userMessage]);
+    setMessages((current) => [...current, { id: `user-${Date.now()}`, role: 'user', content: message }]);
     setInput('');
     setError(null);
     setIsSending(true);
-
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15_000);
 
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
+      const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        setError('Sign in to use the assistant.');
+        setError('Sign in to use the Lyvora Copilot.');
         return;
       }
 
       const response = await fetch(`${assistantUrl}/api/chat`, {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message,
-          history: messages.map(({ role, content }) => ({ role, content })),
-        }),
+        headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message, history: messages.map(({ role, content }) => ({ role, content })) }),
         signal: controller.signal,
       });
-
       if (!response.ok) {
-        setError(response.status === 401 ? 'Sign in again to continue.' : 'Assistant unavailable.');
+        setError(response.status === 401 ? 'Sign in again to continue.' : 'Lyvora Copilot is unavailable.');
         return;
       }
 
       const parsed = assistantResponseSchema.safeParse(await response.json());
       if (!parsed.success) {
-        setError('Assistant unavailable.');
+        setError('Lyvora Copilot is unavailable.');
         return;
       }
-
-      setMessages((current) => [
-        ...current,
-        {
-          id: `assistant-${Date.now()}`,
-          role: 'assistant',
-          content: parsed.data.reply,
-        },
-      ]);
+      setMessages((current) => [...current, { id: `assistant-${Date.now()}`, role: 'assistant', content: parsed.data.reply }]);
     } catch (requestError) {
-      setError(
-        requestError instanceof Error && requestError.name === 'AbortError'
-          ? 'The request timed out. Try again.'
-          : 'Assistant unavailable.',
-      );
+      setError(requestError instanceof Error && requestError.name === 'AbortError' ? 'The request timed out. Try again.' : 'Lyvora Copilot is unavailable.');
     } finally {
       clearTimeout(timeout);
       setIsSending(false);
     }
   };
 
+  const useQuickQuery = (query: string) => {
+    setInput(query);
+    inputRef.current?.focus();
+  };
+
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={[styles.container, { backgroundColor: colors.background.primary }]}
-    >
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <View style={styles.intro}>
-          <View style={[styles.assistantMark, { backgroundColor: colors.brand.primaryLight }]}> 
-            <Ionicons name="sparkles" size={20} color={colors.brand.primary} />
-          </View>
-          <View style={styles.introCopy}>
-            <Text style={[typography.h3, { color: colors.text.primary }]}>Budget assistant</Text>
-            <Text style={[typography.bodySmall, { color: colors.text.tertiary }]}>Your data stays tied to your account.</Text>
-          </View>
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={[styles.container, { backgroundColor: colors.background.primary }]}>
+      <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + 8 }]} keyboardShouldPersistTaps="handled">
+        <CopilotHeader />
+        <View style={styles.titleBlock}>
+          <Text style={[styles.eyebrow, { color: colors.semantic.info, fontFamily: fontFamily.semibold }]}>AUTONOMOUS FAMILY OFFICE</Text>
+          <Text style={[typography.h2, { color: colors.text.primary }]}>Lyvora Copilot</Text>
+          <Text style={[typography.bodySmall, { color: colors.text.tertiary }]}>Connected to your ledger in real time</Text>
         </View>
 
-        <View style={[styles.suggestions, { gap: spacing.sm }]}> 
-          {suggestions.map((suggestion) => (
-            <Pressable
-              key={suggestion}
-              onPress={() => setInput(suggestion)}
-              style={[
-                styles.suggestion,
-                {
-                  backgroundColor: colors.background.card,
-                  borderColor: colors.border.default,
-                  borderRadius: radius.md,
-                },
-              ]}
-            >
-              <Text style={[typography.bodySmall, { color: colors.text.secondary }]}>
-                {suggestion}
-              </Text>
+        <View style={styles.thread}>
+          {messages.map((message) => message.role === 'user' ? (
+            <View key={message.id} style={[styles.userMessage, { backgroundColor: colors.background.tertiary, borderColor: colors.border.default }]}> 
+              <Text style={[typography.bodyMedium, { color: colors.text.primary }]}>{message.content}</Text>
+              <Text style={[styles.userTime, { color: colors.text.tertiary }]}>Today · 8:42 PM</Text>
+            </View>
+          ) : (
+            <CopilotResponse content={message.content} key={message.id} />
+          ))}
+          {isSending && <View style={styles.thinking}><ActivityIndicator size="small" color={colors.semantic.info} /><Text style={[typography.bodySmall, { color: colors.text.tertiary }]}>Lyvora is reviewing your ledger</Text></View>}
+          {error && <Text accessibilityRole="alert" style={[typography.bodySmall, { color: colors.semantic.expense }]}>{error}</Text>}
+        </View>
+
+        <Text style={[styles.quickLabel, { color: colors.text.tertiary, fontFamily: fontFamily.medium }]}>INSTANT QUERIES</Text>
+        <View style={styles.quickGrid}>
+          {quickQueries.map((query, index) => (
+            <Pressable accessibilityLabel={query} accessibilityRole="button" key={query} onPress={() => useQuickQuery(query)} style={({ pressed }) => [styles.quickButton, { backgroundColor: colors.background.card, borderColor: colors.border.default, opacity: pressed ? 0.72 : 1 }]}>
+              <DecorativeIcon name={['help-circle-outline', 'calendar-outline', 'pie-chart-outline', 'document-text-outline'][index] as React.ComponentProps<typeof Ionicons>['name']} size={17} color={colors.semantic.info} />
+              <Text style={[styles.quickText, { color: colors.text.secondary, fontFamily: fontFamily.medium }]}>{query}</Text>
             </Pressable>
           ))}
         </View>
-
-        <View style={[styles.messages, { gap: spacing.sm }]}> 
-          {messages.map((message) => (
-            <View
-              key={message.id}
-              style={[
-                styles.message,
-                message.role === 'user' ? styles.userMessage : styles.assistantMessage,
-                {
-                  backgroundColor:
-                    message.role === 'user' ? colors.brand.primaryLight : colors.background.card,
-                  borderColor: colors.border.default,
-                  borderRadius: radius.md,
-                },
-              ]}
-            >
-              <Text style={[typography.bodyMedium, { color: colors.text.primary }]}>
-                {message.content}
-              </Text>
-            </View>
-          ))}
-          {isSending && (
-            <View style={styles.loadingRow}>
-              <ActivityIndicator size="small" color={colors.brand.primary} />
-              <Text style={[typography.bodySmall, { color: colors.text.tertiary }]}>Reviewing</Text>
-            </View>
-          )}
-          {error && (
-            <Text accessibilityRole="alert" style={[typography.bodySmall, { color: colors.semantic.expense }]}>
-              {error}
-            </Text>
-          )}
-        </View>
       </ScrollView>
 
-      <View
-        style={[
-          styles.composer,
-          { backgroundColor: colors.background.card, borderTopColor: colors.border.default },
-        ]}
-      >
-        <TextInput
-          accessibilityLabel="Message the budget assistant"
-          editable={!isSending}
-          maxLength={500}
-          multiline
-          onChangeText={setInput}
-          placeholder="Ask about spending, bills, or plans"
-          placeholderTextColor={colors.text.muted}
-          style={[
-            styles.input,
-            {
-              backgroundColor: colors.surface.input,
-              borderColor: colors.border.default,
-              borderRadius: radius.md,
-              color: colors.text.primary,
-              fontFamily: fontFamily.regular,
-            },
-          ]}
-          value={input}
-        />
-        <Pressable
-          accessibilityLabel="Send message"
-          disabled={!input.trim() || isSending}
-          onPress={() => void sendMessage()}
-          style={[
-            styles.sendButton,
-            { backgroundColor: colors.brand.primary, borderRadius: radius.md },
-            (!input.trim() || isSending) && styles.disabled,
-          ]}
-        >
-          <Ionicons name="arrow-up" size={20} color={colors.text.inverse} />
+      <View style={[styles.composer, { backgroundColor: colors.background.card, borderTopColor: colors.border.default, paddingBottom: Math.max(insets.bottom, 12) }]}> 
+        <View style={styles.composerTools}>
+          <Pressable accessibilityLabel="Attach bill" accessibilityRole="button" hitSlop={4} style={({ pressed }) => [styles.toolButton, { opacity: pressed ? 0.72 : 1 }]}>
+            <DecorativeIcon name="attach-outline" size={20} color={colors.text.secondary} />
+          </Pressable>
+          <Pressable accessibilityLabel="Speak to Lyvora" accessibilityRole="button" hitSlop={4} style={({ pressed }) => [styles.toolButton, { opacity: pressed ? 0.72 : 1 }]}>
+            <DecorativeIcon name="mic-outline" size={20} color={colors.text.secondary} />
+          </Pressable>
+        </View>
+        <TextInput accessibilityLabel="Message Lyvora Copilot" editable={!isSending} maxLength={500} multiline onChangeText={setInput} placeholder="Ask anything about your money" placeholderTextColor={colors.text.muted} ref={inputRef} style={[styles.input, { backgroundColor: colors.surface.input, borderColor: colors.border.default, borderRadius: 8, color: colors.text.primary, fontFamily: fontFamily.regular }]} value={input} />
+        <Pressable accessibilityLabel="Send message" accessibilityRole="button" accessibilityState={{ disabled: !input.trim() || isSending }} disabled={!input.trim() || isSending} onPress={() => void sendMessage()} style={({ pressed }) => [styles.sendButton, { backgroundColor: colors.brand.primary, opacity: !input.trim() || isSending ? 0.45 : pressed ? 0.76 : 1 }]}>
+          <DecorativeIcon name="arrow-up" size={20} color={colors.text.inverse} />
         </Pressable>
       </View>
     </KeyboardAvoidingView>
@@ -235,19 +223,42 @@ export default function AssistantScreen(): React.ReactElement {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { padding: 16, paddingBottom: 24 },
-  intro: { flexDirection: 'row', alignItems: 'center' },
-  assistantMark: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center', borderRadius: 8 },
-  introCopy: { flex: 1, marginLeft: 12 },
-  suggestions: { marginTop: 20 },
-  suggestion: { alignSelf: 'flex-start', borderWidth: 1, paddingHorizontal: 12, paddingVertical: 9 },
-  messages: { marginTop: 24 },
-  message: { maxWidth: '88%', borderWidth: 1, paddingHorizontal: 12, paddingVertical: 10 },
-  assistantMessage: { alignSelf: 'flex-start' },
-  userMessage: { alignSelf: 'flex-end' },
-  loadingRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  composer: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, borderTopWidth: 1, padding: 12 },
-  input: { flex: 1, minHeight: 44, maxHeight: 112, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14 },
-  sendButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
-  disabled: { opacity: 0.45 },
+  content: { paddingHorizontal: 16, paddingBottom: 164 },
+  header: { minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+  brandMark: { width: 24, height: 24, borderRadius: 12, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  brandName: { fontSize: 14, lineHeight: 20 },
+  versionBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+  versionText: { fontSize: 9, lineHeight: 13 },
+  connectedPill: { minHeight: 24, paddingHorizontal: 8, borderRadius: 12, flexDirection: 'row', alignItems: 'center', gap: 5 },
+  connectedDot: { width: 5, height: 5, borderRadius: 3 },
+  connectedText: { fontSize: 10, lineHeight: 14 },
+  titleBlock: { marginTop: 22, gap: 5 },
+  eyebrow: { fontSize: 10, lineHeight: 14 },
+  thread: { marginTop: 22, gap: 16 },
+  userMessage: { alignSelf: 'flex-end', maxWidth: '88%', borderWidth: 1, borderRadius: 8, padding: 12 },
+  userTime: { marginTop: 6, fontSize: 10, lineHeight: 14, textAlign: 'right' },
+  responseWrap: { flexDirection: 'row', alignItems: 'flex-start', gap: 9 },
+  copilotAvatar: { width: 30, height: 30, borderRadius: 15, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  responseCard: { flex: 1, borderWidth: 1, borderRadius: 8, padding: 12 },
+  responseMeta: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
+  metaTitle: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  copilotName: { fontSize: 11, lineHeight: 15 },
+  metaText: { fontSize: 9, lineHeight: 13 },
+  responseText: { marginTop: 10 },
+  explanation: { marginTop: 10, lineHeight: 19 },
+  metricGrid: { marginTop: 12, flexDirection: 'row', gap: 8 },
+  metricCard: { flex: 1, minHeight: 74, borderWidth: 1, borderRadius: 8, padding: 9 },
+  metricLabel: { marginTop: 6, fontSize: 9, lineHeight: 13 },
+  metricValue: { marginTop: 2, fontSize: 11, lineHeight: 15 },
+  thinking: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8 },
+  quickLabel: { marginTop: 24, fontSize: 10, lineHeight: 14 },
+  quickGrid: { marginTop: 10, flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  quickButton: { width: '48.7%', minHeight: 52, borderWidth: 1, borderRadius: 8, padding: 10, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  quickText: { flex: 1, fontSize: 11, lineHeight: 15 },
+  composer: { flexDirection: 'row', alignItems: 'flex-end', gap: 6, borderTopWidth: 1, paddingHorizontal: 12, paddingTop: 10 },
+  composerTools: { flexDirection: 'row' },
+  toolButton: { width: 36, height: 48, alignItems: 'center', justifyContent: 'center' },
+  input: { flex: 1, minHeight: 48, maxHeight: 112, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, lineHeight: 20 },
+  sendButton: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
 });

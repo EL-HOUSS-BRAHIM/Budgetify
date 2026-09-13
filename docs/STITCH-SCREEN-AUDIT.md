@@ -1,6 +1,8 @@
-# Stitch Screen Implementation Audit
+# Lyvora Stitch Screen Implementation Audit
 
-Source project: `Aura Financial Operating System`
+Product: `Lyvora`
+
+Source design project: `Aura Financial Operating System`
 
 Stitch project: `2349903989313938975`
 
@@ -10,9 +12,9 @@ an accessibility/state audit. Preview data must always be visibly labeled.
 
 | Order | Stitch screen                     | Screen id                          | Intended app route     | Status         |
 | ----- | --------------------------------- | ---------------------------------- | ---------------------- | -------------- |
-| 1     | Home Command Center               | `36ae6e063f4d40b7a5224d55a46aac1e` | `/(tabs)`              | in progress    |
+| 1     | Home Command Center               | `36ae6e063f4d40b7a5224d55a46aac1e` | `/(tabs)`              | finished       |
 | 2     | Money & Net Worth                 | `40843dfb2ec94ce09a8e98f8b17787be` | `/(tabs)/expenses`     | existing route |
-| 3     | AI Assistant Copilot              | `c1ebf1f50bb445608868d67e176ab9cf` | `/(tabs)/assistant`    | existing route |
+| 3     | AI Assistant Copilot              | `c1ebf1f50bb445608868d67e176ab9cf` | `/(tabs)/assistant`    | in progress    |
 | 4     | Plan & Adaptive Budgeting         | `d1c7b9b7c95e4d86a788d576b2c561f4` | `/(tabs)/planning`     | existing route |
 | 5     | Goals & What-If Simulator         | `791f50a241a948799589dd4dc5cee56a` | `/(tabs)/goals`        | existing route |
 | 6     | Financial Forecast Calendar       | `6b09ce157a4545559c30b623d8d582ed` | `/forecast`            | scaffolded     |
@@ -38,12 +40,13 @@ an accessibility/state audit. Preview data must always be visibly labeled.
 
 ## Shared Assets
 
+- Lyvora app icon: Stitch screen `45642d44dcfc45baa6f196e933126123`
 - Aura OS logo: Stitch screen `a39914f30cce43d5b2118be726ef8acd`
 - Profile portrait: Stitch screen `0855857b35144adb9dd786842409f9bc`
 
 ## Navigation Decision
 
-The five primary mobile tabs remain Home, Money, AI, Plan, and Goals. New
+The five primary Lyvora mobile tabs remain Home, Money, AI, Plan, and Goals. New
 screens are contextual routes, settings, or platform references and must not
 be added as extra bottom tabs. Their intended routes above make them available
 for implementation, deep linking, and future navigation entry points.
@@ -52,6 +55,22 @@ for implementation, deep linking, and future navigation entry points.
 
 Evidence is appended screen by screen. Failed or partial checks remain visible;
 they are not converted to completion claims.
+
+### 1. Home Command Center - finished 2026-09-13
+
+- Implementation: typed Supabase Home data boundary supports preview, live,
+  loading, empty, refresh, and error states. Preview data is visibly labeled;
+  Safe-to-Spend is withheld until live safety inputs are available.
+- Stitch comparison: matched the source hierarchy for the Safe-to-Spend card,
+  Financial Health insight, AI Inbox, Continuum Timeline, forecast, quick
+  actions, and five-item navigation. The source `Aura` wordmark is intentionally
+  replaced with the approved Lyvora product name and icon.
+- Android emulator: rendered at native 411 dp width with normal font scale;
+  verified full scroll reachability and fixed-tab-bar clearance.
+- Accessibility: Android UI hierarchy confirms named controls and 48 dp or
+  larger targets; preview-only approval is disabled semantically and visibly.
+- Static checks: mobile TypeScript, focused ESLint, Expo config resolution, and
+  Prettier passed. No React Native JavaScript errors were reported after render.
 
 ### Scaffold Coverage - 2026-09-13
 

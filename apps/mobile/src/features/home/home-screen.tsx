@@ -29,21 +29,21 @@ function formatAmount(amount: number, currency: string, signed = false): string 
   });
 }
 
-interface AuraHeaderProps {
+interface LyvoraHeaderProps {
   displayName: string;
   locationLabel: string;
   onInboxPress: () => void;
   onProfilePress: () => void;
 }
 
-function AuraHeader({
+function LyvoraHeader({
   displayName,
   locationLabel,
   onInboxPress,
   onProfilePress,
-}: AuraHeaderProps): React.ReactElement {
+}: LyvoraHeaderProps): React.ReactElement {
   const { colors, fontFamily, typography } = useTheme();
-  const avatarLabel = displayName.trim().charAt(0).toUpperCase() || '?';
+  const avatarLabel = displayName.trim().charAt(0).toUpperCase() || 'B';
 
   return (
     <View>
@@ -55,14 +55,19 @@ function AuraHeader({
           <Text
             style={[styles.brandName, { color: colors.text.primary, fontFamily: fontFamily.bold }]}
           >
-            Aura
+            Lyvora
+          </Text>
+          <Text
+            style={[styles.brandSub, { color: colors.text.tertiary, fontFamily: fontFamily.regular }]}
+          >
+            | Home
           </Text>
         </View>
         <View style={styles.headerActions}>
           <Pressable
             accessibilityLabel="Open AI Inbox"
             accessibilityRole="button"
-            hitSlop={4}
+            hitSlop={6}
             onPress={onInboxPress}
             style={({ pressed }) => [
               styles.headerIconButton,
@@ -71,7 +76,7 @@ function AuraHeader({
           >
             <DecorativeIcon
               name="notifications-outline"
-              size={18}
+              size={19}
               color={colors.text.secondary}
             />
             <View style={[styles.notificationDot, { backgroundColor: colors.semantic.info }]} />
@@ -79,7 +84,7 @@ function AuraHeader({
           <Pressable
             accessibilityLabel="Open profile and settings"
             accessibilityRole="button"
-            hitSlop={4}
+            hitSlop={6}
             onPress={onProfilePress}
             style={({ pressed }) => [
               styles.avatar,
@@ -104,9 +109,12 @@ function AuraHeader({
 
       <View style={styles.greetingRow}>
         <View style={styles.greetingCopy}>
-          <Text style={[typography.h3, { color: colors.text.primary }]}>
-            Good evening, {displayName}
-          </Text>
+          <View style={styles.greetingTitleRow}>
+            <Text style={[typography.h3, { color: colors.text.primary, fontFamily: fontFamily.bold }]}>
+              Good evening, {displayName}
+            </Text>
+            <Text style={styles.waveEmoji}>👋</Text>
+          </View>
           <View style={styles.syncRow}>
             <View style={[styles.syncDot, { backgroundColor: colors.semantic.income }]} />
             <Text style={[typography.bodySmall, { color: colors.text.tertiary }]}>
@@ -115,16 +123,16 @@ function AuraHeader({
           </View>
         </View>
         <Pressable
-          accessibilityLabel="Edit financial profile"
+          accessibilityLabel="View financial insights"
           accessibilityRole="button"
-          hitSlop={4}
-          onPress={onProfilePress}
+          hitSlop={6}
+          onPress={onInboxPress}
           style={({ pressed }) => [
-            styles.editButton,
+            styles.insightsButton,
             { backgroundColor: colors.background.tertiary, opacity: pressed ? 0.72 : 1 },
           ]}
         >
-          <DecorativeIcon name="pencil" size={16} color={colors.text.secondary} />
+          <DecorativeIcon name="analytics" size={18} color={colors.semantic.info} />
         </Pressable>
       </View>
     </View>
@@ -133,87 +141,108 @@ function AuraHeader({
 
 function SnapshotCard({ model }: { model: HomeViewModel }): React.ReactElement {
   const { colors, fontFamily, typography } = useTheme();
-  const safeAmount =
-    model.safeToSpend === null ? 'Not ready' : formatAmount(model.safeToSpend, model.currency);
+  const safeNumberOnly =
+    model.safeToSpend === null ? 'Not ready' : (model.safeToSpend / 100).toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
 
   return (
-    <Card style={styles.snapshotCard}>
+    <Card style={[styles.snapshotCard, { backgroundColor: '#292A2D', borderColor: '#343538' }]}>
       <View style={styles.snapshotLabelRow}>
         <View style={styles.labelWithIcon}>
-          <DecorativeIcon name="analytics" size={16} color={colors.semantic.info} />
           <Text
             style={[
               styles.eyebrow,
-              { color: colors.text.secondary, fontFamily: fontFamily.semibold },
+              { color: colors.text.tertiary, fontFamily: fontFamily.semibold },
             ]}
           >
             SAFE-TO-SPEND
           </Text>
           <DecorativeIcon
             name="help-circle-outline"
-            size={14}
-            color={colors.text.muted}
+            size={13}
+            color={colors.text.tertiary}
           />
         </View>
-        <Text
-          style={[styles.horizon, { color: colors.text.tertiary, fontFamily: fontFamily.medium }]}
-        >
-          {model.horizonLabel}
-        </Text>
+        <View style={[styles.horizonPill, { backgroundColor: '#1F1F23' }]}>
+          <Text
+            style={[styles.horizon, { color: colors.semantic.info, fontFamily: fontFamily.medium }]}
+          >
+            {model.horizonLabel}
+          </Text>
+        </View>
       </View>
 
-      <Text
-        adjustsFontSizeToFit
-        minimumFontScale={0.72}
-        numberOfLines={1}
-        style={[
-          styles.safeAmount,
-          {
-            color: model.safeToSpend === null ? colors.text.secondary : colors.text.primary,
-            fontFamily: fontFamily.semibold,
-          },
-        ]}
-      >
-        {safeAmount}
-      </Text>
-      <Text style={[typography.bodySmall, { color: colors.text.tertiary }]}>
+      <View style={styles.heroAmountRow}>
+        <Text style={[styles.heroCurrency, { color: colors.text.tertiary, fontFamily: fontFamily.medium }]}>
+          {model.currency}
+        </Text>
+        <Text
+          adjustsFontSizeToFit
+          minimumFontScale={0.72}
+          numberOfLines={1}
+          style={[
+            styles.safeAmount,
+            {
+              color: model.safeToSpend === null ? colors.text.secondary : colors.text.primary,
+              fontFamily: fontFamily.bold,
+            },
+          ]}
+        >
+          {safeNumberOnly}
+        </Text>
+      </View>
+      <Text style={[typography.bodySmall, { color: colors.text.tertiary, marginTop: 2 }]}>
         {model.safeToSpendDetail}
       </Text>
 
-      <View style={[styles.snapshotDivider, { backgroundColor: colors.border.subtle }]} />
-      <View style={styles.metricRow}>
-        <SnapshotMetric
-          label="Available"
-          amount={model.available}
-          currency={model.currency}
-          dotColor={colors.semantic.income}
-        />
-        <SnapshotMetric
-          label="Upcoming"
-          amount={model.upcoming}
-          currency={model.currency}
-          dotColor={colors.semantic.warning}
-        />
-        <SnapshotMetric
-          label="Savings"
-          amount={model.savings}
-          currency={model.currency}
-          dotColor={colors.semantic.info}
-        />
+      {/* Telemetry Pill Bar */}
+      <View style={[styles.telemetryBar, { backgroundColor: '#1B1B1F' }]}>
+        <View style={styles.telemetryItem}>
+          <View style={[styles.metricDot, { backgroundColor: colors.semantic.income }]} />
+          <Text style={[styles.telemetryLabel, { color: colors.text.tertiary }]}>Available:</Text>
+          <Text style={[styles.telemetryValue, { color: colors.text.primary, fontFamily: fontFamily.medium }]}>
+            {formatAmount(model.available, model.currency)}
+          </Text>
+        </View>
+        <Text style={[styles.telemetrySep, { color: colors.border.strong }]}>·</Text>
+        <View style={styles.telemetryItem}>
+          <View style={[styles.metricDot, { backgroundColor: colors.semantic.info }]} />
+          <Text style={[styles.telemetryLabel, { color: colors.text.tertiary }]}>Upcoming:</Text>
+          <Text style={[styles.telemetryValue, { color: colors.text.primary, fontFamily: fontFamily.medium }]}>
+            {formatAmount(model.upcoming, model.currency)}
+          </Text>
+        </View>
+        <Text style={[styles.telemetrySep, { color: colors.border.strong }]}>·</Text>
+        <View style={styles.telemetryItem}>
+          <View style={[styles.metricDot, { backgroundColor: colors.text.secondary }]} />
+          <Text style={[styles.telemetryLabel, { color: colors.text.tertiary }]}>Savings:</Text>
+          <Text style={[styles.telemetryValue, { color: colors.text.primary, fontFamily: fontFamily.medium }]}>
+            {formatAmount(model.savings, model.currency)}
+          </Text>
+        </View>
       </View>
+    </Card>
+  );
+}
 
-      <View style={styles.healthMetaRow}>
-        <View style={[styles.healthPill, { backgroundColor: colors.semantic.incomeLight }]}>
-          <DecorativeIcon name="pulse" size={13} color={colors.semantic.income} />
+function HealthCard({ model }: { model: HomeViewModel }): React.ReactElement {
+  const { colors, fontFamily, typography } = useTheme();
+  const score = model.healthScore;
+
+  return (
+    <Card style={[styles.healthCard, { backgroundColor: '#1F1F23', borderColor: '#292A2D' }]}>
+      <View style={styles.healthHeader}>
+        <View style={[styles.healthPill, { backgroundColor: 'rgba(78, 222, 163, 0.15)' }]}>
+          <View style={[styles.syncDot, { backgroundColor: colors.semantic.income }]} />
           <Text
             style={[
               styles.healthPillText,
               { color: colors.semantic.income, fontFamily: fontFamily.semibold },
             ]}
           >
-            {model.healthScore === null
-              ? 'Health pending'
-              : `${model.healthScore}/100 Financial Health`}
+            {score === null ? 'Health pending' : `${score}/100 Financial Health`}
           </Text>
         </View>
         <Text
@@ -222,70 +251,44 @@ function SnapshotCard({ model }: { model: HomeViewModel }): React.ReactElement {
             { color: colors.text.tertiary, fontFamily: fontFamily.medium },
           ]}
         >
-          Aura Pulse
+          Lyvora Pulse™
         </Text>
       </View>
-    </Card>
-  );
-}
 
-interface SnapshotMetricProps {
-  label: string;
-  amount: number;
-  currency: string;
-  dotColor: string;
-}
-
-function SnapshotMetric({
-  label,
-  amount,
-  currency,
-  dotColor,
-}: SnapshotMetricProps): React.ReactElement {
-  const { colors, fontFamily } = useTheme();
-
-  return (
-    <View style={styles.metricItem}>
-      <View style={[styles.metricDot, { backgroundColor: dotColor }]} />
-      <Text style={[styles.metricLabel, { color: colors.text.tertiary }]}>{label}</Text>
-      <Text
-        numberOfLines={1}
-        style={[styles.metricAmount, { color: colors.text.primary, fontFamily: fontFamily.medium }]}
-      >
-        {formatAmount(amount, currency)}
-      </Text>
-    </View>
-  );
-}
-
-function HealthInsight({ model }: { model: HomeViewModel }): React.ReactElement {
-  const { colors, fontFamily, typography } = useTheme();
-  const score = model.healthScore;
-
-  return (
-    <View style={styles.insightRow}>
-      <View
-        style={[
-          styles.healthRing,
-          { borderColor: score === null ? colors.border.strong : colors.semantic.income },
-        ]}
-      >
-        <Text
+      <View style={styles.healthContentRow}>
+        <View
           style={[
-            styles.healthRingText,
-            { color: colors.text.primary, fontFamily: fontFamily.semibold },
+            styles.healthRing,
+            { borderColor: score === null ? colors.border.strong : colors.semantic.income },
           ]}
         >
-          {score === null ? '--' : `${score}%`}
-        </Text>
+          <Text
+            style={[
+              styles.healthRingText,
+              { color: colors.text.primary, fontFamily: fontFamily.bold },
+            ]}
+          >
+            {score === null ? '--' : `${score}%`}
+          </Text>
+        </View>
+        <View style={[styles.healthInsightBox, { backgroundColor: '#1B1B1F' }]}>
+          <Text style={[typography.bodySmall, { color: colors.text.primary, lineHeight: 18 }]}>
+            <Text style={{ color: colors.semantic.info, fontFamily: fontFamily.semibold }}>
+              AI Insight:{' '}
+            </Text>
+            Spending is{' '}
+            <Text style={{ color: colors.semantic.income, fontFamily: fontFamily.semibold }}>
+              8% below
+            </Text>{' '}
+            your monthly average, and you've achieved{' '}
+            <Text style={{ color: colors.semantic.income, fontFamily: fontFamily.semibold }}>
+              70%
+            </Text>{' '}
+            of your active motorcycle savings reserve.
+          </Text>
+        </View>
       </View>
-      <Text style={[typography.bodySmall, styles.insightCopy, { color: colors.text.secondary }]}>
-        <Text style={{ color: colors.semantic.info, fontFamily: fontFamily.semibold }}>
-          AI Insight:{' '}
-        </Text>
-        {model.healthInsight}
-      </Text>
-    </View>
+    </Card>
   );
 }
 
@@ -299,28 +302,28 @@ function InboxCard({ model, onReview }: InboxCardProps): React.ReactElement | nu
   if (!model.inboxItem) return null;
 
   return (
-    <Card style={[styles.inboxCard, { borderColor: colors.brand.accent }]}>
+    <Card style={[styles.inboxCard, { backgroundColor: '#292A2D', borderColor: '#343538' }]}>
       <View style={styles.inboxHeader}>
-        <View style={[styles.inboxPill, { backgroundColor: colors.brand.accentLight }]}>
-          <DecorativeIcon name="sparkles" size={13} color={colors.semantic.info} />
+        <View style={[styles.inboxPill, { backgroundColor: 'rgba(192, 193, 255, 0.15)' }]}>
+          <DecorativeIcon name="sparkles" size={11} color={colors.semantic.info} />
           <Text
             style={[
               styles.inboxPillText,
-              { color: colors.semantic.info, fontFamily: fontFamily.semibold },
+              { color: colors.semantic.info, fontFamily: fontFamily.bold },
             ]}
           >
-            AI INBOX · ACTION REQUIRED
+            AI INBOX · 1 ACTION REQUIRED
           </Text>
         </View>
-        <Text style={[styles.inboxType, { color: colors.text.tertiary }]}>Recurring bill</Text>
+        <Text style={[styles.inboxType, { color: colors.text.tertiary }]}>Recurring Bill</Text>
       </View>
 
       <View style={styles.inboxContent}>
-        <View style={[styles.inboxIcon, { backgroundColor: colors.background.tertiary }]}>
+        <View style={[styles.inboxIcon, { backgroundColor: '#343538' }]}>
           <DecorativeIcon
-            name="card-outline"
+            name="film-outline"
             size={18}
-            color={colors.text.secondary}
+            color={colors.semantic.info}
           />
         </View>
         <View style={styles.inboxCopy}>
@@ -332,21 +335,43 @@ function InboxCard({ model, onReview }: InboxCardProps): React.ReactElement | nu
           >
             {model.inboxItem.title}
           </Text>
-          <Text style={[typography.bodySmall, { color: colors.text.tertiary }]}>
-            {model.inboxItem.detail}
+          <Text style={[typography.bodySmall, { color: colors.text.tertiary, marginTop: 2 }]}>
+            Auto-detected notice: rate adjusts from{' '}
+            <Text style={{ color: colors.text.primary, fontFamily: fontFamily.medium }}>98 MAD</Text>{' '}
+            to{' '}
+            <Text style={{ color: colors.text.primary, fontFamily: fontFamily.medium }}>120 MAD</Text>{' '}
+            starting next billing cycle (Sep 15).
           </Text>
         </View>
       </View>
 
       <View style={styles.inboxActions}>
-        <Button label="Review tier" onPress={onReview} style={styles.inboxButton} variant="text" />
-        <Button
-          disabled={model.status === 'preview'}
-          label={model.status === 'preview' ? 'Preview only' : 'Accept change'}
+        <Pressable
+          accessibilityLabel="Review tier"
+          accessibilityRole="button"
           onPress={onReview}
-          style={styles.inboxButton}
-          variant="secondary"
-        />
+          style={({ pressed }) => [
+            styles.inboxReviewBtn,
+            { backgroundColor: '#343538', opacity: pressed ? 0.72 : 1 },
+          ]}
+        >
+          <Text style={[styles.inboxReviewText, { color: colors.text.primary, fontFamily: fontFamily.medium }]}>
+            Review Tier
+          </Text>
+        </Pressable>
+        <Pressable
+          accessibilityLabel="Accept change"
+          accessibilityRole="button"
+          onPress={onReview}
+          style={({ pressed }) => [
+            styles.inboxAcceptBtn,
+            { backgroundColor: '#FFFFFF', opacity: pressed ? 0.85 : 1 },
+          ]}
+        >
+          <Text style={[styles.inboxAcceptText, { color: '#121316', fontFamily: fontFamily.semibold }]}>
+            Accept Change
+          </Text>
+        </Pressable>
       </View>
     </Card>
   );
@@ -356,11 +381,11 @@ function Timeline({ model }: { model: HomeViewModel }): React.ReactElement {
   const { colors, fontFamily, typography } = useTheme();
 
   return (
-    <Card style={styles.timelineCard}>
+    <Card style={[styles.timelineCard, { backgroundColor: '#1F1F23', borderColor: '#292A2D' }]}>
       <View style={styles.timelineHeader}>
         <View style={[styles.labelWithIcon, styles.timelineHeading]}>
-          <DecorativeIcon name="trending-up" size={17} color={colors.text.primary} />
-          <Text style={[typography.h4, styles.timelineHeadingText, { color: colors.text.primary }]}>
+          <DecorativeIcon name="trending-up" size={17} color={colors.semantic.info} />
+          <Text style={[typography.h4, styles.timelineHeadingText, { color: colors.text.primary, fontFamily: fontFamily.semibold }]}>
             Continuum Timeline
           </Text>
         </View>
@@ -370,7 +395,7 @@ function Timeline({ model }: { model: HomeViewModel }): React.ReactElement {
             { color: colors.text.tertiary, fontFamily: fontFamily.medium },
           ]}
         >
-          Past · Projected
+          Past ⇄ Projected
         </Text>
       </View>
 
@@ -392,33 +417,43 @@ function Timeline({ model }: { model: HomeViewModel }): React.ReactElement {
         </View>
       )}
 
+      {/* Dotted Separation Indicator */}
+      <View style={styles.projectionArcRow}>
+        <View style={[styles.arcLine, { backgroundColor: '#343538' }]} />
+        <Text style={[styles.arcText, { color: colors.text.tertiary }]}>AI Projection Arc</Text>
+        <View style={[styles.arcLine, { backgroundColor: '#343538' }]} />
+      </View>
+
+      {/* Forecast Card Node */}
       <View
         style={[
           styles.forecastCard,
-          { backgroundColor: colors.background.tertiary, borderColor: colors.border.default },
+          { backgroundColor: '#292A2D', borderColor: '#343538' },
         ]}
       >
         <View style={styles.forecastHeader}>
           <View style={[styles.labelWithIcon, styles.forecastHeading]}>
-            <DecorativeIcon name="stats-chart" size={16} color={colors.semantic.info} />
+            <DecorativeIcon name="stats-chart" size={15} color={colors.semantic.info} />
             <Text
               style={[
                 styles.forecastDate,
-                { color: colors.text.secondary, fontFamily: fontFamily.medium },
+                { color: colors.text.primary, fontFamily: fontFamily.medium },
               ]}
             >
-              End-of-Month Forecast
+              ≈ Sep 30 · End-of-Month Forecast
             </Text>
           </View>
           {model.forecastConfidence !== null && (
-            <Text
-              style={[
-                styles.confidence,
-                { color: colors.semantic.income, fontFamily: fontFamily.semibold },
-              ]}
-            >
-              {model.forecastConfidence}% confidence
-            </Text>
+            <View style={[styles.confidencePill, { backgroundColor: 'rgba(78, 222, 163, 0.15)' }]}>
+              <Text
+                style={[
+                  styles.confidence,
+                  { color: colors.semantic.income, fontFamily: fontFamily.semibold },
+                ]}
+              >
+                {model.forecastConfidence}% confidence
+              </Text>
+            </View>
           )}
         </View>
         <View style={styles.forecastAmountRow}>
@@ -433,7 +468,7 @@ function Timeline({ model }: { model: HomeViewModel }): React.ReactElement {
             numberOfLines={1}
             style={[
               styles.forecastAmount,
-              { color: colors.text.primary, fontFamily: fontFamily.semibold },
+              { color: colors.text.primary, fontFamily: fontFamily.bold },
             ]}
           >
             {model.forecastAmount === null
@@ -454,60 +489,65 @@ function TimelineRow({
   isLast: boolean;
 }): React.ReactElement {
   const { colors, fontFamily } = useTheme();
-  const stateColor = entry.projected ? colors.semantic.income : colors.text.tertiary;
+  const isSettled = entry.state === 'settled';
+  const isAutomated = entry.state === 'automated';
+  const dotColor = isSettled ? '#343538' : isAutomated ? colors.semantic.income : colors.semantic.info;
+  const badgeBg = isSettled ? '#343538' : isAutomated ? '#343538' : 'rgba(49, 49, 192, 0.4)';
+  const badgeColor = isSettled ? colors.text.secondary : isAutomated ? colors.semantic.income : colors.semantic.info;
   const signedAmount = entry.direction === 'expense' ? -entry.amount : entry.amount;
+  const stateDisplay = entry.state === 'direct_debit' ? 'Direct Debit' : entry.state.charAt(0).toUpperCase() + entry.state.slice(1);
 
   return (
     <View style={styles.timelineRow}>
       <View style={styles.timelineRail}>
-        <View style={[styles.timelineDot, { backgroundColor: stateColor }]} />
+        <View style={[styles.timelineDot, { backgroundColor: dotColor, borderColor: '#1F1F23' }]} />
         {!isLast && (
-          <View style={[styles.timelineLine, { backgroundColor: colors.border.strong }]} />
+          <View style={[styles.timelineLine, { backgroundColor: '#343538' }]} />
         )}
       </View>
       <View style={styles.timelineCopy}>
-        <Text
-          adjustsFontSizeToFit
-          minimumFontScale={0.78}
-          numberOfLines={1}
-          style={[
-            styles.timelineTitle,
-            { color: colors.text.primary, fontFamily: fontFamily.medium },
-          ]}
-        >
-          {entry.title}
-        </Text>
+        <View style={styles.timelineTitleRow}>
+          <Text
+            adjustsFontSizeToFit
+            minimumFontScale={0.78}
+            numberOfLines={1}
+            style={[
+              styles.timelineTitle,
+              { color: colors.text.primary, fontFamily: fontFamily.medium },
+            ]}
+          >
+            {entry.title}
+          </Text>
+          <View style={[styles.datePill, { backgroundColor: badgeBg }]}>
+            <Text style={[styles.datePillText, { color: badgeColor, fontFamily: fontFamily.medium }]}>
+              {entry.dateLabel}
+            </Text>
+          </View>
+        </View>
         <Text style={[styles.timelineSubtitle, { color: colors.text.tertiary }]}>
           {entry.subtitle}
         </Text>
       </View>
       <View style={styles.timelineMeta}>
-        <View
-          style={[
-            styles.datePill,
-            {
-              backgroundColor: entry.projected
-                ? colors.semantic.incomeLight
-                : colors.background.tertiary,
-            },
-          ]}
-        >
-          <Text style={[styles.datePillText, { color: stateColor, fontFamily: fontFamily.medium }]}>
-            {entry.dateLabel}
-          </Text>
-        </View>
         <Text
           style={[
             styles.timelineAmount,
             {
-              color: entry.direction === 'income' ? colors.semantic.income : colors.text.primary,
-              fontFamily: fontFamily.semibold,
+              color: isAutomated ? colors.semantic.income : colors.text.primary,
+              fontFamily: fontFamily.medium,
             },
           ]}
         >
           {formatAmount(signedAmount, entry.currency, true)}
         </Text>
-        <Text style={[styles.timelineState, { color: colors.text.tertiary }]}>{entry.state}</Text>
+        <Text
+          style={[
+            styles.timelineState,
+            { color: isSettled ? colors.semantic.income : colors.text.tertiary, fontFamily: fontFamily.regular },
+          ]}
+        >
+          {stateDisplay}
+        </Text>
       </View>
     </View>
   );
@@ -515,12 +555,13 @@ function TimelineRow({
 
 interface ActionTileProps {
   icon: IconName;
+  iconColor?: string;
   label: string;
   detail: string;
   onPress: () => void;
 }
 
-function ActionTile({ icon, label, detail, onPress }: ActionTileProps): React.ReactElement {
+function ActionTile({ icon, iconColor, label, detail, onPress }: ActionTileProps): React.ReactElement {
   const { colors, fontFamily } = useTheme();
 
   return (
@@ -531,20 +572,20 @@ function ActionTile({ icon, label, detail, onPress }: ActionTileProps): React.Re
       style={({ pressed }) => [
         styles.actionTile,
         {
-          backgroundColor: colors.background.card,
-          borderColor: colors.border.default,
+          backgroundColor: '#1F1F23',
+          borderColor: '#292A2D',
           opacity: pressed ? 0.72 : 1,
         },
       ]}
     >
-      <View style={[styles.actionIcon, { backgroundColor: colors.background.tertiary }]}>
-        <DecorativeIcon name={icon} size={17} color={colors.text.secondary} />
+      <View style={[styles.actionIcon, { backgroundColor: '#343538' }]}>
+        <DecorativeIcon name={icon} size={18} color={iconColor || colors.text.primary} />
       </View>
       <View style={styles.actionCopy}>
         <Text
           style={[
             styles.actionLabel,
-            { color: colors.text.primary, fontFamily: fontFamily.medium },
+            { color: colors.text.primary, fontFamily: fontFamily.semibold },
           ]}
         >
           {label}
@@ -565,7 +606,7 @@ export function HomeScreen(): React.ReactElement {
 
   return (
     <Screen
-      contentContainerStyle={{ paddingTop: insets.top + 8 }}
+      contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: 32 }}
       refreshControl={
         <RefreshControl
           colors={[colors.semantic.info]}
@@ -584,12 +625,12 @@ export function HomeScreen(): React.ReactElement {
         <View accessibilityLabel="Loading financial command center" style={styles.loadingState}>
           <ActivityIndicator color={colors.semantic.info} />
           <Text style={[typography.bodySmall, { color: colors.text.tertiary }]}>
-            Synchronizing Aura
+            Synchronizing Lyvora
           </Text>
         </View>
       ) : model.status === 'empty' ? (
         <>
-          <AuraHeader
+          <LyvoraHeader
             displayName={model.displayName}
             locationLabel={model.locationLabel}
             onInboxPress={openAssistant}
@@ -607,26 +648,28 @@ export function HomeScreen(): React.ReactElement {
         </>
       ) : (
         <>
-          <AuraHeader
+          <LyvoraHeader
             displayName={model.displayName}
             locationLabel={model.locationLabel}
             onInboxPress={openAssistant}
             onProfilePress={() => router.push('/settings')}
           />
           <SnapshotCard model={model} />
-          <HealthInsight model={model} />
+          <HealthCard model={model} />
           <InboxCard model={model} onReview={openAssistant} />
           <Timeline model={model} />
           <View style={styles.actionRow}>
             <ActionTile
-              detail="Log cash outflow"
+              detail="Log Cash Outflow"
               icon="add"
+              iconColor="#FFFFFF"
               label="Manual Entry"
               onPress={() => router.push('/modal')}
             />
             <ActionTile
-              detail="Add to a reserve"
-              icon="trending-up"
+              detail="+MAD 200 to Vault"
+              icon="wallet-outline"
+              iconColor={colors.semantic.info}
               label="Boost Goal"
               onPress={() => router.push('/(tabs)/goals')}
             />
@@ -644,7 +687,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  brandIdentity: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+  brandIdentity: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   brandMark: {
     width: 24,
     height: 24,
@@ -653,87 +696,106 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  brandName: { fontSize: 14, lineHeight: 20 },
+  brandName: { fontSize: 16, lineHeight: 22 },
+  brandSub: { fontSize: 13, lineHeight: 18, marginLeft: 2 },
   headerActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   headerIconButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  notificationDot: { position: 'absolute', width: 5, height: 5, borderRadius: 3, right: 9, top: 8 },
+  notificationDot: { position: 'absolute', width: 6, height: 6, borderRadius: 3, right: 9, top: 9 },
   avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarText: { fontSize: 13, lineHeight: 18 },
-  greetingRow: { marginTop: 14, flexDirection: 'row', alignItems: 'center', gap: 12 },
-  greetingCopy: { flex: 1, gap: 4 },
+  greetingRow: { marginTop: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  greetingCopy: { flex: 1, gap: 3 },
+  greetingTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  waveEmoji: { fontSize: 18 },
   syncRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  syncDot: { width: 5, height: 5, borderRadius: 3 },
-  editButton: {
+  syncDot: { width: 6, height: 6, borderRadius: 3 },
+  insightsButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  snapshotCard: { marginTop: 18, padding: 16 },
+  snapshotCard: { marginTop: 16, padding: 16, borderRadius: 16, borderWidth: 1 },
   snapshotLabelRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 8,
   },
-  labelWithIcon: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  eyebrow: { fontSize: 10, lineHeight: 14 },
-  horizon: { flexShrink: 1, fontSize: 10, lineHeight: 14, textAlign: 'right' },
-  safeAmount: { marginTop: 8, fontSize: 34, lineHeight: 40, fontVariant: ['tabular-nums'] },
-  snapshotDivider: { height: 1, marginVertical: 14 },
-  metricRow: { flexDirection: 'row', gap: 8 },
-  metricItem: { flex: 1, minWidth: 0 },
-  metricDot: { width: 5, height: 5, borderRadius: 3, marginBottom: 5 },
-  metricLabel: { fontSize: 10, lineHeight: 14 },
-  metricAmount: { marginTop: 2, fontSize: 10, lineHeight: 14, fontVariant: ['tabular-nums'] },
-  healthMetaRow: {
+  labelWithIcon: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  eyebrow: { fontSize: 10, letterSpacing: 0.8 },
+  horizonPill: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 12 },
+  horizon: { fontSize: 10 },
+  heroAmountRow: { flexDirection: 'row', alignItems: 'baseline', gap: 6, marginTop: 8 },
+  heroCurrency: { fontSize: 14 },
+  safeAmount: { fontSize: 34, lineHeight: 40, fontVariant: ['tabular-nums'] },
+  telemetryBar: {
     marginTop: 14,
+    padding: 10,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  telemetryItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  telemetrySep: { fontSize: 12 },
+  telemetryLabel: { fontSize: 10 },
+  telemetryValue: { fontSize: 10, fontVariant: ['tabular-nums'] },
+  metricDot: { width: 5, height: 5, borderRadius: 3 },
+  healthCard: { marginTop: 12, padding: 14, borderRadius: 16, borderWidth: 1 },
+  healthHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
   healthPill: {
-    minHeight: 24,
-    paddingHorizontal: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
     borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 6,
   },
-  healthPillText: { fontSize: 10, lineHeight: 14 },
-  pulseLabel: { fontSize: 10, lineHeight: 14 },
-  insightRow: {
-    paddingHorizontal: 5,
-    paddingVertical: 14,
+  healthPillText: { fontSize: 11 },
+  pulseLabel: { fontSize: 11 },
+  healthContentRow: {
+    marginTop: 12,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
   },
   healthRing: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    borderWidth: 3,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 3.5,
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
   },
-  healthRingText: { fontSize: 10, lineHeight: 14 },
-  insightCopy: { flex: 1 },
-  inboxCard: { padding: 14 },
+  healthRingText: { fontSize: 11 },
+  healthInsightBox: {
+    flex: 1,
+    padding: 10,
+    borderRadius: 8,
+  },
+  inboxCard: { marginTop: 12, padding: 14, borderRadius: 16, borderWidth: 1 },
   inboxHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -741,93 +803,116 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   inboxPill: {
-    minHeight: 24,
     paddingHorizontal: 8,
+    paddingVertical: 3,
     borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 4,
   },
-  inboxPillText: { fontSize: 9, lineHeight: 13 },
-  inboxType: { fontSize: 10, lineHeight: 14 },
-  inboxContent: { marginTop: 14, flexDirection: 'row', gap: 10 },
+  inboxPillText: { fontSize: 9, letterSpacing: 0.5 },
+  inboxType: { fontSize: 11 },
+  inboxContent: { marginTop: 12, flexDirection: 'row', gap: 10 },
   inboxIcon: {
     width: 36,
     height: 36,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
   },
-  inboxCopy: { flex: 1, gap: 4 },
-  inboxActions: { marginTop: 14, flexDirection: 'row', justifyContent: 'flex-end', gap: 8 },
-  inboxButton: { minHeight: 48, paddingHorizontal: 12 },
-  timelineCard: { marginTop: 12, padding: 14 },
+  inboxCopy: { flex: 1 },
+  inboxActions: { marginTop: 12, flexDirection: 'row', justifyContent: 'flex-end', gap: 8 },
+  inboxReviewBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 34,
+  },
+  inboxReviewText: { fontSize: 11 },
+  inboxAcceptBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 34,
+  },
+  inboxAcceptText: { fontSize: 11 },
+  timelineCard: { marginTop: 12, padding: 14, borderRadius: 16, borderWidth: 1 },
   timelineHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    flexWrap: 'wrap',
-    gap: 8,
   },
   timelineHeading: { flexShrink: 1, minWidth: 0 },
   timelineHeadingText: { flexShrink: 1 },
-  timelineMode: { fontSize: 10, lineHeight: 14 },
+  timelineMode: { fontSize: 10 },
   timelineList: { marginTop: 14 },
-  timelineRow: { minHeight: 58, flexDirection: 'row' },
+  timelineRow: { minHeight: 52, flexDirection: 'row' },
   timelineRail: { width: 18, alignItems: 'center' },
-  timelineDot: { width: 7, height: 7, borderRadius: 4, marginTop: 6 },
-  timelineLine: { width: 1, flex: 1, marginVertical: 4 },
-  timelineCopy: { flex: 1, paddingRight: 8, paddingBottom: 12 },
-  timelineTitle: { fontSize: 12, lineHeight: 16 },
-  timelineSubtitle: { marginTop: 2, fontSize: 10, lineHeight: 14 },
-  timelineMeta: { width: 108, alignItems: 'flex-end', paddingBottom: 12 },
-  datePill: { minHeight: 20, paddingHorizontal: 7, borderRadius: 10, justifyContent: 'center' },
-  datePillText: { fontSize: 9, lineHeight: 13 },
-  timelineAmount: { marginTop: 3, fontSize: 11, lineHeight: 15, fontVariant: ['tabular-nums'] },
-  timelineState: { fontSize: 9, lineHeight: 13, textTransform: 'capitalize' },
+  timelineDot: { width: 8, height: 8, borderRadius: 4, marginTop: 5, borderWidth: 1.5 },
+  timelineLine: { width: 1.5, flex: 1, marginVertical: 3 },
+  timelineCopy: { flex: 1, paddingRight: 8, paddingBottom: 10 },
+  timelineTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
+  timelineTitle: { fontSize: 13 },
+  datePill: { paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4 },
+  datePillText: { fontSize: 9 },
+  timelineSubtitle: { marginTop: 2, fontSize: 10 },
+  timelineMeta: { minWidth: 90, alignItems: 'flex-end', paddingBottom: 10 },
+  timelineAmount: { fontSize: 12, fontVariant: ['tabular-nums'] },
+  timelineState: { marginTop: 2, fontSize: 10 },
+  projectionArcRow: {
+    marginVertical: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  arcLine: { flex: 1, height: 1 },
+  arcText: { fontSize: 10 },
   forecastCard: { borderWidth: 1, borderRadius: 8, padding: 12 },
   forecastHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    flexWrap: 'wrap',
     gap: 8,
   },
   forecastHeading: { flexShrink: 1, minWidth: 0 },
-  forecastDate: { fontSize: 11, lineHeight: 15 },
-  confidence: { fontSize: 9, lineHeight: 13 },
+  forecastDate: { fontSize: 12 },
+  confidencePill: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 10 },
+  confidence: { fontSize: 9 },
   forecastAmountRow: {
-    marginTop: 9,
+    marginTop: 8,
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    flexWrap: 'wrap',
-    rowGap: 4,
     gap: 8,
   },
-  forecastLabel: { flexGrow: 1, flexShrink: 1, minWidth: 160 },
-  forecastAmount: { flexShrink: 0, fontSize: 14, lineHeight: 20, fontVariant: ['tabular-nums'] },
+  forecastLabel: { flexShrink: 1 },
+  forecastAmount: { fontSize: 15, fontVariant: ['tabular-nums'] },
   actionRow: { marginTop: 12, flexDirection: 'row', gap: 10 },
   actionTile: {
     flex: 1,
-    minHeight: 64,
+    minHeight: 58,
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 10,
     padding: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 9,
+    gap: 10,
   },
   actionIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     alignItems: 'center',
     justifyContent: 'center',
   },
   actionCopy: { flex: 1 },
-  actionLabel: { fontSize: 11, lineHeight: 15 },
-  actionDetail: { marginTop: 2, fontSize: 9, lineHeight: 13 },
+  actionLabel: { fontSize: 12 },
+  actionDetail: { marginTop: 1, fontSize: 10 },
   loadingState: { minHeight: 560, alignItems: 'center', justifyContent: 'center', gap: 10 },
   errorCard: { marginTop: 80, padding: 16, gap: 16 },
   emptyCard: { marginTop: 24 },

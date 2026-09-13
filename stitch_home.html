@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#121316;color:#e3e2e6;}body{overscroll-behavior:none;-webkit-font-smoothing:antialiased;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "primary-fixed-dim": "#c5c6c8", "secondary": "#c0c1ff", "on-secondary-fixed": "#07006c", "on-primary-fixed-variant": "#444749", "on-surface": "#e3e2e6", "primary": "#ffffff", "on-secondary-container": "#b0b2ff", "surface-container-highest": "#343538", "on-tertiary-fixed": "#002113", "tertiary": "#ffffff", "tertiary-fixed": "#6ffbbe", "outline": "#8e9193", "tertiary-fixed-dim": "#4edea3", "on-error": "#690005", "inverse-on-surface": "#303034", "primary-fixed": "#e1e2e4", "secondary-container": "#3131c0", "on-primary-container": "#626566", "on-error-container": "#ffdad6", "on-tertiary": "#003824", "outline-variant": "#444749", "on-background": "#e3e2e6", "surface-container-high": "#292a2d", "on-surface-variant": "#c4c7c9", "error-container": "#93000a", "primary-container": "#e1e2e4", "surface": "#121316", "on-primary-fixed": "#191c1e", "background": "#121316", "secondary-fixed-dim": "#c0c1ff", "inverse-surface": "#e3e2e6", "tertiary-container": "#6ffbbe", "inverse-primary": "#5c5f60", "surface-container-lowest": "#0d0e11", "on-secondary-fixed-variant": "#2f2ebe", "on-primary": "#2e3132", "surface-bright": "#38393c", "surface-container-low": "#1b1b1f", "surface-variant": "#343538", "surface-container": "#1f1f23", "surface-dim": "#121316", "on-tertiary-fixed-variant": "#005236", "on-tertiary-container": "#00734e", "on-secondary": "#1000a9", "secondary-fixed": "#e1e0ff", "error": "#ffb4ab", "surface-tint": "#c5c6c8" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-xs": "0.25rem", "space-xl": "2.5rem", "margin": "2rem", "gutter": "1.25rem", "gutter-sm": "0.75rem", "space-lg": "1.5rem", "space-sm": "0.5rem", "margin-mobile": "1rem", "gutter-lg": "1.75rem", "space-md": "1rem", "margin-desktop": "3rem" }, fontFamily: { "body-md": ["Inter"], "headline-sm": ["Inter"], "headline-lg": ["Inter"], "body-sm": ["Inter"], "data-metric": ["Inter"], "body-lg": ["Inter"], "display-hero-mobile": ["Inter"], "headline-lg-mobile": ["Inter"], "data-mono": ["Inter"], "display-hero": ["Inter"], "headline-md": ["Inter"], "label-md": ["Inter"], "label-xs": ["Inter"] }, fontSize: { "body-md": ["14px", { lineHeight: "20px", letterSpacing: "0em", fontWeight: "400" }], "headline-sm": ["18px", { lineHeight: "24px", letterSpacing: "-0.01em", fontWeight: "500" }], "headline-lg": ["32px", { lineHeight: "40px", letterSpacing: "-0.02em", fontWeight: "600" }], "body-sm": ["13px", { lineHeight: "18px", letterSpacing: "0.005em", fontWeight: "400" }], "data-metric": ["28px", { lineHeight: "34px", letterSpacing: "-0.02em", fontWeight: "600" }], "body-lg": ["16px", { lineHeight: "24px", letterSpacing: "-0.05em", fontWeight: "400" }], "display-hero-mobile": ["34px", { lineHeight: "40px", letterSpacing: "-0.025em", fontWeight: "600" }], "headline-lg-mobile": ["26px", { lineHeight: "32px", letterSpacing: "-0.02em", fontWeight: "600" }], "data-mono": ["13px", { lineHeight: "18px", letterSpacing: "-0.01em", fontWeight: "500" }], "display-hero": ["48px", { lineHeight: "56px", letterSpacing: "-0.03em", fontWeight: "600" }], "headline-md": ["22px", { lineHeight: "28px", letterSpacing: "-0.015em", fontWeight: "500" }], "label-md": ["12px", { lineHeight: "16px", letterSpacing: "0.02em", fontWeight: "500" }], "label-xs": ["10px", { lineHeight: "14px", letterSpacing: "0.06em", fontWeight: "600" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-body-md text-on-surface flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_12px_rgba(0,0,0,0.4)]"><div class="h-16 px-space-md flex items-center justify-between"><div class="flex items-center gap-space-sm"><img alt="Aura OS Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1Uce-eFN0WaY865Xs1-U3E-qUsdvGICFpM9K8rwVpzZ7o8cBQmwSeY0lcHrc_qU84_NZRwSxcKANdGzQMLsQ4WR0R_pEsPnQwintp1-NKcnKrf1PTR8faeNMIVnBZA_rf0fzxOJOgx5rgmzWYQQHSzYqPtii1vPbQM_EiNxuaJCZHBnHYhlgomkw-1BJwe1RhcgLFlDPj4FVsJlqDlROc4FuaOW1Z2QhFSxhH5ndrdE7BAMHRqu_VVGjJU"/><span class="font-headline-sm text-headline-sm tracking-tight text-primary font-semibold">Aura</span><span class="hidden sm:inline font-body-sm text-body-sm text-on-surface-variant font-normal pl-space-xs">| Home</span></div><div class="flex items-center gap-space-xs"><button aria-label="Notifications" class="w-11 h-11 flex items-center justify-center rounded-full text-on-surface-variant hover:text-primary transition-colors relative"><span class="material-symbols-outlined text-[22px]">notifications</span><span class="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-secondary ring-2 ring-surface"></span></button><a aria-label="Brahim Profile" class="w-11 h-11 flex items-center justify-center pl-1" data-path="profile" href="#"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBlb--V19a2wDiUr30_HAvwSR-WtmBmDYKMdSLr1VLs51dmo3WWNDbdU1Vs7cwIRAsTPuWyqtRVwmkw5h5YBH5SnYGBk0t1QLKJ9JlKAM2dHuj17akZtcNgRrycTagDVD16fZx9hzNVd-ZukyfXuntUOIHsSGmutpW3d8RC8O578qVVn8J4GVOMIN3MWyrNPpvRe8Fy--VP-yzIdOhyAS1HL1UaOZy5aaNUBzvQkqdvbhiBL9gAt6zE"/></a></div></div></header><main class="flex-1 flex flex-col relative w-full pt-16 pb-24 bg-surface"><div class="flex flex-col w-full px-margin-mobile space-y-space-md">
+<!-- Greeting Header -->
+<section class="flex items-center justify-between pt-space-xs">
+<div class="space-y-0.5">
+<div class="flex items-center gap-1.5">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-primary tracking-tight">Good evening, Brahim</h1>
+<span class="text-xl inline-block animate-pulse">👋</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface-variant flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary-fixed-dim"></span>
+        Liquidity synced · Casablanca, 21:14
+      </p>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-secondary text-[20px]">insights</span>
+</div>
+</div>
+</section>
+<!-- Primary Anchor: Safe-to-Spend -->
+<section class="w-full rounded-xl bg-surface-container-high p-space-lg shadow-md relative overflow-hidden">
+<div class="absolute -right-8 -top-8 w-36 h-36 rounded-full bg-secondary/5 blur-2xl pointer-events-none"></div>
+<div class="flex flex-col space-y-3 relative z-10">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="font-label-xs text-label-xs text-on-surface-variant uppercase tracking-wider">Safe-to-Spend</span>
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant cursor-pointer" title="Anti-wealth illusion calculation factoring locked commitments">help_outline</span>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-secondary font-label-xs text-label-xs">
+          Until Oct 1 (Salary)
+        </span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-baseline gap-2">
+<span class="font-label-md text-label-md text-on-surface-variant font-medium">MAD</span>
+<span class="font-display-hero-mobile text-display-hero-mobile text-primary tracking-tight font-semibold">1,160.00</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+          Guaranteed zero-stress threshold for the next 12 days.
+        </p>
+</div>
+<!-- Financial Breakdown Telemetry Pill Bar -->
+<div class="pt-2">
+<div class="w-full bg-surface-container-low rounded-lg p-2.5 flex flex-wrap items-center justify-between gap-2">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-tertiary-fixed-dim"></span>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Available:</span>
+<span class="font-data-mono text-data-mono text-primary font-medium">MAD 5,000</span>
+</div>
+<span class="text-outline-variant font-label-xs">·</span>
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Upcoming:</span>
+<span class="font-data-mono text-data-mono text-primary font-medium">MAD 960</span>
+</div>
+<span class="text-outline-variant font-label-xs">·</span>
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary-fixed-dim"></span>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Savings:</span>
+<span class="font-data-mono text-data-mono text-primary font-medium">MAD 1,200</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Two-Column Glance: Financial Health & Monthly Trajectory -->
+<section class="grid grid-cols-1 gap-space-sm">
+<!-- Financial Health Card -->
+<div class="w-full rounded-xl bg-surface-container p-space-md shadow-sm flex flex-col space-y-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="px-2.5 py-1 rounded-full bg-tertiary-fixed/15 text-tertiary-fixed-dim font-label-md text-label-md flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-tertiary-fixed-dim"></span>
+            82/100 Financial Health
+          </span>
+</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Aura Pulse™</span>
+</div>
+<div class="flex items-start gap-3 pt-1">
+<!-- SVG Radial Gauge -->
+<div class="relative w-12 h-12 flex-shrink-0 flex items-center justify-center">
+<svg class="w-12 h-12 -rotate-90" viewbox="0 0 36 36">
+<path class="text-surface-container-highest" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3.5"></path>
+<path class="text-tertiary-fixed-dim" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="82, 100" stroke-linecap="round" stroke-width="3.5"></path>
+</svg>
+<span class="absolute font-label-xs text-label-xs font-semibold text-primary">82%</span>
+</div>
+<div class="flex-1">
+<div class="bg-surface-container-low rounded-lg p-2.5">
+<p class="font-body-sm text-body-sm text-on-surface leading-snug">
+<span class="font-medium text-secondary">AI Insight:</span> Spending is <span class="text-tertiary-fixed-dim font-medium">8% below</span> your monthly average, and you've achieved <span class="text-tertiary-fixed-dim font-medium">70%</span> of your active motorcycle savings reserve.
+            </p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- AI Inbox Card (1 Action Required) -->
+<section class="w-full rounded-xl bg-surface-container-high p-space-md shadow-md relative overflow-hidden" id="ai-alert-card">
+<div class="flex items-start justify-between mb-2">
+<div class="flex items-center gap-1.5">
+<span class="px-2 py-0.5 rounded-full bg-secondary/15 text-secondary font-label-xs text-label-xs flex items-center gap-1 font-semibold tracking-wide uppercase">
+<span class="material-symbols-outlined text-[12px]">auto_awesome</span>
+          AI Inbox · 1 Action Required
+        </span>
+</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Recurring Bill</span>
+</div>
+<div class="space-y-2 mt-2">
+<div class="flex items-start gap-3">
+<div class="w-8 h-8 rounded-lg bg-surface-container-highest flex items-center justify-center flex-shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-secondary text-[18px]">movie</span>
+</div>
+<div class="flex-1">
+<p class="font-body-md text-body-md text-primary font-medium">
+            Netflix subscription price increase
+          </p>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+            Auto-detected notice: rate adjusts from <span class="text-primary font-medium">98 MAD</span> to <span class="text-primary font-medium">120 MAD</span> starting next billing cycle (Sep 15).
+          </p>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="flex items-center justify-end gap-2 pt-2">
+<button class="px-3 py-1.5 rounded-lg bg-surface-container-highest text-on-surface font-label-md text-label-md hover:bg-surface-bright transition-colors active:scale-95" id="review-btn">
+          Review Tier
+        </button>
+<button class="px-3 py-1.5 rounded-lg bg-primary text-on-primary font-label-md text-label-md font-semibold hover:opacity-90 transition-opacity active:scale-95" id="accept-btn">
+          Accept Change
+        </button>
+</div>
+</div>
+</section>
+<!-- Vertical Financial Continuum Timeline -->
+<section class="w-full rounded-xl bg-surface-container p-space-md shadow-sm space-y-3">
+<div class="flex items-center justify-between pb-1">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary text-[18px]">timeline</span>
+<h2 class="font-headline-sm text-headline-sm text-primary font-semibold">Continuum Timeline</h2>
+</div>
+<span class="font-label-xs text-label-xs text-on-surface-variant">Past ⇄ Projected</span>
+</div>
+<!-- Timeline Container -->
+<div class="relative pl-6 space-y-4">
+<!-- Vertical Continuous Line -->
+<div class="absolute left-2.5 top-2 bottom-6 w-0.5 bg-surface-container-highest"></div>
+<!-- Item 1: Past Today -->
+<div class="relative flex items-center justify-between group">
+<div class="absolute -left-6 top-1.5 w-2 h-2 rounded-full bg-surface-container-highest ring-4 ring-surface-container"></div>
+<div class="flex flex-col pr-2">
+<div class="flex items-center gap-2">
+<span class="font-body-md text-body-md text-primary font-medium">Carrefour Market</span>
+<span class="px-1.5 py-0.2 rounded bg-surface-container-highest text-on-surface-variant font-label-xs text-[10px]">Today</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Groceries &amp; Household</span>
+</div>
+<div class="text-right">
+<span class="font-data-mono text-data-mono text-on-surface font-medium">-MAD 420.00</span>
+<span class="block font-label-xs text-label-xs text-tertiary-fixed-dim">Settled</span>
+</div>
+</div>
+<!-- Item 2: Upcoming Sep 15 -->
+<div class="relative flex items-center justify-between group">
+<div class="absolute -left-6 top-1.5 w-2.5 h-2.5 rounded-full bg-secondary ring-4 ring-surface-container"></div>
+<div class="flex flex-col pr-2">
+<div class="flex items-center gap-2">
+<span class="font-body-md text-body-md text-primary font-medium">Netflix Standard</span>
+<span class="px-1.5 py-0.2 rounded bg-secondary-container/40 text-secondary font-label-xs text-[10px]">Sep 15</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Recurring Subscription</span>
+</div>
+<div class="text-right">
+<span class="font-data-mono text-data-mono text-primary font-medium">-MAD 98.00</span>
+<span class="block font-label-xs text-label-xs text-on-surface-variant">Queued</span>
+</div>
+</div>
+<!-- Item 3: Upcoming Sep 18 -->
+<div class="relative flex items-center justify-between group">
+<div class="absolute -left-6 top-1.5 w-2.5 h-2.5 rounded-full bg-secondary ring-4 ring-surface-container"></div>
+<div class="flex flex-col pr-2">
+<div class="flex items-center gap-2">
+<span class="font-body-md text-body-md text-primary font-medium">Maroc Telecom Fibre</span>
+<span class="px-1.5 py-0.2 rounded bg-secondary-container/40 text-secondary font-label-xs text-[10px]">Sep 18</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Home Internet Utility</span>
+</div>
+<div class="text-right">
+<span class="font-data-mono text-data-mono text-primary font-medium">-MAD 199.00</span>
+<span class="block font-label-xs text-label-xs text-on-surface-variant">Direct Debit</span>
+</div>
+</div>
+<!-- Item 4: Upcoming Sep 24 -->
+<div class="relative flex items-center justify-between group">
+<div class="absolute -left-6 top-1.5 w-2.5 h-2.5 rounded-full bg-tertiary-fixed-dim ring-4 ring-surface-container"></div>
+<div class="flex flex-col pr-2">
+<div class="flex items-center gap-2">
+<span class="font-body-md text-body-md text-primary font-medium">Auto-Transfer: Moto Goal</span>
+<span class="px-1.5 py-0.2 rounded bg-surface-container-highest text-tertiary-fixed-dim font-label-xs text-[10px]">Sep 24</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Smart Vault Reserve</span>
+</div>
+<div class="text-right">
+<span class="font-data-mono text-data-mono text-tertiary-fixed-dim font-medium">-MAD 800.00</span>
+<span class="block font-label-xs text-label-xs text-on-surface-variant">Automated</span>
+</div>
+</div>
+<!-- Dotted Separation Indicator -->
+<div class="relative py-1">
+<div class="w-full flex items-center gap-2">
+<div class="w-full h-px bg-surface-container-highest"></div>
+<span class="text-on-surface-variant font-label-xs text-[11px] whitespace-nowrap px-1">AI Projection Arc</span>
+<div class="w-full h-px bg-surface-container-highest"></div>
+</div>
+</div>
+<!-- Item 5: Predictive Projection Node -->
+<div class="relative rounded-lg bg-surface-container-high p-3 flex flex-col space-y-2">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary text-[16px]">auto_graph</span>
+<span class="font-body-sm text-body-sm text-primary font-medium">≈ Sep 30 · End-of-Month Forecast</span>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-tertiary-fixed/15 text-tertiary-fixed-dim font-label-xs text-label-xs font-semibold">
+            86% confidence
+          </span>
+</div>
+<div class="flex items-baseline justify-between pt-0.5">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Anticipated carryover liquidity</span>
+<span class="font-headline-sm text-headline-sm text-primary font-bold">MAD 1,742.00</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Quick Contextual Shortcuts -->
+<section class="grid grid-cols-2 gap-space-sm pb-space-xs">
+<button class="flex items-center gap-2 p-3 rounded-lg bg-surface-container text-left hover:bg-surface-container-high transition-colors active:scale-95">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-[18px]">add</span>
+</div>
+<div>
+<p class="font-body-sm text-body-sm text-primary font-medium">Manual Entry</p>
+<p class="font-label-xs text-label-xs text-on-surface-variant">Log Cash Outflow</p>
+</div>
+</button>
+<button class="flex items-center gap-2 p-3 rounded-lg bg-surface-container text-left hover:bg-surface-container-high transition-colors active:scale-95">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary text-[18px]">savings</span>
+</div>
+<div>
+<p class="font-body-sm text-body-sm text-primary font-medium">Boost Goal</p>
+<p class="font-label-xs text-label-xs text-on-surface-variant">+MAD 200 to Vault</p>
+</div>
+</button>
+</section>
+</div>
+<script>
+  // Simple micro-interaction for AI Inbox action buttons
+  const acceptBtn = document.getElementById('accept-btn');
+  const reviewBtn = document.getElementById('review-btn');
+  const alertCard = document.getElementById('ai-alert-card');
+
+  if (acceptBtn && alertCard) {
+    acceptBtn.addEventListener('click', () => {
+      acceptBtn.textContent = 'Accepted ✓';
+      acceptBtn.classList.remove('bg-primary', 'text-on-primary');
+      acceptBtn.classList.add('bg-tertiary-fixed-dim', 'text-on-tertiary-fixed');
+      setTimeout(() => {
+        alertCard.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+        alertCard.style.opacity = '0';
+        alertCard.style.transform = 'translateY(-10px)';
+        setTimeout(() => alertCard.remove(), 400);
+      }, 700);
+    });
+  }
+
+  if (reviewBtn) {
+    reviewBtn.addEventListener('click', () => {
+      reviewBtn.textContent = 'Opening Netflix...';
+      setTimeout(() => {
+        reviewBtn.textContent = 'Review Tier';
+      }, 1500);
+    });
+  }
+</script></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface/85 backdrop-blur-xl shadow-[0_-4px_24px_rgba(0,0,0,0.6)]" data-active-classes="text-primary font-medium"><div class="h-16 px-space-sm flex items-center justify-around relative"><a aria-current="page" class="flex-1 h-12 flex flex-col items-center justify-center gap-0.5 transition-all active:scale-95 text-primary font-medium" data-path="home" href="#"><span class="material-symbols-outlined text-[22px]">cottage</span><span class="font-label-xs text-label-xs tracking-wider">Home</span></a><a class="flex-1 h-12 flex flex-col items-center justify-center gap-0.5 text-on-surface-variant transition-all hover:text-on-surface active:scale-95" data-path="money" href="#"><span class="material-symbols-outlined text-[22px]">account_balance_wallet</span><span class="font-label-xs text-label-xs tracking-wider">Money</span></a><div class="relative -top-3.5 flex items-center justify-center px-space-xs"><a aria-label="Aura Intelligence Copilot" class="w-13 h-13 w-[52px] h-[52px] rounded-full bg-surface-container-high flex items-center justify-center shadow-[0_4px_16px_rgba(192,193,255,0.25)] transition-all hover:scale-105 active:scale-95 relative" data-path="aura-ai" href="#"><div class="absolute -inset-[1.5px] rounded-full bg-gradient-to-tr from-secondary-container via-secondary to-tertiary-fixed opacity-80 -z-10"></div><span class="material-symbols-outlined text-secondary text-[24px]">auto_awesome</span></a></div><a class="flex-1 h-12 flex flex-col items-center justify-center gap-0.5 text-on-surface-variant transition-all hover:text-on-surface active:scale-95" data-path="plan" href="#"><span class="material-symbols-outlined text-[22px]">explore</span><span class="font-label-xs text-label-xs tracking-wider">Plan</span></a><a class="flex-1 h-12 flex flex-col items-center justify-center gap-0.5 text-on-surface-variant transition-all hover:text-on-surface active:scale-95" data-path="goals" href="#"><span class="material-symbols-outlined text-[22px]">flag</span><span class="font-label-xs text-label-xs tracking-wider">Goals</span></a></div></nav></body></html>

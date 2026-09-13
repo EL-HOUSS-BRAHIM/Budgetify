@@ -90,7 +90,7 @@ export default function SettingsScreen(): React.ReactElement {
           { color: colors.text.tertiary, marginTop: spacing.lg, marginBottom: 8, marginLeft: 4 },
         ]}
       >
-        AURA PREVIEWS
+        LYVORA PREVIEWS
       </Text>
 
       <View

@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Budgetify",
+    "name": "Lyvora",
     "slug": "budgetify",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -20,7 +20,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#0F172A"
+        "backgroundColor": "#0C0D10"
       },
       "package": "tech.brahimcrafts.budgetify"
     },

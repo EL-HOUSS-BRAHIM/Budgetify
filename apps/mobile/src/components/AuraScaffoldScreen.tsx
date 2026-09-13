@@ -49,7 +49,7 @@ export function AuraScaffoldScreen({
           <Text
             style={[styles.brandName, { color: colors.text.primary, fontFamily: fontFamily.bold }]}
           >
-            Aura
+            Lyvora
           </Text>
         </View>
       </View>
