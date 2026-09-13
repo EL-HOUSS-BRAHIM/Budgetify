@@ -1,9 +1,11 @@
 import React from 'react';
+import { useRouter } from 'expo-router';
 import { ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../src/theme/ThemeProvider';
 
 export default function SettingsScreen(): React.ReactElement {
+  const router = useRouter();
   const { colors, isDark, toggleTheme, spacing, typography } = useTheme();
   const insets = useSafeAreaInsets();
 
@@ -80,6 +82,46 @@ export default function SettingsScreen(): React.ReactElement {
             trackColor={{ false: colors.border.strong, true: colors.brand.primary }}
           />
         </View>
+      </View>
+
+      <Text
+        style={[
+          typography.caption,
+          { color: colors.text.tertiary, marginTop: spacing.lg, marginBottom: 8, marginLeft: 4 },
+        ]}
+      >
+        AURA PREVIEWS
+      </Text>
+
+      <View
+        style={[
+          styles.card,
+          { backgroundColor: colors.background.card, borderColor: colors.border.default },
+        ]}
+      >
+        {[
+          ['Financial Forecast', '/forecast'],
+          ['Subscriptions & Bills', '/bills'],
+          ['Transaction Detail', '/transaction/preview'],
+          ['Salary Day', '/salary-day'],
+          ['Privacy & AI Access', '/privacy'],
+        ].map(([label, route], index) => (
+          <React.Fragment key={route}>
+            {index > 0 && (
+              <View style={[styles.divider, { backgroundColor: colors.border.subtle }]} />
+            )}
+            <TouchableOpacity
+              accessibilityLabel={`Open ${label}`}
+              accessibilityRole="button"
+              activeOpacity={0.7}
+              onPress={() => router.push(route as never)}
+              style={styles.settingRow}
+            >
+              <Text style={[typography.bodyLarge, { color: colors.text.primary }]}>{label}</Text>
+              <Text style={[typography.bodyLarge, { color: colors.text.tertiary }]}>›</Text>
+            </TouchableOpacity>
+          </React.Fragment>
+        ))}
       </View>
 
       {/* Data & Privacy (GDPR) */}
