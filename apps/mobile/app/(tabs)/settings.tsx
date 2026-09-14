@@ -105,6 +105,9 @@ export default function SettingsScreen(): React.ReactElement {
           ['Transaction Detail', '/transaction/preview'],
           ['Salary Day', '/salary-day'],
           ['Privacy & AI Access', '/privacy'],
+          ['Irregular Income Mode', '/income-mode'],
+          ['Emergency Lockdown Mode', '/lockdown'],
+          ['Credit Card Hub', '/credit-cards'],
         ].map(([label, route], index) => (
           <React.Fragment key={route}>
             {index > 0 && (

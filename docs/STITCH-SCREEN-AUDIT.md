@@ -21,10 +21,10 @@ an accessibility/state audit. Preview data must always be visibly labeled.
 | 7     | Subscriptions & Bills Center      | `b550d1f3a69b4c21a86ad98564d95200` | `/bills`               | finished       |
 | 8     | Smart Transaction Detail          | `0a642d28536542da9021761a86bbd44a` | `/transaction/[id]`    | finished       |
 | 9     | Salary Day Flow                   | `0f71adbe6f394e81abaabfc9f3e2ec29` | `/salary-day`          | finished       |
-| 10    | Privacy & AI Access Control       | `776daf01b46a4836b5d77d10b7e27ceb` | `/privacy`             | scaffolded     |
-| 11    | Irregular Income Mode             | `5a255302725745f5ab85ae33d4d44583` | `/income-mode`         | queued         |
-| 12    | Emergency Lockdown Mode           | `435b530c5b454d3eb6d73fda94da922e` | `/lockdown`            | queued         |
-| 13    | Credit Card Hub                   | `c97e62dbb5f64284a1eb7779efb19b61` | `/credit-cards`        | queued         |
+| 10    | Privacy & AI Access Control       | `776daf01b46a4836b5d77d10b7e27ceb` | `/privacy`             | finished       |
+| 11    | Irregular Income Mode             | `5a255302725745f5ab85ae33d4d44583` | `/income-mode`         | finished       |
+| 12    | Emergency Lockdown Mode           | `435b530c5b454d3eb6d73fda94da922e` | `/lockdown`            | finished       |
+| 13    | Credit Card Hub                   | `c97e62dbb5f64284a1eb7779efb19b61` | `/credit-cards`        | finished       |
 | 14    | Capital Allocation Engine         | `30492bd6193c45eea0174b98ab5889b3` | `/allocation`          | queued         |
 | 15    | Financial Automation Engine       | `752fe09d41144f5ea37244c60c05eff7` | `/automations`         | queued         |
 | 16    | Voice-First Driving Mode          | `9d57901b1e8b496393641b9b065e2ff9` | `/driving-mode`        | queued         |
@@ -181,6 +181,28 @@ was sent.` Cancellation actions likewise only prepare local review state; the
 transfers were created.` It does not mutate account balances, goals, or bills.
 - Static checks: mobile TypeScript, root-scoped focused ESLint, Prettier, editor
   diagnostics, and React Native runtime error log passed.
+
+### 10-13. Governance & Financial Safety - finished 2026-09-14
+
+- Privacy & AI Access Control: implemented the vault status, three mutually
+  exclusive AI-context scopes, categorization and alert preferences, and an
+  explicit approval-only money-transfer boundary. Settings are local preview
+  state and do not alter authentication, RLS, or backend authorization.
+- Irregular Income Mode: implemented conservative-floor configuration, survival
+  coverage, surplus-routing priorities, and a local payment-split simulation.
+  It does not create routing rules or move money.
+- Emergency Lockdown Mode: implemented survival directives, containment audits,
+  runway summary, and a reversible local protection state. It never suspends
+  subscriptions, freezes cards, or modifies external provider permissions.
+- Credit Card Hub: implemented utilization, billing timeline, zero-interest
+  shield guidance, and local statement-plan preparation. Preparing the plan
+  confirms `No payment was sent.`
+- Stitch comparison and Android: Privacy, Irregular Income, Emergency Lockdown,
+  and Credit Card Hub rendered on the emulator with the corresponding dark,
+  dense source hierarchy. Credit Card controls were verified as named and at
+  least 48 dp high; all financial actions state their non-executing scope.
+- Static checks: mobile TypeScript, root-scoped focused ESLint, Prettier, and
+  editor diagnostics passed for the four routes and Settings entry points.
 
 ### Scaffold Coverage - 2026-09-13
 
