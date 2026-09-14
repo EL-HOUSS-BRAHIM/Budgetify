@@ -15,6 +15,7 @@
   ],
   "scripts": {
     "dev": "npm run start --workspace apps/mobile",
+    "dev:lan": "npm run start --workspace apps/mobile -- --dev-client --host lan",
     "dev:api": "npm run dev --workspace services/ai",
     "android": "npm run android --workspace apps/mobile",
     "db:start": "npx supabase start",

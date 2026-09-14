@@ -1,0 +1,121 @@
+name: build-apk-debug
+
+# Debug APK compiled on the GitHub runner, meant to be side-loaded on a phone
+# and pointed at a Metro dev server running on your LAN.
+#
+# On your machine:  npm run dev:lan   (then open the printed URL in the app)
+# Install the APK:  adb install -r app-debug.apk
+
+on:
+  workflow_dispatch:
+    inputs:
+      architectures:
+        description: ABIs to compile (fewer ABIs = faster build)
+        type: choice
+        default: arm64-v8a
+        options:
+          - arm64-v8a
+          - arm64-v8a,x86_64
+          - armeabi-v7a,arm64-v8a,x86,x86_64
+  push:
+    branches: [main]
+    paths:
+      - 'apps/mobile/**'
+      - 'packages/**'
+      - 'package-lock.json'
+      - '.github/workflows/build-apk-debug.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  ARCHS: ${{ inputs.architectures || 'arm64-v8a' }}
+  GRADLE_OPTS: -Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false
+  EXPO_NO_TELEMETRY: '1'
+
+jobs:
+  debug-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit --fund=false
+
+      # android/ is git-ignored (Expo CNG), so it is regenerated every run.
+      # Caching it keeps Gradle's incremental state and the CMake/NDK outputs.
+      - name: Restore prebuild output
+        uses: actions/cache@v4
+        with:
+          path: |
+            apps/mobile/android/.gradle
+            apps/mobile/android/app/build
+            apps/mobile/android/app/.cxx
+          key: prebuild-${{ runner.os }}-${{ env.ARCHS }}-${{ hashFiles('package-lock.json', 'apps/mobile/app.json') }}-${{ github.sha }}
+          restore-keys: |
+            prebuild-${{ runner.os }}-${{ env.ARCHS }}-${{ hashFiles('package-lock.json', 'apps/mobile/app.json') }}-
+            prebuild-${{ runner.os }}-${{ env.ARCHS }}-
+
+      - name: Prebuild android project
+        run: npx expo prebuild --platform android --no-install
+        working-directory: apps/mobile
+
+      # Parallel execution + the local build cache cut repeat builds roughly in half.
+      # (Gradle's configuration cache is left off: the React Native 0.76 plugin
+      # still invalidates it on every run, so it only adds overhead.)
+      - name: Tune Gradle
+        run: |
+          {
+            echo "org.gradle.parallel=true"
+            echo "org.gradle.caching=true"
+            echo "org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g -Dfile.encoding=UTF-8"
+            echo "reactNativeArchitectures=${ARCHS}"
+          } >> apps/mobile/android/gradle.properties
+
+      # Caches ~/.gradle (dependencies + local build cache) across runs.
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
+
+      - name: Assemble debug APK
+        run: ./gradlew assembleDebug --build-cache --stacktrace
+        working-directory: apps/mobile/android
+
+      - name: Stage APK
+        run: |
+          mv apps/mobile/android/app/build/outputs/apk/debug/app-debug.apk \
+             "budgetify-debug-${GITHUB_SHA::7}.apk"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: budgetify-debug-apk
+          path: budgetify-debug-*.apk
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Summary
+        run: |
+          {
+            echo "### Debug APK (\`$ARCHS\`)"
+            echo ""
+            echo "1. Download the \`budgetify-debug-apk\` artifact and \`adb install -r\` it."
+            echo "2. On your dev machine run \`npm run dev:lan\`."
+            echo "3. Make sure the phone and the dev machine are on the same network,"
+            echo "   then open the dev client and enter \`http://<your-lan-ip>:8081\`."
+            echo "   Or shake the device and set \"Debug server host & port\"."
+          } >> "$GITHUB_STEP_SUMMARY"

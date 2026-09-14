@@ -108,6 +108,14 @@ export default function SettingsScreen(): React.ReactElement {
           ['Irregular Income Mode', '/income-mode'],
           ['Emergency Lockdown Mode', '/lockdown'],
           ['Credit Card Hub', '/credit-cards'],
+           ['Capital Allocation Engine', '/allocation'],
+           ['Financial Automation Engine', '/automations'],
+           ['Voice-First Driving Mode', '/driving-mode'],
+           ['End-of-Month Brutal Report', '/reports/month-end'],
+            ['Deep Goal Strategy', '/goals/preview/strategy'],
+            ['Shared Finances & Splitting', '/shared-finances'],
+            ['Document Vault', '/vault'],
+            ['Lock Screen & Dynamic Island Reference', '/platform-surface'],
         ].map(([label, route], index) => (
           <React.Fragment key={route}>
             {index > 0 && (

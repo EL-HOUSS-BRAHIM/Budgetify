@@ -25,13 +25,13 @@ an accessibility/state audit. Preview data must always be visibly labeled.
 | 11    | Irregular Income Mode             | `5a255302725745f5ab85ae33d4d44583` | `/income-mode`         | finished       |
 | 12    | Emergency Lockdown Mode           | `435b530c5b454d3eb6d73fda94da922e` | `/lockdown`            | finished       |
 | 13    | Credit Card Hub                   | `c97e62dbb5f64284a1eb7779efb19b61` | `/credit-cards`        | finished       |
-| 14    | Capital Allocation Engine         | `30492bd6193c45eea0174b98ab5889b3` | `/allocation`          | queued         |
-| 15    | Financial Automation Engine       | `752fe09d41144f5ea37244c60c05eff7` | `/automations`         | queued         |
-| 16    | Voice-First Driving Mode          | `9d57901b1e8b496393641b9b065e2ff9` | `/driving-mode`        | queued         |
-| 17    | End-of-Month Brutal Report        | `7686160c206548c1ad706bc1a11bac34` | `/reports/month-end`   | queued         |
-| 18    | Deep Goal Strategy                | `89c69a8ccb744f1c9d7ccdbdba4f381c` | `/goals/[id]/strategy` | queued         |
-| 19    | Shared Finances & Splitting       | `927e60cdc3f94599bce26f94dbfbcee2` | `/shared-finances`     | queued         |
-| 20    | Document Vault                    | `f65099ef5b514daba59b96c54f22b75a` | `/vault`               | queued         |
+| 14    | Capital Allocation Engine         | `30492bd6193c45eea0174b98ab5889b3` | `/allocation`          | finished       |
+| 15    | Financial Automation Engine       | `752fe09d41144f5ea37244c60c05eff7` | `/automations`         | finished       |
+| 16    | Voice-First Driving Mode          | `9d57901b1e8b496393641b9b065e2ff9` | `/driving-mode`        | finished       |
+| 17    | End-of-Month Brutal Report        | `7686160c206548c1ad706bc1a11bac34` | `/reports/month-end`   | finished       |
+| 18    | Deep Goal Strategy                | `89c69a8ccb744f1c9d7ccdbdba4f381c` | `/goals/[id]/strategy` | implemented   |
+| 19    | Shared Finances & Splitting       | `927e60cdc3f94599bce26f94dbfbcee2` | `/shared-finances`     | implemented   |
+| 20    | Document Vault                    | `f65099ef5b514daba59b96c54f22b75a` | `/vault`               | implemented   |
 | 21    | Lock Screen & Dynamic Island      | `aa91ec38c2254e43b7b7ea4e7d491db5` | platform surface       | reference only |
 | 22    | AI Personality Settings           | `b000485969d148ffa9f53cb74afad0f2` | `/settings/ai`         | queued         |
 | 23    | Financial Health Deep-Dive        | `21eb7510e9574a2dba4fa9026c0852dc` | `/financial-health`    | queued         |
@@ -182,6 +182,24 @@ transfers were created.` It does not mutate account balances, goals, or bills.
 - Static checks: mobile TypeScript, root-scoped focused ESLint, Prettier, editor
   diagnostics, and React Native runtime error log passed.
 
+### 14-17. Capital, Automation, Voice & Report - finished 2026-09-14
+
+- Capital Allocation Engine: implemented the surplus-capital distribution,
+  weighted allocation cards, balanced total, and local prepare action. It
+  explicitly states that no account balance changes and no transfer is created.
+- Financial Automation Engine: implemented rule cards and a natural-language
+  rule builder. Rules compile only to a local preview and are never activated.
+- Voice-First Driving Mode: implemented the driver-focused capture interface,
+  glance telemetry, and explicit review requirement. It does not start device
+  recording or create a transaction.
+- End-of-Month Brutal Report: implemented preview-only discipline score, monthly
+  indicators, candid spending analysis, and local next-month plan preparation.
+- Stitch comparison and Android: Allocation, Automation, Driving Mode, and
+  Month-End Report routes rendered in the emulator with their corresponding
+  dark, dense Stitch-inspired structures and Lyvora branding.
+- Static checks: mobile TypeScript, root-scoped focused ESLint, Prettier, and
+  editor diagnostics passed for all four routes and the Settings menu.
+
 ### 10-13. Governance & Financial Safety - finished 2026-09-14
 
 - Privacy & AI Access Control: implemented the vault status, three mutually
@@ -214,3 +232,31 @@ transfers were created.` It does not mutate account balances, goals, or bills.
 - The Settings screen exposes all five scaffold routes under `AURA PREVIEWS`.
 - Static validation passed: mobile TypeScript, focused ESLint, and Prettier.
   Shared core validation passed: 65 tests. Expo dependency validation passed.
+
+### 18-20. Strategy, Shared Finances & Vault - implemented 2026-09-14
+
+- Deep Goal Strategy: added `/goals/[id]/strategy` with labeled preview target
+  health, strategy layers, adaptive proposal, and local-only strategy review
+  confirmation. Goal cards link directly to the matching strategy route.
+- Shared Finances & Splitting: added `/shared-finances` with household
+  commitment totals, contribution split, fairness check, and local-only split
+  review confirmation. It creates no invitations, requests, or payments.
+- Document Vault: added `/vault` with protected-vault status, sample records,
+  renewal insight, and a local-only vault review confirmation. It does not
+  upload, share, or connect external files.
+- All three surfaces are discoverable from the Settings preview menu. Preview
+  content is visibly labeled.
+- Focused mobile TypeScript, Prettier, and editor diagnostics passed. Android
+  emulator inspection and Stitch screenshot comparison remain outstanding for
+  final `finished` status.
+
+### 21. Lock Screen & Dynamic Island - reference surface 2026-09-14
+
+- Added `/platform-surface` as an explicit in-app reference for the intended
+  lock-screen and Dynamic Island content contract: Safe-to-Spend status,
+  coverage state, and native handoff notes.
+- The route visibly states that it is reference-only. It does not claim to
+  activate Android lock-screen notifications, live surfaces, or Dynamic Island
+  APIs.
+- Focused mobile TypeScript, Prettier, and editor diagnostics passed. Native
+  platform implementation is intentionally outside the current Expo route.

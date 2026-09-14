@@ -520,6 +520,15 @@ function GoalCard({ goal }: { goal: GoalView }): React.ReactElement {
             : 'Live target'}
         </Text>
       </View>
+      <Pressable
+        accessibilityLabel={`Open strategy for ${goal.name}`}
+        accessibilityRole="button"
+        onPress={() => router.push(`/goals/${goal.id}/strategy`)}
+        style={({ pressed }) => [styles.strategyLink, { borderTopColor: colors.border.subtle, opacity: pressed ? 0.7 : 1 }]}
+      >
+        <Text style={[styles.strategyLinkText, { color: colors.semantic.info, fontFamily: fontFamily.semibold }]}>Open deep strategy</Text>
+        <Ionicons name="arrow-forward" size={16} color={colors.semantic.info} />
+      </Pressable>
     </Card>
   );
 }
@@ -657,6 +666,15 @@ const styles = StyleSheet.create({
   goalPercent: { fontSize: 13, lineHeight: 18 },
   goalFooter: { marginTop: 8, flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
   goalDetail: { fontSize: 10, lineHeight: 14 },
+  strategyLink: {
+    minHeight: 44,
+    marginTop: 10,
+    borderTopWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  strategyLinkText: { fontSize: 11, lineHeight: 16 },
   simHeader: {
     marginTop: 26,
     flexDirection: 'row',
