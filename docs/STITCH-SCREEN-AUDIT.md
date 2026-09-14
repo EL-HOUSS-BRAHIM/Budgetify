@@ -33,9 +33,9 @@ an accessibility/state audit. Preview data must always be visibly labeled.
 | 19    | Shared Finances & Splitting       | `927e60cdc3f94599bce26f94dbfbcee2` | `/shared-finances`     | implemented   |
 | 20    | Document Vault                    | `f65099ef5b514daba59b96c54f22b75a` | `/vault`               | implemented   |
 | 21    | Lock Screen & Dynamic Island      | `aa91ec38c2254e43b7b7ea4e7d491db5` | platform surface       | reference only |
-| 22    | AI Personality Settings           | `b000485969d148ffa9f53cb74afad0f2` | `/settings/ai`         | queued         |
-| 23    | Financial Health Deep-Dive        | `21eb7510e9574a2dba4fa9026c0852dc` | `/financial-health`    | queued         |
-| 24    | Intelligent Onboarding            | `5dba3955163c41e0a68a2257b72a9ba3` | `/onboarding`          | queued         |
+| 22    | AI Personality Settings           | `b000485969d148ffa9f53cb74afad0f2` | `/settings/ai`         | implemented   |
+| 23    | Financial Health Deep-Dive        | `21eb7510e9574a2dba4fa9026c0852dc` | `/financial-health`    | implemented   |
+| 24    | Intelligent Onboarding            | `5dba3955163c41e0a68a2257b72a9ba3` | `/onboarding`          | implemented   |
 | 25    | Desktop Command Center (Pro View) | `868290fb58854a9faa4dec5ce07147e0` | web/desktop reference  | reference only |
 
 ## Shared Assets
@@ -260,3 +260,29 @@ transfers were created.` It does not mutate account balances, goals, or bills.
   APIs.
 - Focused mobile TypeScript, Prettier, and editor diagnostics passed. Native
   platform implementation is intentionally outside the current Expo route.
+
+### 22-24. Personality, Health & Onboarding - implemented 2026-09-14
+
+- AI Personality Settings: added `/settings/ai` with three local tone profiles,
+  explicit selection semantics, a preview-only save confirmation, and a fixed
+  approval boundary for money movement.
+- Financial Health Deep-Dive: added `/financial-health` with a visibly labeled
+  sample score, liquidity, goal momentum, spending stability, and a next-move
+  insight. It is not presented as financial advice or a live assessment.
+- Intelligent Onboarding: added `/onboarding` with a three-step local preview
+  flow covering priorities, safety floor, and first signal. It creates no
+  account, bank connection, or persistent profile.
+- All three surfaces are discoverable from the Settings preview menu.
+- Focused mobile TypeScript, Prettier, and editor diagnostics passed. Android
+  emulator inspection and Stitch screenshot comparison remain outstanding for
+  final `finished` status.
+
+### 25. Desktop Command Center - reference surface 2026-09-14
+
+- Added `/desktop-reference` as an in-app composition reference for the future
+  desktop/web command center, including sidebar navigation, Safe-to-Spend,
+  health, and continuum timeline signals.
+- The route visibly states that it is reference-only and is not presented as a
+  desktop web implementation.
+- Focused mobile TypeScript, Prettier, and editor diagnostics passed. A real
+  desktop implementation and browser comparison remain outstanding.

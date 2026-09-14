@@ -433,6 +433,7 @@ export default function GoalsScreen(): React.ReactElement {
 }
 
 function GoalCard({ goal }: { goal: GoalView }): React.ReactElement {
+  const router = useRouter();
   const { colors, fontFamily, typography } = useTheme();
   const progress = Math.min(100, Math.round((goal.currentAmount / goal.targetAmount) * 100));
   return (
