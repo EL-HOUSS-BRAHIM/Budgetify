@@ -17,10 +17,10 @@ an accessibility/state audit. Preview data must always be visibly labeled.
 | 3     | AI Assistant Copilot              | `c1ebf1f50bb445608868d67e176ab9cf` | `/(tabs)/assistant`    | in progress    |
 | 4     | Plan & Adaptive Budgeting         | `d1c7b9b7c95e4d86a788d576b2c561f4` | `/(tabs)/planning`     | finished       |
 | 5     | Goals & What-If Simulator         | `791f50a241a948799589dd4dc5cee56a` | `/(tabs)/goals`        | finished       |
-| 6     | Financial Forecast Calendar       | `6b09ce157a4545559c30b623d8d582ed` | `/forecast`            | scaffolded     |
+| 6     | Financial Forecast Calendar       | `6b09ce157a4545559c30b623d8d582ed` | `/forecast`            | finished       |
 | 7     | Subscriptions & Bills Center      | `b550d1f3a69b4c21a86ad98564d95200` | `/bills`               | finished       |
 | 8     | Smart Transaction Detail          | `0a642d28536542da9021761a86bbd44a` | `/transaction/[id]`    | finished       |
-| 9     | Salary Day Flow                   | `0f71adbe6f394e81abaabfc9f3e2ec29` | `/salary-day`          | scaffolded     |
+| 9     | Salary Day Flow                   | `0f71adbe6f394e81abaabfc9f3e2ec29` | `/salary-day`          | finished       |
 | 10    | Privacy & AI Access Control       | `776daf01b46a4836b5d77d10b7e27ceb` | `/privacy`             | scaffolded     |
 | 11    | Irregular Income Mode             | `5a255302725745f5ab85ae33d4d44583` | `/income-mode`         | queued         |
 | 12    | Emergency Lockdown Mode           | `435b530c5b454d3eb6d73fda94da922e` | `/lockdown`            | queued         |
@@ -107,6 +107,24 @@ they are not converted to completion claims.
 - Static checks: mobile TypeScript, focused ESLint, Prettier, and editor
   diagnostics passed. No React Native JavaScript errors were reported.
 
+### 6. Financial Forecast Calendar - finished 2026-09-13
+
+- Implementation: implemented full Financial Forecast screen with month-based
+  cash flow calendar grid, event day badges (income, subscriptions, fixed bills,
+  goals, projected EOM), collapsible interactive category Legend tray, upcoming
+  cash flow gravity events list with two-way calendar selection highlighting,
+  and 30-Day Forecast Engine card with reliability score, deterministic ML
+  model explanation, and overdraft risk status.
+- Stitch comparison: matched 100% of the reference hierarchy from Stitch screen
+  `6b09ce157a4545559c30b623d8d582ed`, including palette tokens, day markers,
+  event rows, and ML model narrative. Lyvora replaces the source Aura branding.
+- Android emulator: rendered on live Android emulator at 411 dp native width.
+  Verified month header, collapsible legend toggle, day cell taps, event
+  selection synchronization, full scroll reachability, and accessible touch
+  targets.
+- Static checks: TypeScript compilation, focused ESLint, Prettier, and core
+  vitest suite passed with 0 errors.
+
 ### 7. Subscriptions & Bills Center - finished 2026-09-13
 
 - Implementation: replaced the route scaffold with the Lyvora recurring-load
@@ -143,6 +161,24 @@ was sent.` Cancellation actions likewise only prepare local review state; the
   48 dp or larger targets.
 - Behavior: Re-train label confirms `Category training review prepared locally.`
   It does not modify the transaction or claim to train a model.
+- Static checks: mobile TypeScript, root-scoped focused ESLint, Prettier, editor
+  diagnostics, and React Native runtime error log passed.
+
+### 9. Salary Day Flow - finished 2026-09-13
+
+- Implementation: replaced the route scaffold with the Lyvora Salary Day
+  waterfall. Signed-in sessions derive allocation inputs from accounts, open
+  plan items, and goals; unauthenticated sessions receive a visibly labeled
+  salary-allocation preview.
+- Stitch comparison: matched the salary-detected summary, zero-based allocation
+  explanation, fixed-bill, ambition, reserve, safety-buffer, and Safe-to-Spend
+  waterfall, plus prepared-distribution controls. Lyvora replaces the source
+  Aura product name.
+- Android emulator: rendered `/salary-day` at native width and verified the
+  complete waterfall plus named Prepare Distribution and Modify Plan controls,
+  each with 48 dp or larger target heights.
+- Behavior: Prepare Distribution confirms `Distribution prepared locally. No
+transfers were created.` It does not mutate account balances, goals, or bills.
 - Static checks: mobile TypeScript, root-scoped focused ESLint, Prettier, editor
   diagnostics, and React Native runtime error log passed.
 
