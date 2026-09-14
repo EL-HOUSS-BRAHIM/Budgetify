@@ -1,7 +1,36 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import { createClient } from '@supabase/supabase-js';
+import { z } from 'zod';
 import { executeToolCall } from './executor';
 import { ToolDefinitions } from './tools';
+
+const ChatBodySchema = z.object({
+  message: z.string().trim().min(1).max(2000),
+  history: z
+    .array(z.object({ role: z.enum(['user', 'assistant', 'system']), content: z.string().max(4000) }))
+    .max(50)
+    .optional(),
+});
+
+function allowedOrigins(): string[] {
+  return (process.env['ALLOWED_ORIGINS'] ?? 'http://localhost:3000,http://localhost:8081')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+}
+
+async function authenticateCaller(
+  supabaseUrl: string,
+  supabasePublishableKey: string,
+  userJwt: string,
+): Promise<boolean> {
+  const supabase = createClient(supabaseUrl, supabasePublishableKey, {
+    auth: { autoRefreshToken: false, detectSessionInUrl: false, persistSession: false },
+  });
+  const { data, error } = await supabase.auth.getUser(userJwt);
+  return !error && Boolean(data.user);
+}
 
 /**
  * The assistant's tool-calling loop and voice/text chatbot endpoint.
@@ -10,7 +39,12 @@ import { ToolDefinitions } from './tools';
 export function createApp(): Hono {
   const app = new Hono();
 
-  app.use('*', cors());
+  app.use(
+    '*',
+    cors({
+      origin: (origin) => (!origin || allowedOrigins().includes(origin) ? origin : ''),
+    }),
+  );
 
   app.get('/health', (c) => c.json({ status: 'ok', service: 'budgetify-ai' }));
 
@@ -28,18 +62,23 @@ export function createApp(): Hono {
     if (!supabaseUrl || !supabasePublishableKey) {
       return c.json({ error: 'Supabase server configuration is missing' }, 503);
     }
+    if (!(await authenticateCaller(supabaseUrl, supabasePublishableKey, userJwt))) {
+      return c.json({ error: 'Invalid or expired access token' }, 401);
+    }
     const executionContext = { supabaseUrl, supabasePublishableKey, userJwt };
 
     try {
-      const body = await c.req.json<{
-        message: string;
-        history?: Array<{ role: 'user' | 'assistant' | 'system'; content: string }>;
-      }>();
-
-      const userMessage = body.message;
-      if (!userMessage) {
-        return c.json({ error: 'message is required' }, 400);
+      let rawBody: unknown;
+      try {
+        rawBody = await c.req.json();
+      } catch {
+        return c.json({ error: 'Invalid chat payload' }, 400);
       }
+      const parsedBody = ChatBodySchema.safeParse(rawBody);
+      if (!parsedBody.success) {
+        return c.json({ error: 'Invalid chat payload' }, 400);
+      }
+      const userMessage = parsedBody.data.message;
 
       // Fast intent matching for common voice/text budgeting commands
       const lower = userMessage.toLowerCase();

@@ -48,7 +48,7 @@ describe('health', () => {
     expect(await response.json()).toEqual({ error: 'Supabase server configuration is missing' });
   });
 
-  it('does not expose internal errors from malformed requests', async () => {
+  it('rejects invalid caller tokens before executing a tool', async () => {
     vi.stubEnv('SUPABASE_URL', 'https://project.supabase.co');
     vi.stubEnv('SUPABASE_PUBLISHABLE_KEY', 'sb_publishable_test');
 
@@ -58,11 +58,39 @@ describe('health', () => {
         Authorization: 'Bearer test-user-jwt',
         'Content-Type': 'application/json',
       },
+      body: JSON.stringify({ message: 'spent $10 on food' }),
+    });
+
+    expect(response.status).toBe(401);
+    expect(await response.json()).toEqual({ error: 'Invalid or expired access token' });
+  });
+
+  it('rejects malformed chat payloads after caller authentication', async () => {
+    vi.stubEnv('SUPABASE_URL', 'https://project.supabase.co');
+    vi.stubEnv('SUPABASE_PUBLISHABLE_KEY', 'sb_publishable_test');
+    const originalFetch = globalThis.fetch;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        new Response(JSON.stringify({ id: 'user-1' }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      ),
+    );
+
+    const response = await createApp().request('/api/chat', {
+      method: 'POST',
+      headers: {
+        Authorization: 'Bearer valid-user-jwt',
+        'Content-Type': 'application/json',
+      },
       body: '{',
     });
 
-    expect(response.status).toBe(500);
-    expect(await response.json()).toEqual({ error: 'Unable to process request' });
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: 'Invalid chat payload' });
+    vi.stubGlobal('fetch', originalFetch);
   });
 
   it('returns a structured 404 for unknown routes', async () => {
