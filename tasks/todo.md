@@ -2,6 +2,12 @@
 
 Plan: `tasks/plan.md` · Spec: `docs/SPEC-platform-foundation.md`
 
+## Backend-Frontend parity planning (new)
+
+- Progress state matrix: `tasks/progress-backend-frontend-parity.md`
+- Path to end (backend-first): `tasks/path-to-end-backend-first.md`
+- Execution todo board: `tasks/todo-backend-first-parity.md`
+
 ## Progress
 
 | Task | State | Evidence |
@@ -16,14 +22,14 @@ Plan: `tasks/plan.md` · Spec: `docs/SPEC-platform-foundation.md`
 | T7 Generated types | stale | Must be regenerated from the hosted schema after migration push |
 | T8 Expo app shell | done | Expo Router tab shell, tokens, dark/light theme, dashboard, budgets, expenses, planning checklist, modal |
 | T9 Supabase client in the app | done | `src/lib/supabase.ts` with SecureStore session persistence |
-| T10 services/ai health endpoint | blocked | 4 tests pass; typecheck and production start fail |
-| T11 Safe hosted target | ready | Project ref known; credential rotation and CLI verification pending |
-| T12 Shippable server baseline | ready | Compile/start/dependency defects reproduced |
-| T13 Hosted auth configuration | blocked | Depends on T11 and T12 |
-| T14 Push hosted migrations | blocked | Depends on T11 target gate |
-| T15 Generate hosted types | blocked | Depends on T14 |
-| T16 Authenticated backend smoke | blocked | Depends on T13 and T15 |
-| T17 Public API deployment | deferred | Begins only after T16 passes and host is selected |
+| T10 services/ai health endpoint | done | 2026-09-15: `/health` returns 200 locally and in Docker; no secret required to boot; route tests pass |
+| T11 Safe hosted target | done | 2026-09-15: user confirmed password rotation; linked target `hnlieepsxoqeebkreugt` verified via CLI; required env keys present only in local ignored env files; no service-role key usage in app/service |
+| T12 Shippable server baseline | done | 2026-09-15: `npm run typecheck --workspace services/ai` pass; `npm run test --workspace services/ai` pass (12 tests); `npm run start --workspace services/ai` serves `/health` 200; Docker build+run serves `/health` 200 |
+| T13 Hosted auth configuration | done | 2026-09-15: startup config validation added (`SUPABASE_URL` + publishable key format); placeholder/elevated key paths rejected; caller JWT validation and schema validation tests pass; CORS allowlist enforced for `/api/*` |
+| T14 Push hosted migrations | done | 2026-09-15: preflight target `hnlieepsxoqeebkreugt` verified; `db push --linked --dry-run` up-to-date with no pending SQL; `db push --linked` no-op success; `db lint --linked --schema public --fail-on error` clean |
+| T15 Generate hosted types | done | 2026-09-15: generated via `supabase gen types typescript --linked --schema public` on linked `hnlieepsxoqeebkreugt`; UTF-8 normalized; workspace `npm run typecheck` and `npm run test` pass |
+| T16 Authenticated backend smoke | done | 2026-09-15: user confirmed token-driven two-user smoke passed; `/health` 200 and unauthenticated `/api/chat` 401 verified; caller-scoped write/read and cross-user RLS denial proven |
+| T17 Public API deployment | in progress | 2026-09-15: Render Docker blueprint added (`render.yaml`); deployment runbook (`docs/DEPLOY-API-RENDER.md`) and public HTTPS smoke script (`services/ai/public-smoke-t17.mjs`) added; awaiting Render deploy URL + token run evidence |
 
 Anything marked "written, unverified" is a claim, not a fact. It becomes done
 when its verification command has actually been run.
@@ -43,10 +49,10 @@ to Supabase without sharing credentials, and link only the Budgetify project
 files. The unrelated shared MCP is excluded from this workflow.
 
 **Acceptance criteria:**
-- [ ] The database password has been rotated in the Supabase Dashboard
-- [ ] CLI project output and linked migration output show `hnlieepsxoqeebkreugt`
-- [ ] `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` are stored outside git
-- [ ] No secret/service-role key is used by the mobile app or AI service
+- [x] The database password has been rotated in the Supabase Dashboard
+- [x] CLI project output and linked migration output show `hnlieepsxoqeebkreugt`
+- [x] `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` are stored outside git
+- [x] No secret/service-role key is used by the mobile app or AI service
 
 **Verification:** Run the installed CLI's project and linked migration listing;
 inspect `git status` and staged diffs for secrets.
@@ -67,10 +73,10 @@ TypeScript errors, and use a production build/start path that resolves modules
 under supported Node releases. Keep `/health` independent of LLM configuration.
 
 **Acceptance criteria:**
-- [ ] `@supabase/supabase-js` and `zod` are direct service dependencies
-- [ ] Service type-check and route tests pass
-- [ ] Production start serves `GET /health` with HTTP 200
-- [ ] Container build/start uses the same proven production artifact
+- [x] `@supabase/supabase-js` and `zod` are direct service dependencies
+- [x] Service type-check and route tests pass
+- [x] Production start serves `GET /health` with HTTP 200
+- [x] Container build/start uses the same proven production artifact
 
 **Verification:** `npm run typecheck --workspace services/ai`; `npm run test
 --workspace services/ai`; production start followed by a `/health` request.
@@ -94,10 +100,10 @@ the caller's Supabase access token to preserve RLS. Validate HTTP input and make
 CORS explicit before public deployment.
 
 **Acceptance criteria:**
-- [ ] Missing/invalid hosted configuration fails clearly at startup
-- [ ] No project URL, placeholder key, or elevated key is hard-coded
-- [ ] Invalid/expired caller tokens return 401 and never execute a tool
-- [ ] Chat payloads are schema-validated and CORS is allowlisted
+- [x] Missing/invalid hosted configuration fails clearly at startup
+- [x] No project URL, placeholder key, or elevated key is hard-coded
+- [x] Invalid/expired caller tokens return 401 and never execute a tool
+- [x] Chat payloads are schema-validated and CORS is allowlisted
 
 **Verification:** Focused tests cover missing config, invalid payload, invalid JWT,
 and successful forwarding of a caller-scoped token.
@@ -120,13 +126,13 @@ remote dry run, and apply the two committed migrations to the verified project.
 No linked reset, schema pull, local stack, or Docker command is permitted.
 
 **Acceptance criteria:**
-- [ ] Preflight confirms the exact project ref and expected remote state
-- [ ] Dry run contains only the two expected migrations and no destructive SQL
-- [ ] Push succeeds and both timestamps appear in remote migration history
-- [ ] Remote database lint reports no errors
+- [x] Preflight confirms the exact project ref and expected remote state
+- [x] Dry run contains only the two expected migrations and no destructive SQL
+- [x] Push succeeds and both timestamps appear in remote migration history
+- [x] Remote database lint reports no errors
 
 **Verification:** Installed CLI `migration list --linked`, `db push --dry-run`,
-`db push`, then `db lint --linked --fail-on error`.
+`db push`, then `db lint --linked --schema public --fail-on error`.
 
 **Dependencies:** T11 · **Scope:** S
 
@@ -137,10 +143,10 @@ No linked reset, schema pull, local stack, or Docker command is permitted.
 ---
 
 ## Checkpoint E — hosted schema and runtime
-- [ ] T11 target gate passed before any remote write
-- [ ] T12 production server boots and passes tests/type-check
-- [ ] T13 has no elevated Supabase key and rejects invalid callers
-- [ ] T14 migration history and remote lint are clean
+- [x] T11 target gate passed before any remote write
+- [x] T12 production server boots and passes tests/type-check
+- [x] T13 has no elevated Supabase key and rejects invalid callers
+- [x] T14 migration history and remote lint are clean
 
 ---
 
@@ -150,9 +156,9 @@ No linked reset, schema pull, local stack, or Docker command is permitted.
 Budgetify project after migration deployment, replacing the local-only workflow.
 
 **Acceptance criteria:**
-- [ ] Type generation explicitly targets `hnlieepsxoqeebkreugt`
-- [ ] Generated tables and RPCs match the hosted public schema
-- [ ] Workspace type-check and tests pass with the regenerated file
+- [x] Type generation explicitly targets `hnlieepsxoqeebkreugt`
+- [x] Generated tables and RPCs match the hosted public schema
+- [x] Workspace type-check and tests pass with the regenerated file
 
 **Verification:** Generate types with `--project-id` or `--linked`; run workspace
 type-check and tests; inspect the generated diff.
@@ -172,10 +178,10 @@ a dedicated test account to exercise one read and one write through `/api/chat`,
 then prove a second account cannot access the first account's data.
 
 **Acceptance criteria:**
-- [ ] `/health` returns 200 and `/api/chat` without a token returns 401
-- [ ] A caller-scoped expense command creates the expected hosted row
-- [ ] Summary reads only that caller's data
-- [ ] A second user cannot read or mutate the first user's rows
+- [x] `/health` returns 200 and `/api/chat` without a token returns 401
+- [x] A caller-scoped expense command creates the expected hosted row
+- [x] Summary reads only that caller's data
+- [x] A second user cannot read or mutate the first user's rows
 
 **Verification:** HTTP smoke script against localhost plus read-only confirmation
 in the Supabase Dashboard. Tokens and financial payloads are not logged.
@@ -190,10 +196,10 @@ in the Supabase Dashboard. Tokens and financial payloads are not logged.
 ---
 
 ## Checkpoint F — backend usable now
-- [ ] Hosted schema is applied and typed
-- [ ] Local Hono server talks to hosted Supabase
-- [ ] Authenticated write/read works end to end
-- [ ] Cross-user RLS denial is proven
+- [x] Hosted schema is applied and typed
+- [x] Local Hono server talks to hosted Supabase
+- [x] Authenticated write/read works end to end
+- [x] Cross-user RLS denial is proven
 
 ---
 
@@ -211,6 +217,11 @@ HTTPS. This task is intentionally after the local-to-hosted proof.
 
 **Verification:** Provider deployment status plus external health/auth/write/RLS
 smoke checks and a rollback rehearsal.
+
+**Execution notes (2026-09-15):**
+- Render blueprint: `render.yaml`
+- Deployment runbook: `docs/DEPLOY-API-RENDER.md`
+- Public smoke script: `services/ai/public-smoke-t17.mjs` (also `npm run smoke:public`)
 
 **Dependencies:** T16, deployment-host decision · **Scope:** M
 

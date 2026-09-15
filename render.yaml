@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: budgetify-ai
+    runtime: docker
+    repo: https://github.com/REPLACE_WITH_OWNER/Budgetify
+    plan: starter
+    branch: main
+    dockerContext: .
+    dockerfilePath: ./services/ai/Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 8787
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: LLM_BASE_URL
+        sync: false
+      - key: LLM_API_KEY
+        sync: false
+      - key: LLM_MODEL
+        sync: false

@@ -110,6 +110,7 @@ reimplemented without first checking whether it already exists.
 | [`docs/REUSE-LEDGER.md`](docs/REUSE-LEDGER.md) | One verdict per legacy artefact: port, rewrite or drop |
 | [`docs/LEGACY-AUDIT.md`](docs/LEGACY-AUDIT.md) | What the old app actually did |
 | [`docs/SPEC-platform-foundation.md`](docs/SPEC-platform-foundation.md) | Spec for the module in flight |
+| [`docs/DEPLOY-API-RENDER.md`](docs/DEPLOY-API-RENDER.md) | T17 runbook for public API deployment and HTTPS smoke checks |
 | [`docs/adr/`](docs/adr/) | Architecture decision records |
 | [`tasks/plan.md`](tasks/plan.md), [`tasks/todo.md`](tasks/todo.md) | Current plan and task list |
 

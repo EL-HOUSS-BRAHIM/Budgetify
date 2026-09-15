@@ -6,13 +6,15 @@ ENV NODE_ENV=production
 FROM base AS deps
 COPY package.json package-lock.json ./
 COPY services/ai/package.json ./services/ai/
-RUN npm ci --omit=dev --workspace services/ai
+RUN npm ci --workspace services/ai
 
 FROM base AS runtime
 COPY --from=deps /app/node_modules ./node_modules
-COPY services/ai ./services/ai
+COPY services/ai/package.json ./services/ai/package.json
+COPY services/ai/src ./services/ai/src
+COPY services/ai/tsconfig.json ./services/ai/tsconfig.json
 
 # Never run as root; the service handles user JWTs.
 USER node
 EXPOSE 8787
-CMD ["node", "--experimental-strip-types", "services/ai/src/server.ts"]
+CMD ["node", "--import", "tsx", "services/ai/src/server.ts"]

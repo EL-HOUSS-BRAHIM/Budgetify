@@ -134,6 +134,7 @@ export default function OnboardingScreen(): React.ReactElement {
                     ? 'Goal contributions'
                     : "Today's commitments"
               }
+              selected={false}
               onPress={() => {}}
             />
             <Choice
@@ -144,6 +145,7 @@ export default function OnboardingScreen(): React.ReactElement {
                     ? 'A deliberate spending buffer'
                     : 'One useful insight'
               }
+              selected={false}
               onPress={() => {}}
             />
           </View>

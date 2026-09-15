@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createApp } from './app';
+import { createApp, SUPABASE_CONFIGURATION_ERROR } from './app';
 
 describe('health', () => {
   afterEach(() => {
@@ -45,7 +45,24 @@ describe('health', () => {
     });
 
     expect(response.status).toBe(503);
-    expect(await response.json()).toEqual({ error: 'Supabase server configuration is missing' });
+    expect(await response.json()).toEqual({ error: SUPABASE_CONFIGURATION_ERROR });
+  });
+
+  it('reports unavailable when Supabase configuration uses a placeholder key', async () => {
+    vi.stubEnv('SUPABASE_URL', 'https://project.supabase.co');
+    vi.stubEnv('SUPABASE_PUBLISHABLE_KEY', 'sb_publishable_REPLACE_ME');
+
+    const response = await createApp().request('/api/chat', {
+      method: 'POST',
+      headers: {
+        Authorization: 'Bearer test-user-jwt',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ message: 'spent $10 on food' }),
+    });
+
+    expect(response.status).toBe(503);
+    expect(await response.json()).toEqual({ error: SUPABASE_CONFIGURATION_ERROR });
   });
 
   it('rejects invalid caller tokens before executing a tool', async () => {
@@ -71,11 +88,12 @@ describe('health', () => {
     const originalFetch = globalThis.fetch;
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () =>
-        new Response(JSON.stringify({ id: 'user-1' }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        }),
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify({ id: 'user-1' }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          }),
       ),
     );
 
@@ -98,5 +116,19 @@ describe('health', () => {
 
     expect(response.status).toBe(404);
     expect(await response.json()).toEqual({ error: 'not_found' });
+  });
+
+  it('rejects requests from origins outside the allowlist', async () => {
+    vi.stubEnv('ALLOWED_ORIGINS', 'https://allowed.example');
+
+    const response = await createApp().request('/api/tools', {
+      method: 'GET',
+      headers: {
+        Origin: 'https://blocked.example',
+      },
+    });
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toEqual({ error: 'Origin is not allowed' });
   });
 });

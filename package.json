@@ -23,6 +23,8 @@
     "db:reset": "npx supabase db reset",
     "db:types": "npx supabase gen types typescript --linked --schema public > packages/types/src/database.ts",
     "db:test": "npx supabase test db --linked",
+    "smoke:hosted-local": "node services/ai/smoke-hosted-t16.mjs",
+    "smoke:public": "node services/ai/public-smoke-t17.mjs",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",

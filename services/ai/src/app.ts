@@ -5,19 +5,65 @@ import { z } from 'zod';
 import { executeToolCall } from './executor';
 import { ToolDefinitions } from './tools';
 
+const DEFAULT_ALLOWED_ORIGINS = 'http://localhost:3000,http://localhost:8081';
+export const SUPABASE_CONFIGURATION_ERROR = 'Supabase server configuration is missing or invalid';
+
 const ChatBodySchema = z.object({
   message: z.string().trim().min(1).max(2000),
   history: z
-    .array(z.object({ role: z.enum(['user', 'assistant', 'system']), content: z.string().max(4000) }))
+    .array(
+      z.object({ role: z.enum(['user', 'assistant', 'system']), content: z.string().max(4000) }),
+    )
     .max(50)
     .optional(),
 });
 
-function allowedOrigins(): string[] {
-  return (process.env['ALLOWED_ORIGINS'] ?? 'http://localhost:3000,http://localhost:8081')
+const SupabaseConfigSchema = z.object({
+  SUPABASE_URL: z
+    .string()
+    .url()
+    .refine((value) => value.startsWith('https://'), {
+      message: 'SUPABASE_URL must start with https://',
+    }),
+  SUPABASE_PUBLISHABLE_KEY: z
+    .string()
+    .regex(/^sb_publishable_[A-Za-z0-9._-]+$/)
+    .refine((value) => !value.includes('REPLACE_ME'), {
+      message: 'SUPABASE_PUBLISHABLE_KEY must be a real publishable key',
+    }),
+});
+
+function parseAllowedOrigins(rawValue: string | undefined): string[] {
+  return (rawValue ?? DEFAULT_ALLOWED_ORIGINS)
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean);
+}
+
+function getSupabaseConfig(
+  env: NodeJS.ProcessEnv,
+): { supabaseUrl: string; supabasePublishableKey: string } | null {
+  const parsed = SupabaseConfigSchema.safeParse(env);
+  if (!parsed.success) {
+    return null;
+  }
+
+  return {
+    supabaseUrl: parsed.data.SUPABASE_URL,
+    supabasePublishableKey: parsed.data.SUPABASE_PUBLISHABLE_KEY,
+  };
+}
+
+export function assertSupabaseConfig(env: NodeJS.ProcessEnv = process.env): {
+  supabaseUrl: string;
+  supabasePublishableKey: string;
+} {
+  const config = getSupabaseConfig(env);
+  if (!config) {
+    throw new Error(SUPABASE_CONFIGURATION_ERROR);
+  }
+
+  return config;
 }
 
 async function authenticateCaller(
@@ -38,11 +84,23 @@ async function authenticateCaller(
  */
 export function createApp(): Hono {
   const app = new Hono();
+  const allowedOrigins = parseAllowedOrigins(process.env['ALLOWED_ORIGINS']);
+
+  app.use('/api/*', async (c, next) => {
+    const origin = c.req.header('Origin');
+    if (origin && !allowedOrigins.includes(origin)) {
+      return c.json({ error: 'Origin is not allowed' }, 403);
+    }
+
+    await next();
+  });
 
   app.use(
     '*',
     cors({
-      origin: (origin) => (!origin || allowedOrigins().includes(origin) ? origin : ''),
+      origin: (origin) => (!origin || allowedOrigins.includes(origin) ? origin : ''),
+      allowHeaders: ['Content-Type', 'Authorization'],
+      allowMethods: ['GET', 'POST', 'OPTIONS'],
     }),
   );
 
@@ -57,11 +115,11 @@ export function createApp(): Hono {
       return c.json({ error: 'Missing or invalid Authorization header' }, 401);
     }
     const userJwt = authHeader.replace('Bearer ', '');
-    const supabaseUrl = process.env['SUPABASE_URL'];
-    const supabasePublishableKey = process.env['SUPABASE_PUBLISHABLE_KEY'];
-    if (!supabaseUrl || !supabasePublishableKey) {
-      return c.json({ error: 'Supabase server configuration is missing' }, 503);
+    const supabaseConfig = getSupabaseConfig(process.env);
+    if (!supabaseConfig) {
+      return c.json({ error: SUPABASE_CONFIGURATION_ERROR }, 503);
     }
+    const { supabaseUrl, supabasePublishableKey } = supabaseConfig;
     if (!(await authenticateCaller(supabaseUrl, supabasePublishableKey, userJwt))) {
       return c.json({ error: 'Invalid or expired access token' }, 401);
     }
