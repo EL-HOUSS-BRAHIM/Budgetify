@@ -33,7 +33,7 @@ an accessibility/state audit. Preview data must always be visibly labeled.
 | 19    | Shared Finances & Splitting       | `927e60cdc3f94599bce26f94dbfbcee2` | `/shared-finances`     | implemented   |
 | 20    | Document Vault                    | `f65099ef5b514daba59b96c54f22b75a` | `/vault`               | implemented   |
 | 21    | Lock Screen & Dynamic Island      | `aa91ec38c2254e43b7b7ea4e7d491db5` | platform surface       | reference only |
-| 22    | AI Personality Settings           | `b000485969d148ffa9f53cb74afad0f2` | `/settings/ai`         | implemented   |
+| 22    | AI Personality Settings           | `b000485969d148ffa9f53cb74afad0f2` | `/settings/ai`         | finished       |
 | 23    | Financial Health Deep-Dive        | `21eb7510e9574a2dba4fa9026c0852dc` | `/financial-health`    | implemented   |
 | 24    | Intelligent Onboarding            | `5dba3955163c41e0a68a2257b72a9ba3` | `/onboarding`          | implemented   |
 | 25    | Desktop Command Center (Pro View) | `868290fb58854a9faa4dec5ce07147e0` | web/desktop reference  | reference only |
@@ -200,6 +200,24 @@ transfers were created.` It does not mutate account balances, goals, or bills.
 - Static checks: mobile TypeScript, root-scoped focused ESLint, Prettier, and
   editor diagnostics passed for all four routes and the Settings menu.
 
+### 14-15. Focused continuation - 2026-09-19
+
+- Capital Allocation Engine: rechecked the surplus-capital preview, weighted
+  distribution cards, balanced allocation total, and local Prepare Distribution
+  action. The route explicitly states that no account balance or transfer is
+  changed.
+- Financial Automation Engine: rechecked the draft rule cards and natural
+  language builder. The input is labeled, the compile action is disabled until
+  text is entered, and compilation only prepares a local rule review; no
+  automation is activated.
+- Accessibility/state audit: both routes provide named back controls and
+  visible preview or draft-only boundaries. The automation input and action
+  expose disabled and review states rather than implying execution.
+- Static checks: focused mobile TypeScript, ESLint, Prettier, and editor
+  diagnostics passed for both routes. Existing Android/Stitch evidence from
+  the finished 2026-09-14 audit remains applicable.
+
+
 ### 10-13. Governance & Financial Safety - finished 2026-09-14
 
 - Privacy & AI Access Control: implemented the vault status, three mutually
@@ -246,9 +264,11 @@ transfers were created.` It does not mutate account balances, goals, or bills.
   upload, share, or connect external files.
 - All three surfaces are discoverable from the Settings preview menu. Preview
   content is visibly labeled.
-- Focused mobile TypeScript, Prettier, and editor diagnostics passed. Android
-  emulator inspection and Stitch screenshot comparison remain outstanding for
-  final `finished` status.
+- Focused mobile TypeScript, ESLint, Prettier, and editor diagnostics passed
+  for all three routes. The four route files were normalized with Prettier;
+  Android debug build/install was launched successfully after configuring the
+  local SDK path. Android route inspection and Stitch screenshot comparison
+  remain outstanding for final `finished` status.
 
 ### 21. Lock Screen & Dynamic Island - reference surface 2026-09-14
 
@@ -258,8 +278,10 @@ transfers were created.` It does not mutate account balances, goals, or bills.
 - The route visibly states that it is reference-only. It does not claim to
   activate Android lock-screen notifications, live surfaces, or Dynamic Island
   APIs.
-- Focused mobile TypeScript, Prettier, and editor diagnostics passed. Native
-  platform implementation is intentionally outside the current Expo route.
+- Focused mobile TypeScript, ESLint, Prettier, and editor diagnostics passed.
+  Android debug build/install was launched successfully after configuring the
+  local SDK path. Native platform implementation is intentionally outside the
+  current Expo route; the in-app surface remains reference-only.
 
 ### 22-24. Personality, Health & Onboarding - implemented 2026-09-14
 
@@ -276,6 +298,34 @@ transfers were created.` It does not mutate account balances, goals, or bills.
 - Focused mobile TypeScript, Prettier, and editor diagnostics passed. Android
   emulator inspection and Stitch screenshot comparison remain outstanding for
   final `finished` status.
+
+### 22-23. Focused continuation - 2026-09-19
+
+- AI Personality Settings - finished: compared the route against the Stitch
+  screenshot for screen `b000485969d148ffa9f53cb74afad0f2` and found a real
+  gap - the implementation only had three generic tone options instead of the
+  source's four named personas. Rebuilt the route to match: `The Coach`,
+  `The Analyst`, `The Guardian`, and `The Minimalist`, each with a distinct
+  detail line, a live local-only sample-dialogue preview that changes per
+  persona, and a `Live calibration` card summarizing proactivity, explanation
+  depth, and risk sensitivity for the selected persona. The fixed
+  money-movement approval boundary and the local-only save confirmation are
+  unchanged.
+- AI Personality Settings verification: Android emulator relaunch confirmed
+  the updated hierarchy (`The Coach` text node, `Select The Coach` radio
+  content-desc, named `Go back` control). A runtime screenshot was captured
+  and reviewed against the Stitch reference image; the persona list, sample
+  preview, and calibration section now match the source hierarchy. Focused
+  mobile TypeScript, ESLint, and Prettier passed after the change.
+- Financial Health Deep-Dive - remains implemented, not finished: Android
+  emulator relaunch confirmed the route renders (`Financial Health` title,
+  named `Go back` control, visible `Design preview · sample indicators are not
+  a financial assessment` notice) and a runtime screenshot was captured. Direct
+  comparison against the Stitch reference screenshot for screen
+  `21eb7510e9574a2dba4fa9026c0852dc` shows the source uses a richer
+  "Financial DNA" style breakdown with more metrics and trend detail than the
+  current three-dimension summary. This gap is recorded rather than hidden;
+  the route is not promoted to `finished` until that hierarchy is matched.
 
 ### 25. Desktop Command Center - reference surface 2026-09-14
 

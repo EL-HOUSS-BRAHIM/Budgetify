@@ -3,7 +3,7 @@ const token1 = process.env.SMOKE_USER1_TOKEN;
 const token2 = process.env.SMOKE_USER2_TOKEN;
 
 if (!publicApiUrl) {
-  throw new Error('Set PUBLIC_API_URL, for example https://budgetify-ai.onrender.com');
+  throw new Error('Set PUBLIC_API_URL, for example https://budgetify-ai.back4app.io');
 }
 
 if (!token1 || !token2) {

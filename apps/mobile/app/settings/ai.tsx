@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, Card, DataNotice, Screen } from '../../src/components/ui';
 import { useTheme } from '../../src/theme/ThemeProvider';
 
-type Style = 'direct' | 'coach' | 'quiet';
+type Style = 'coach' | 'analyst' | 'guardian' | 'minimalist';
 
 function Icon(props: React.ComponentProps<typeof Ionicons>): React.ReactElement {
   return (
@@ -23,12 +23,19 @@ export default function AiPersonalityScreen(): React.ReactElement {
   const router = useRouter();
   const { colors, fontFamily, typography } = useTheme();
   const insets = useSafeAreaInsets();
-  const [style, setStyle] = useState<Style>('direct');
+  const [style, setStyle] = useState<Style>('coach');
   const [prepared, setPrepared] = useState(false);
   const labels: Record<Style, string> = {
-    direct: 'Direct & candid',
-    coach: 'Warm coach',
-    quiet: 'Quiet signal',
+    coach: 'The Coach',
+    analyst: 'The Analyst',
+    guardian: 'The Guardian',
+    minimalist: 'The Minimalist',
+  };
+  const details: Record<Style, string> = {
+    coach: 'Encouraging context, gentle nudges, and room to reflect.',
+    analyst: 'Pattern-led explanations with the next decision made explicit.',
+    guardian: 'Protective guardrails and early warnings before risk compounds.',
+    minimalist: 'Only urgent changes and high-confidence recommendations.',
   };
 
   return (
@@ -90,35 +97,57 @@ export default function AiPersonalityScreen(): React.ReactElement {
           PREVIEW
         </Text>
       </Card>
+      <Card style={styles.sampleCard}>
+        <View style={styles.sampleHeader}>
+          <Text style={[styles.label, { color: colors.text.tertiary }]}>LIVE PREVIEW</Text>
+          <Text style={[styles.preview, { color: colors.semantic.income, fontFamily: fontFamily.semibold }]}>LOCAL ONLY</Text>
+        </View>
+        <Text style={[styles.sampleQuote, { color: colors.text.primary, fontFamily: fontFamily.semibold }]}>“{style === 'minimalist' ? 'Your runway is healthy. I will surface only material changes.' : style === 'coach' ? 'You are building good momentum. Let us protect the runway before adding more.' : style === 'analyst' ? 'Liquidity is the constraint. Preserve 5.4 months before accelerating the target.' : 'Dining is 18% above pace. I will flag the risk before it reaches your safety floor.'}”</Text>
+        <Text style={[styles.small, { color: colors.text.tertiary }]}>Tone changes the framing, not the underlying financial signal.</Text>
+      </Card>
       <Text
         style={[styles.section, { color: colors.text.primary, fontFamily: fontFamily.semibold }]}
       >
         Conversation posture
       </Text>
       <PersonalityOption
-        active={style === 'direct'}
-        icon="flash-outline"
-        title="Direct & candid"
-        detail="Short, clear decisions with the tradeoff stated plainly."
-        onPress={() => setStyle('direct')}
+        active={style === 'coach'}
+        icon="heart-outline"
+        title="The Coach"
+        detail={details.coach}
+        onPress={() => setStyle('coach')}
         tone="info"
       />
       <PersonalityOption
-        active={style === 'coach'}
-        icon="heart-outline"
-        title="Warm coach"
-        detail="Encouraging context, gentle nudges, and room to reflect."
-        onPress={() => setStyle('coach')}
-        tone="income"
+        active={style === 'analyst'}
+        icon="analytics-outline"
+        title="The Analyst"
+        detail={details.analyst}
+        onPress={() => setStyle('analyst')}
+        tone="info"
       />
       <PersonalityOption
-        active={style === 'quiet'}
-        icon="volume-mute-outline"
-        title="Quiet signal"
-        detail="Only urgent changes and high-confidence recommendations."
-        onPress={() => setStyle('quiet')}
+        active={style === 'guardian'}
+        icon="shield-checkmark-outline"
+        title="The Guardian"
+        detail={details.guardian}
+        onPress={() => setStyle('guardian')}
         tone="warning"
       />
+      <PersonalityOption
+        active={style === 'minimalist'}
+        icon="volume-mute-outline"
+        title="The Minimalist"
+        detail={details.minimalist}
+        onPress={() => setStyle('minimalist')}
+        tone="income"
+      />
+      <Text style={[styles.section, { color: colors.text.primary, fontFamily: fontFamily.semibold }]}>Live calibration</Text>
+      <Card style={styles.calibration}>
+        <CalibrationRow label="Proactivity" value={style === 'minimalist' ? 'Low' : style === 'guardian' ? 'High' : 'Balanced'} />
+        <CalibrationRow label="Explanation depth" value={style === 'analyst' ? 'Deep' : style === 'minimalist' ? 'Brief' : 'Balanced'} />
+        <CalibrationRow label="Risk sensitivity" value={style === 'guardian' ? 'Protective' : 'Standard'} last />
+      </Card>
       <Card style={styles.boundary}>
         <Icon name="lock-closed-outline" size={18} color={colors.semantic.income} />
         <View style={styles.flex}>
@@ -220,6 +249,16 @@ function PersonalityOption({
   );
 }
 
+function CalibrationRow({ label, value, last = false }: { label: string; value: string; last?: boolean }): React.ReactElement {
+  const { colors, fontFamily } = useTheme();
+  return (
+    <View style={[styles.calibrationRow, !last && { borderBottomColor: colors.border.subtle, borderBottomWidth: 1 }]}>
+      <Text style={[styles.small, { color: colors.text.tertiary }]}>{label}</Text>
+      <Text style={[styles.calibrationValue, { color: colors.semantic.info, fontFamily: fontFamily.semibold }]}>{value}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   header: {
     minHeight: 44,
@@ -278,6 +317,12 @@ const styles = StyleSheet.create({
   },
   radioFill: { width: 10, height: 10, borderRadius: 5 },
   boundary: { marginTop: 14, padding: 14, flexDirection: 'row', gap: 10 },
+  sampleCard: { marginTop: 14, padding: 14 },
+  sampleHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  sampleQuote: { marginTop: 8, fontSize: 13, lineHeight: 19 },
+  calibration: { marginTop: 8, paddingHorizontal: 12 },
+  calibrationRow: { minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  calibrationValue: { fontSize: 11, lineHeight: 15 },
   boundaryTitle: { fontSize: 12, lineHeight: 17 },
   confirmation: { marginTop: 14, padding: 14 },
   action: { marginTop: 14 },

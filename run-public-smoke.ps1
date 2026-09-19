@@ -1,7 +1,7 @@
 Set-Location "C:\dev\Budgetify"
 
 if (-not $env:PUBLIC_API_URL) {
-  Write-Error "Set PUBLIC_API_URL, e.g. https://budgetify-ai.onrender.com"
+  Write-Error "Set PUBLIC_API_URL, e.g. https://budgetify-ai.back4app.io"
   exit 1
 }
 

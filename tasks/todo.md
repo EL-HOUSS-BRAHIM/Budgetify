@@ -29,7 +29,7 @@ Plan: `tasks/plan.md` · Spec: `docs/SPEC-platform-foundation.md`
 | T14 Push hosted migrations | done | 2026-09-15: preflight target `hnlieepsxoqeebkreugt` verified; `db push --linked --dry-run` up-to-date with no pending SQL; `db push --linked` no-op success; `db lint --linked --schema public --fail-on error` clean |
 | T15 Generate hosted types | done | 2026-09-15: generated via `supabase gen types typescript --linked --schema public` on linked `hnlieepsxoqeebkreugt`; UTF-8 normalized; workspace `npm run typecheck` and `npm run test` pass |
 | T16 Authenticated backend smoke | done | 2026-09-15: user confirmed token-driven two-user smoke passed; `/health` 200 and unauthenticated `/api/chat` 401 verified; caller-scoped write/read and cross-user RLS denial proven |
-| T17 Public API deployment | in progress | 2026-09-15: Render Docker blueprint added (`render.yaml`); deployment runbook (`docs/DEPLOY-API-RENDER.md`) and public HTTPS smoke script (`services/ai/public-smoke-t17.mjs`) added; awaiting Render deploy URL + token run evidence |
+| T17 Public API deployment | in progress | 2026-09-19: Switched to Back4App Containers; deployment runbook (`docs/DEPLOY-API-BACK4APP.md`) and public HTTPS smoke script (`services/ai/public-smoke-t17.mjs`) updated; awaiting Back4App deploy URL + token run evidence |
 
 Anything marked "written, unverified" is a claim, not a fact. It becomes done
 when its verification command has actually been run.
