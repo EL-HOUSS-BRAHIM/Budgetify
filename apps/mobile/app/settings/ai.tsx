@@ -1,12 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Button, Card, DataNotice, Screen } from '../../src/components/ui';
+import { Card, DataNotice, Screen } from '../../src/components/ui';
+import {
+  useProfile,
+  type AiPersonality,
+  type ProfileRow,
+} from '../../src/features/profile/profile';
 import { useTheme } from '../../src/theme/ThemeProvider';
-
-type Style = 'coach' | 'analyst' | 'guardian' | 'minimalist';
 
 function Icon(props: React.ComponentProps<typeof Ionicons>): React.ReactElement {
   return (
@@ -19,23 +22,41 @@ function Icon(props: React.ComponentProps<typeof Ionicons>): React.ReactElement 
   );
 }
 
+const labels: Record<AiPersonality, string> = {
+  coach: 'The Coach',
+  analyst: 'The Analyst',
+  guardian: 'The Guardian',
+  minimalist: 'The Minimalist',
+};
+
+const details: Record<AiPersonality, string> = {
+  coach: 'Encouraging context, gentle nudges, and room to reflect.',
+  analyst: 'Pattern-led explanations with the next decision made explicit.',
+  guardian: 'Protective guardrails and early warnings before risk compounds.',
+  minimalist: 'Only urgent changes and high-confidence recommendations.',
+};
+
+function profilePersonality(profile: ProfileRow | null): AiPersonality {
+  const value = profile?.ai_personality;
+  if (value === 'analyst' || value === 'guardian' || value === 'minimalist') return value;
+  return 'coach';
+}
+
 export default function AiPersonalityScreen(): React.ReactElement {
   const router = useRouter();
   const { colors, fontFamily, typography } = useTheme();
   const insets = useSafeAreaInsets();
-  const [style, setStyle] = useState<Style>('coach');
-  const [prepared, setPrepared] = useState(false);
-  const labels: Record<Style, string> = {
-    coach: 'The Coach',
-    analyst: 'The Analyst',
-    guardian: 'The Guardian',
-    minimalist: 'The Minimalist',
-  };
-  const details: Record<Style, string> = {
-    coach: 'Encouraging context, gentle nudges, and room to reflect.',
-    analyst: 'Pattern-led explanations with the next decision made explicit.',
-    guardian: 'Protective guardrails and early warnings before risk compounds.',
-    minimalist: 'Only urgent changes and high-confidence recommendations.',
+  const { profile, isLoading, isSaving, error, updateProfile } = useProfile();
+  const [notice, setNotice] = useState<string | null>(null);
+  const style = profilePersonality(profile);
+
+  const saveStyle = async (nextStyle: AiPersonality) => {
+    try {
+      await updateProfile({ aiPersonality: nextStyle });
+      setNotice(`${labels[nextStyle]} saved.`);
+    } catch {
+      setNotice('AI personality could not be saved.');
+    }
   };
 
   return (
@@ -60,125 +81,131 @@ export default function AiPersonalityScreen(): React.ReactElement {
         </Text>
         <View style={styles.headerButton} />
       </View>
+
       <Text
         style={[styles.eyebrow, { color: colors.semantic.info, fontFamily: fontFamily.semibold }]}
       >
-        AI PERSONALITY · PREVIEW
+        AI PERSONALITY
       </Text>
       <Text style={[typography.h2, { color: colors.text.primary, marginTop: 5 }]}>
         Make the signal yours
       </Text>
       <Text style={[typography.bodySmall, { color: colors.text.tertiary, marginTop: 4 }]}>
-        Choose how Lyvora frames financial decisions without changing the underlying analysis.
+        Tone changes framing only. Money movement still requires explicit approval.
       </Text>
-      <DataNotice
-        icon="eye-outline"
-        label="Design preview · preference is stored locally in this screen"
-        tone="info"
-      />
-      <Card style={[styles.voiceCard, { borderColor: colors.brand.accent }]}>
-        <View style={[styles.voiceIcon, { backgroundColor: colors.brand.accentLight }]}>
-          <Icon name="sparkles-outline" size={23} color={colors.semantic.info} />
+
+      {isLoading ? (
+        <View accessibilityLabel="Loading AI personality" style={styles.loading}>
+          <ActivityIndicator color={colors.semantic.info} />
         </View>
-        <View style={styles.flex}>
+      ) : error ? (
+        <DataNotice icon="alert-circle-outline" label={error} tone="expense" />
+      ) : (
+        <>
+          <Card style={[styles.voiceCard, { borderColor: colors.brand.accent }]}>
+            <View style={[styles.voiceIcon, { backgroundColor: colors.brand.accentLight }]}>
+              <Icon name="sparkles-outline" size={23} color={colors.semantic.info} />
+            </View>
+            <View style={styles.flex}>
+              <Text
+                style={[
+                  styles.voiceTitle,
+                  { color: colors.text.primary, fontFamily: fontFamily.semibold },
+                ]}
+              >
+                Current voice
+              </Text>
+              <Text style={[styles.voiceText, { color: colors.text.tertiary }]}>
+                {labels[style]}
+              </Text>
+            </View>
+          </Card>
+
           <Text
             style={[
-              styles.voiceTitle,
+              styles.section,
               { color: colors.text.primary, fontFamily: fontFamily.semibold },
             ]}
           >
-            Current voice
+            Conversation posture
           </Text>
-          <Text style={[styles.voiceText, { color: colors.text.tertiary }]}>{labels[style]}</Text>
-        </View>
-        <Text
-          style={[styles.preview, { color: colors.semantic.info, fontFamily: fontFamily.semibold }]}
-        >
-          PREVIEW
-        </Text>
-      </Card>
-      <Card style={styles.sampleCard}>
-        <View style={styles.sampleHeader}>
-          <Text style={[styles.label, { color: colors.text.tertiary }]}>LIVE PREVIEW</Text>
-          <Text style={[styles.preview, { color: colors.semantic.income, fontFamily: fontFamily.semibold }]}>LOCAL ONLY</Text>
-        </View>
-        <Text style={[styles.sampleQuote, { color: colors.text.primary, fontFamily: fontFamily.semibold }]}>“{style === 'minimalist' ? 'Your runway is healthy. I will surface only material changes.' : style === 'coach' ? 'You are building good momentum. Let us protect the runway before adding more.' : style === 'analyst' ? 'Liquidity is the constraint. Preserve 5.4 months before accelerating the target.' : 'Dining is 18% above pace. I will flag the risk before it reaches your safety floor.'}”</Text>
-        <Text style={[styles.small, { color: colors.text.tertiary }]}>Tone changes the framing, not the underlying financial signal.</Text>
-      </Card>
-      <Text
-        style={[styles.section, { color: colors.text.primary, fontFamily: fontFamily.semibold }]}
-      >
-        Conversation posture
-      </Text>
-      <PersonalityOption
-        active={style === 'coach'}
-        icon="heart-outline"
-        title="The Coach"
-        detail={details.coach}
-        onPress={() => setStyle('coach')}
-        tone="info"
-      />
-      <PersonalityOption
-        active={style === 'analyst'}
-        icon="analytics-outline"
-        title="The Analyst"
-        detail={details.analyst}
-        onPress={() => setStyle('analyst')}
-        tone="info"
-      />
-      <PersonalityOption
-        active={style === 'guardian'}
-        icon="shield-checkmark-outline"
-        title="The Guardian"
-        detail={details.guardian}
-        onPress={() => setStyle('guardian')}
-        tone="warning"
-      />
-      <PersonalityOption
-        active={style === 'minimalist'}
-        icon="volume-mute-outline"
-        title="The Minimalist"
-        detail={details.minimalist}
-        onPress={() => setStyle('minimalist')}
-        tone="income"
-      />
-      <Text style={[styles.section, { color: colors.text.primary, fontFamily: fontFamily.semibold }]}>Live calibration</Text>
-      <Card style={styles.calibration}>
-        <CalibrationRow label="Proactivity" value={style === 'minimalist' ? 'Low' : style === 'guardian' ? 'High' : 'Balanced'} />
-        <CalibrationRow label="Explanation depth" value={style === 'analyst' ? 'Deep' : style === 'minimalist' ? 'Brief' : 'Balanced'} />
-        <CalibrationRow label="Risk sensitivity" value={style === 'guardian' ? 'Protective' : 'Standard'} last />
-      </Card>
-      <Card style={styles.boundary}>
-        <Icon name="lock-closed-outline" size={18} color={colors.semantic.income} />
-        <View style={styles.flex}>
-          <Text
-            style={[
-              styles.boundaryTitle,
-              { color: colors.text.primary, fontFamily: fontFamily.semibold },
-            ]}
-          >
-            The boundary stays fixed
-          </Text>
-          <Text style={[styles.small, { color: colors.text.tertiary }]}>
-            Personality changes tone only. Money movement always requires explicit approval.
-          </Text>
-        </View>
-      </Card>
-      {prepared ? (
-        <Card style={styles.confirmation}>
-          <DataNotice
-            icon="checkmark-circle-outline"
-            label="AI personality preference prepared locally. No model or account setting changed."
+          <PersonalityOption
+            active={style === 'coach'}
+            detail={details.coach}
+            icon="heart-outline"
+            onPress={() => void saveStyle('coach')}
+            title="The Coach"
             tone="info"
           />
-        </Card>
-      ) : (
-        <Button
-          icon="checkmark-outline"
-          label="Save preview preference"
-          onPress={() => setPrepared(true)}
-          style={styles.action}
-        />
+          <PersonalityOption
+            active={style === 'analyst'}
+            detail={details.analyst}
+            icon="analytics-outline"
+            onPress={() => void saveStyle('analyst')}
+            title="The Analyst"
+            tone="info"
+          />
+          <PersonalityOption
+            active={style === 'guardian'}
+            detail={details.guardian}
+            icon="shield-checkmark-outline"
+            onPress={() => void saveStyle('guardian')}
+            title="The Guardian"
+            tone="warning"
+          />
+          <PersonalityOption
+            active={style === 'minimalist'}
+            detail={details.minimalist}
+            icon="volume-mute-outline"
+            onPress={() => void saveStyle('minimalist')}
+            title="The Minimalist"
+            tone="income"
+          />
+
+          <Text
+            style={[
+              styles.section,
+              { color: colors.text.primary, fontFamily: fontFamily.semibold },
+            ]}
+          >
+            Live calibration
+          </Text>
+          <Card style={styles.calibration}>
+            <CalibrationRow
+              label="Proactivity"
+              value={style === 'minimalist' ? 'Low' : style === 'guardian' ? 'High' : 'Balanced'}
+            />
+            <CalibrationRow
+              label="Explanation depth"
+              value={style === 'analyst' ? 'Deep' : style === 'minimalist' ? 'Brief' : 'Balanced'}
+            />
+            <CalibrationRow
+              label="Risk sensitivity"
+              last
+              value={style === 'guardian' ? 'Protective' : 'Standard'}
+            />
+          </Card>
+          <Card style={styles.boundary}>
+            <Icon name="lock-closed-outline" size={18} color={colors.semantic.income} />
+            <View style={styles.flex}>
+              <Text
+                style={[
+                  styles.boundaryTitle,
+                  { color: colors.text.primary, fontFamily: fontFamily.semibold },
+                ]}
+              >
+                The boundary stays fixed
+              </Text>
+              <Text style={[styles.small, { color: colors.text.tertiary }]}>
+                Personality is stored in your profile. It does not change authorization rules.
+              </Text>
+            </View>
+          </Card>
+          {isSaving && (
+            <DataNotice icon="cloud-upload-outline" label="Saving preference..." tone="info" />
+          )}
+          {notice && <DataNotice label={notice} tone="info" />}
+        </>
       )}
     </Screen>
   );
@@ -249,17 +276,38 @@ function PersonalityOption({
   );
 }
 
-function CalibrationRow({ label, value, last = false }: { label: string; value: string; last?: boolean }): React.ReactElement {
+function CalibrationRow({
+  label,
+  last = false,
+  value,
+}: {
+  label: string;
+  last?: boolean;
+  value: string;
+}): React.ReactElement {
   const { colors, fontFamily } = useTheme();
   return (
-    <View style={[styles.calibrationRow, !last && { borderBottomColor: colors.border.subtle, borderBottomWidth: 1 }]}>
+    <View
+      style={[
+        styles.calibrationRow,
+        !last && { borderBottomColor: colors.border.subtle, borderBottomWidth: 1 },
+      ]}
+    >
       <Text style={[styles.small, { color: colors.text.tertiary }]}>{label}</Text>
-      <Text style={[styles.calibrationValue, { color: colors.semantic.info, fontFamily: fontFamily.semibold }]}>{value}</Text>
+      <Text
+        style={[
+          styles.calibrationValue,
+          { color: colors.semantic.info, fontFamily: fontFamily.semibold },
+        ]}
+      >
+        {value}
+      </Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  loading: { minHeight: 180, alignItems: 'center', justifyContent: 'center' },
   header: {
     minHeight: 44,
     flexDirection: 'row',
@@ -274,8 +322,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerTitle: { fontSize: 12, lineHeight: 18 },
-  eyebrow: { marginTop: 22, fontSize: 10, lineHeight: 14 },
-  voiceCard: { marginTop: 16, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  eyebrow: { marginTop: 22, fontSize: 10, lineHeight: 14, letterSpacing: 0 },
+  voiceCard: {
+    marginTop: 16,
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderWidth: 1,
+  },
   voiceIcon: {
     width: 44,
     height: 44,
@@ -283,10 +338,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  flex: { flex: 1 },
+  flex: { flex: 1, minWidth: 0 },
   voiceTitle: { fontSize: 12, lineHeight: 17 },
   voiceText: { marginTop: 2, fontSize: 11, lineHeight: 15 },
-  preview: { fontSize: 9, lineHeight: 13 },
   section: { marginTop: 22, fontSize: 16, lineHeight: 22 },
   option: {
     minHeight: 78,
@@ -317,13 +371,13 @@ const styles = StyleSheet.create({
   },
   radioFill: { width: 10, height: 10, borderRadius: 5 },
   boundary: { marginTop: 14, padding: 14, flexDirection: 'row', gap: 10 },
-  sampleCard: { marginTop: 14, padding: 14 },
-  sampleHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  sampleQuote: { marginTop: 8, fontSize: 13, lineHeight: 19 },
   calibration: { marginTop: 8, paddingHorizontal: 12 },
-  calibrationRow: { minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  calibrationRow: {
+    minHeight: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   calibrationValue: { fontSize: 11, lineHeight: 15 },
   boundaryTitle: { fontSize: 12, lineHeight: 17 },
-  confirmation: { marginTop: 14, padding: 14 },
-  action: { marginTop: 14 },
 });

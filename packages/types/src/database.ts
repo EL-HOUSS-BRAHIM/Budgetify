@@ -243,27 +243,54 @@ export type Database = {
       }
       profiles: {
         Row: {
+          ai_context_scope: string
+          ai_personality: string
+          auto_categorize_enabled: boolean
           created_at: string
           currency: string
           display_name: string | null
+          first_signal: string
           id: string
+          income_cadence: string
+          intelligent_alerts_enabled: boolean
           locale: string
+          onboarding_completed_at: string | null
+          onboarding_priority: string
+          safety_buffer_amount: number
           updated_at: string
         }
         Insert: {
+          ai_context_scope?: string
+          ai_personality?: string
+          auto_categorize_enabled?: boolean
           created_at?: string
           currency?: string
           display_name?: string | null
+          first_signal?: string
           id: string
+          income_cadence?: string
+          intelligent_alerts_enabled?: boolean
           locale?: string
+          onboarding_completed_at?: string | null
+          onboarding_priority?: string
+          safety_buffer_amount?: number
           updated_at?: string
         }
         Update: {
+          ai_context_scope?: string
+          ai_personality?: string
+          auto_categorize_enabled?: boolean
           created_at?: string
           currency?: string
           display_name?: string | null
+          first_signal?: string
           id?: string
+          income_cadence?: string
+          intelligent_alerts_enabled?: boolean
           locale?: string
+          onboarding_completed_at?: string | null
+          onboarding_priority?: string
+          safety_buffer_amount?: number
           updated_at?: string
         }
         Relationships: []
@@ -339,7 +366,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_budget_progress: { Args: { target_date?: string }; Returns: Json }
+      get_financial_health: { Args: { target_date?: string }; Returns: Json }
+      get_goal_strategy: {
+        Args: { goal_id: string; target_date?: string }
+        Returns: Json
+      }
+      get_month_end_report: { Args: { target_date?: string }; Returns: Json }
       get_monthly_summary: { Args: { target_date?: string }; Returns: Json }
+      get_salary_allocation: { Args: { target_date?: string }; Returns: Json }
       toggle_plan_item: {
         Args: { p_account_id?: string; p_is_done: boolean; p_item_id: string }
         Returns: Json

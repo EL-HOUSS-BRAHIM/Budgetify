@@ -23,49 +23,6 @@ interface BillContract {
   status: string;
 }
 
-const previewContracts: BillContract[] = [
-  {
-    id: 'preview-fibre',
-    title: 'Maroc Telecom Fibre',
-    detail: 'Home Infrastructure · Fibre 100 Mbps',
-    amount: 19900,
-    currency: 'MAD',
-    dueLabel: 'Due in 2 days',
-    icon: 'wifi-outline',
-    status: 'Direct debit',
-  },
-  {
-    id: 'preview-netflix',
-    title: 'Netflix Standard 4K',
-    detail: 'Media · Auto-detected price change resolved',
-    amount: 9800,
-    currency: 'MAD',
-    dueLabel: 'Renews Sep 15',
-    icon: 'film-outline',
-    status: 'Auto-monitored',
-  },
-  {
-    id: 'preview-gym',
-    title: 'CitySport Club',
-    detail: 'Wellness & Health · Bank autocharge',
-    amount: 30000,
-    currency: 'MAD',
-    dueLabel: 'Renews Oct 1',
-    icon: 'fitness-outline',
-    status: 'Direct debit',
-  },
-  {
-    id: 'preview-icloud',
-    title: 'iCloud Storage 200GB',
-    detail: 'Cloud storage · Virtual card',
-    amount: 2900,
-    currency: 'MAD',
-    dueLabel: 'Renews Sep 28',
-    icon: 'cloud-outline',
-    status: 'Virtual card',
-  },
-];
-
 function DecorativeIcon(props: React.ComponentProps<typeof Ionicons>): React.ReactElement {
   return (
     <Ionicons
@@ -108,11 +65,9 @@ export default function BillsScreen(): React.ReactElement {
   const { colors, fontFamily, typography } = useTheme();
   const insets = useSafeAreaInsets();
   const [contracts, setContracts] = useState<BillContract[]>([]);
-  const [isPreview, setIsPreview] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
 
   const loadBills = useCallback(async () => {
     setError(null);
@@ -121,8 +76,7 @@ export default function BillsScreen(): React.ReactElement {
         data: { session },
       } = await supabase.auth.getSession();
       if (!session) {
-        setContracts(previewContracts);
-        setIsPreview(true);
+        setContracts([]);
         return;
       }
       const { data, error: queryError } = await supabase
@@ -132,7 +86,6 @@ export default function BillsScreen(): React.ReactElement {
         .order('due_date', { ascending: true });
       if (queryError) throw queryError;
       setContracts(data.map(toContract));
-      setIsPreview(false);
     } catch {
       setError('Subscriptions could not be loaded. Your existing data was not changed.');
     } finally {
@@ -152,7 +105,6 @@ export default function BillsScreen(): React.ReactElement {
   const recurringTotal = contracts
     .filter((contract) => contract.status !== 'Paid')
     .reduce((sum, contract) => sum + contract.amount, 0);
-  const urgentContract = contracts[0];
 
   return (
     <Screen
@@ -251,9 +203,6 @@ export default function BillsScreen(): React.ReactElement {
               </Text>
             </View>
           </View>
-          {isPreview && (
-            <DataNotice icon="eye-outline" label="Design preview · sample contracts" tone="info" />
-          )}
           <Card style={styles.loadCard}>
             <View>
               <Text style={[styles.loadLabel, { color: colors.text.tertiary }]}>
@@ -282,121 +231,8 @@ export default function BillsScreen(): React.ReactElement {
                 {contracts.length} active contracts
               </Text>
               <Text style={[styles.bufferText, { color: colors.text.tertiary }]}>
-                89% liquidity buffer OK
+                From active recurring plan items
               </Text>
-            </View>
-          </Card>
-          {urgentContract && (
-            <>
-              <Text
-                style={[
-                  styles.sectionTitle,
-                  { color: colors.text.primary, fontFamily: fontFamily.medium },
-                ]}
-              >
-                Action Required
-              </Text>
-              <Card style={[styles.urgentCard, { borderColor: colors.semantic.warning }]}>
-                <View style={styles.urgentTop}>
-                  <View
-                    style={[styles.urgentPill, { backgroundColor: colors.semantic.warningLight }]}
-                  >
-                    <DecorativeIcon
-                      name="warning-outline"
-                      size={13}
-                      color={colors.semantic.warning}
-                    />
-                    <Text
-                      style={[
-                        styles.urgentPillText,
-                        { color: colors.semantic.warning, fontFamily: fontFamily.semibold },
-                      ]}
-                    >
-                      URGENT REVIEW
-                    </Text>
-                  </View>
-                  <Text style={[styles.autoLabel, { color: colors.text.tertiary }]}>
-                    Autonomous check ready
-                  </Text>
-                </View>
-                <ContractRow contract={urgentContract} />
-                <View
-                  style={[styles.verifiedStrip, { backgroundColor: colors.background.tertiary }]}
-                >
-                  <DecorativeIcon
-                    name="shield-checkmark-outline"
-                    size={15}
-                    color={colors.semantic.income}
-                  />
-                  <Text style={[styles.verifiedText, { color: colors.text.secondary }]}>
-                    Liquidity verified: this commitment fits the current preview buffer.
-                  </Text>
-                </View>
-                <View style={styles.urgentActions}>
-                  <Button
-                    label="Review payment"
-                    onPress={() =>
-                      setNotice('Payment review prepared locally. No payment was sent.')
-                    }
-                    style={styles.urgentButton}
-                    variant="secondary"
-                  />
-                  <Button
-                    label="Remind later"
-                    onPress={() => setNotice('A local reminder draft was prepared.')}
-                    style={styles.urgentButton}
-                    variant="text"
-                  />
-                </View>
-              </Card>
-            </>
-          )}
-          <Text
-            style={[
-              styles.sectionTitle,
-              { color: colors.text.primary, fontFamily: fontFamily.medium },
-            ]}
-          >
-            Money Leak Detector
-          </Text>
-          <Card style={[styles.leakCard, { borderColor: colors.semantic.warning }]}>
-            <View style={styles.leakHeader}>
-              <View style={[styles.leakIcon, { backgroundColor: colors.semantic.warningLight }]}>
-                <DecorativeIcon name="radio-outline" size={19} color={colors.semantic.warning} />
-              </View>
-              <View style={styles.leakCopy}>
-                <Text
-                  style={[
-                    styles.leakTitle,
-                    { color: colors.text.primary, fontFamily: fontFamily.semibold },
-                  ]}
-                >
-                  Potential unused subscription
-                </Text>
-                <Text style={[styles.leakDetail, { color: colors.text.tertiary }]}>
-                  Review before making any cancellation decision.
-                </Text>
-              </View>
-            </View>
-            <Text style={[typography.bodySmall, { color: colors.text.secondary }]}>
-              A cancellation proposal could save {formatAmount(2400, currency)} per month. Lyvora
-              needs your approval before preparing it.
-            </Text>
-            <View style={styles.leakActions}>
-              <Button
-                label="Prepare cancellation"
-                onPress={() =>
-                  setNotice('Cancellation proposal prepared. No service was canceled.')
-                }
-                style={styles.urgentButton}
-                variant="secondary"
-              />
-              <Button
-                label="Keep service"
-                onPress={() => setNotice('Kept in your local review state.')}
-                style={styles.urgentButton}
-                variant="text"
-              />
             </View>
           </Card>
           <Text
@@ -433,11 +269,11 @@ export default function BillsScreen(): React.ReactElement {
                 Zero-Leak Shield
               </Text>
               <Text style={[typography.bodySmall, { color: colors.text.tertiary }]}>
-                Renewal contracts are reviewed for unauthorized price changes before their due date.
+                Renewal intelligence and cancellation proposals will appear after the insights and
+                action-review contracts are implemented.
               </Text>
             </View>
           </Card>
-          {notice && <DataNotice label={notice} tone="info" />}
         </>
       )}
     </Screen>

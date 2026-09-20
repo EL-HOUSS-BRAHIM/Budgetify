@@ -68,7 +68,7 @@ export default function PlatformSurfaceScreen(): React.ReactElement {
             <Text style={[styles.statusText, { color: colors.text.tertiary }]}>
               Secured by Lyvora
             </Text>
-            <Icon name="battery-three-quarters-outline" size={12} color={colors.text.tertiary} />
+            <Icon name="battery-half-outline" size={12} color={colors.text.tertiary} />
             <Text style={[styles.statusText, { color: colors.text.tertiary }]}>88%</Text>
           </View>
         </View>
@@ -132,9 +132,7 @@ export default function PlatformSurfaceScreen(): React.ReactElement {
               <Text style={[styles.actionText, { color: colors.semantic.income }]}>
                 Distribute now
               </Text>
-              <Text style={[styles.actionText, { color: colors.semantic.info }]}>
-                View details
-              </Text>
+              <Text style={[styles.actionText, { color: colors.semantic.info }]}>View details</Text>
             </View>
             <Text style={[styles.notificationFoot, { color: colors.semantic.income }]}>
               Waterfall executed cleanly · October envelopes locked
@@ -202,7 +200,10 @@ export default function PlatformSurfaceScreen(): React.ReactElement {
 
       <Card style={styles.notes}>
         <Text
-          style={[styles.sectionTitle, { color: colors.text.primary, fontFamily: fontFamily.semibold }]}
+          style={[
+            styles.sectionTitle,
+            { color: colors.text.primary, fontFamily: fontFamily.semibold },
+          ]}
         >
           Native handoff
         </Text>

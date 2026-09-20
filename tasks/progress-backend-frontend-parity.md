@@ -15,8 +15,11 @@ Rule: Backend must match existing frontend product surfaces.
 
 ## Global Blockers
 
-1. Supabase MCP target mismatch: MCP project URL resolves to a non-Budgetify project, while app/service code targets hnlieepsxoqeebkreugt. State: BLOCKED_ENV for remote MCP write actions until target is corrected.
-2. No dedicated login/signup UX in mobile routes yet. Current pattern is session checks with preview fallback.
+1. No dedicated login/signup UX in mobile routes yet. Current pattern is session checks with preview fallback.
+
+## Resolved Blockers
+
+- 2026-09-20: Supabase MCP retargeted from the old project to Budgetify. `get_project_url` now returns `https://hnlieepsxoqeebkreugt.supabase.co`.
 
 ## Backend Snapshot (Supabase + AI service)
 
@@ -29,12 +32,12 @@ Rule: Backend must match existing frontend product surfaces.
 | RLS regression tests (profiles + ledger) | COMPLETED_READY | supabase/tests/profiles_rls_test.sql, supabase/tests/ledger_rls_test.sql |
 | RPC: toggle_plan_item | COMPLETED_READY | supabase/migrations/20260913170000_set_plan_item_status.sql |
 | RPC: get_monthly_summary | PARTIAL_READY | supabase/migrations/20260913000000_schema_budgetify.sql |
-| Budget progress/velocity RPC (for planning + budgets tabs) | WAITING_BACKEND | missing RPC contract |
-| Financial health scoring RPC | WAITING_BACKEND | missing RPC contract |
-| Goal strategy recommendation RPC | WAITING_BACKEND | missing RPC contract |
-| Month-end narrative/report RPC | WAITING_BACKEND | missing RPC contract |
+| Budget progress/velocity RPC (for planning + budgets tabs) | COMPLETED_READY | supabase/migrations/20260920000000_budget_progress.sql |
+| Financial health scoring RPC | COMPLETED_READY | supabase/migrations/20260920020000_insights_and_preferences.sql |
+| Goal strategy recommendation RPC | COMPLETED_READY | supabase/migrations/20260920010000_strategy_and_salary_contracts.sql |
+| Month-end narrative/report RPC | COMPLETED_READY | supabase/migrations/20260920020000_insights_and_preferences.sql |
 | Chat history persistence (table + RLS + API wiring) | WAITING_BACKEND | no chat_messages table or writes |
-| Settings/profile preference persistence contract | PARTIAL_READY | profiles table exists, no finished app wiring |
+| Settings/profile preference persistence contract | COMPLETED_READY | profiles table stores display/currency, AI personality, privacy toggles, and onboarding baseline |
 | Shared finance contracts (households/invites/splits) | WAITING_BACKEND | missing schema |
 | Vault/documents contracts | WAITING_BACKEND | missing schema |
 | Credit-card specific contracts | WAITING_BACKEND | missing schema |
@@ -46,28 +49,28 @@ Rule: Backend must match existing frontend product surfaces.
 |---|---|---|
 | apps/mobile/app/(tabs)/index.tsx | PARTIAL_READY | Uses real data hook, but still contains static narrative/insight text in UI composition. |
 | apps/mobile/app/(tabs)/expenses.tsx | WAITING_FRONTEND_WIRING | Static local expenses array; no transactions query. |
-| apps/mobile/app/(tabs)/assistant.tsx | PARTIAL_READY | Calls real /api/chat, but seeds local starter messages and hardcoded insight cards. |
-| apps/mobile/app/(tabs)/planning.tsx | WAITING_FRONTEND_WIRING | Category velocity and corrections are local preview logic. |
-| apps/mobile/app/(tabs)/goals.tsx | PARTIAL_READY | Queries real goals with preview fallback and local simulation sections. |
-| apps/mobile/app/(tabs)/budgets.tsx | WAITING_FRONTEND_WIRING | Budget categories are hardcoded sample data. |
+| apps/mobile/app/(tabs)/assistant.tsx | COMPLETED_READY | Calls real /api/chat with no seeded sample thread or fake metric cards. |
+| apps/mobile/app/(tabs)/planning.tsx | COMPLETED_READY | Uses real budget progress and plan items; local correction simulation removed. |
+| apps/mobile/app/(tabs)/goals.tsx | COMPLETED_READY | Queries real goals with no preview fallback or local simulator. |
+| apps/mobile/app/(tabs)/budgets.tsx | COMPLETED_READY | Uses typed budget progress RPC output. |
 | apps/mobile/app/(tabs)/settings.tsx | WAITING_FRONTEND_WIRING | Profile/currency/privacy actions are mostly local/static. |
 | apps/mobile/app/forecast.tsx | PARTIAL_READY | Forecast hook queries real data but still has preview model fallback. |
-| apps/mobile/app/bills.tsx | PARTIAL_READY | Reads recurring plan items but includes preview fallback and preview language. |
-| apps/mobile/app/salary-day.tsx | PARTIAL_READY | Reads real profile/accounts/plan/goals but still uses preview model fallback and local-only apply action. |
-| apps/mobile/app/transaction/[id].tsx | PARTIAL_READY | Reads real transaction by id, but receipt/OCR and several context blocks are hardcoded preview content. |
-| apps/mobile/app/reports/month-end.tsx | WAITING_FRONTEND_WIRING | Full report content is static preview text/metrics. |
-| apps/mobile/app/settings/ai.tsx | WAITING_FRONTEND_WIRING | Preference is local screen state only. |
-| apps/mobile/app/modal.tsx | WAITING_FRONTEND_WIRING | Input UX exists; write integration not complete for parity standard. |
+| apps/mobile/app/bills.tsx | COMPLETED_READY | Uses recurring plan items only, with no preview fallback contracts. |
+| apps/mobile/app/salary-day.tsx | COMPLETED_READY | Uses typed salary allocation RPC and review-only prepared action. |
+| apps/mobile/app/transaction/[id].tsx | COMPLETED_READY | Reads real transaction by id with no receipt/OCR preview blocks. |
+| apps/mobile/app/reports/month-end.tsx | COMPLETED_READY | Uses typed month-end report RPC output. |
+| apps/mobile/app/settings/ai.tsx | COMPLETED_READY | Persists AI personality through the profile row. |
+| apps/mobile/app/modal.tsx | COMPLETED_READY | Creates real transaction rows. |
 | apps/mobile/app/allocation.tsx | WAITING_BACKEND | Preview-only capital allocation surface, no backend contract. |
 | apps/mobile/app/automations.tsx | WAITING_BACKEND | Preview-only automation surface, no backend contract. |
 | apps/mobile/app/credit-cards.tsx | WAITING_BACKEND | Preview-only card data, no backend contract. |
 | apps/mobile/app/driving-mode.tsx | WAITING_BACKEND | Preview-only voice mode surface. |
-| apps/mobile/app/financial-health.tsx | WAITING_BACKEND | Preview indicators with no backend health score contract. |
-| apps/mobile/app/goals/[id]/strategy.tsx | WAITING_BACKEND | Strategy details are sample guidance, not computed backend output. |
+| apps/mobile/app/financial-health.tsx | COMPLETED_READY | Uses typed financial health RPC output. |
+| apps/mobile/app/goals/[id]/strategy.tsx | COMPLETED_READY | Uses typed goal strategy RPC output. |
 | apps/mobile/app/income-mode.tsx | WAITING_BACKEND | Preview-only irregular income mode rules. |
 | apps/mobile/app/lockdown.tsx | WAITING_BACKEND | Preview-only lockdown mode controls. |
-| apps/mobile/app/onboarding.tsx | WAITING_FRONTEND_WIRING | Flow is preview and does not persist onboarding/profile baseline. |
-| apps/mobile/app/privacy.tsx | WAITING_FRONTEND_WIRING | Privacy toggles local only; not persisted. |
+| apps/mobile/app/onboarding.tsx | COMPLETED_READY | Persists onboarding priority, monthly cadence, safety buffer, and first signal. |
+| apps/mobile/app/privacy.tsx | COMPLETED_READY | Persists AI context scope and privacy toggles through the profile row. |
 | apps/mobile/app/shared-finances.tsx | WAITING_BACKEND | Preview-only shared finance surface. |
 | apps/mobile/app/vault.tsx | WAITING_BACKEND | Preview-only documents vault surface. |
 | apps/mobile/app/platform-surface.tsx | DEFERRED | Platform reference surface; not core parity gate. |

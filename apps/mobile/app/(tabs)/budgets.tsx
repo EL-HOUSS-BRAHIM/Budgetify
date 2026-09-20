@@ -1,126 +1,167 @@
 import { formatMoney, money } from '@budgetify/core';
+import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect, useRouter } from 'expo-router';
 import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { EmptyState, DataNotice } from '../../src/components/ui';
+import { type BudgetProgressItem, useBudgetProgress } from '../../src/features/finance/budgets';
 import { useTheme } from '../../src/theme/ThemeProvider';
+
+type IconName = React.ComponentProps<typeof Ionicons>['name'];
+
+function iconForCategory(category: string): IconName {
+  const normalized = category.toLowerCase();
+  if (normalized.includes('food') || normalized.includes('dining')) return 'restaurant-outline';
+  if (normalized.includes('housing') || normalized.includes('rent')) return 'home-outline';
+  if (normalized.includes('transport')) return 'car-outline';
+  if (normalized.includes('entertainment')) return 'film-outline';
+  if (normalized.includes('shopping')) return 'bag-outline';
+  if (normalized.includes('health')) return 'medical-outline';
+  return 'pricetag-outline';
+}
+
+function budgetStatusLabel(item: BudgetProgressItem): string {
+  if (item.status === 'over')
+    return `${formatMoney(money(Math.abs(item.remaining.amount), item.remaining.currency))} over`;
+  if (item.status === 'warning') return `${item.percentSpent}% used`;
+  return `${Math.max(0, 100 - item.percentSpent)}% remaining`;
+}
 
 export default function BudgetsScreen(): React.ReactElement {
   const { colors, spacing, typography } = useTheme();
   const insets = useSafeAreaInsets();
-  const currency = 'USD';
+  const router = useRouter();
+  const { budgets, isLoading, error, refresh } = useBudgetProgress();
 
-  const categories = [
-    {
-      name: 'Food & Dining',
-      spent: money(54000, currency),
-      limit: money(70000, currency),
-      icon: '🍔',
-    },
-    {
-      name: 'Housing & Utilities',
-      spent: money(120000, currency),
-      limit: money(120000, currency),
-      icon: '🏠',
-    },
-    {
-      name: 'Transportation',
-      spent: money(15000, currency),
-      limit: money(30000, currency),
-      icon: '🚗',
-    },
-    {
-      name: 'Entertainment',
-      spent: money(22000, currency),
-      limit: money(20000, currency),
-      icon: '🎬',
-    },
-    {
-      name: 'Shopping & Misc',
-      spent: money(11050, currency),
-      limit: money(25000, currency),
-      icon: '🛍️',
-    },
-  ];
+  useFocusEffect(
+    React.useCallback(() => {
+      void refresh();
+    }, [refresh]),
+  );
 
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: colors.background.primary }]}
       contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 32 }]}
+      refreshControl={
+        <RefreshControl
+          colors={[colors.brand.primary]}
+          onRefresh={refresh}
+          refreshing={isLoading && budgets.length > 0}
+          tintColor={colors.brand.primary}
+        />
+      }
     >
       <Text style={[typography.h3, { color: colors.text.primary, marginBottom: spacing.md }]}>
-        September Budgets
+        Budgets
       </Text>
 
-      {categories.map((cat) => {
-        const percent = Math.min(100, Math.round((cat.spent.amount / cat.limit.amount) * 100));
-        const isOver = cat.spent.amount > cat.limit.amount;
+      {error && <DataNotice icon="alert-circle-outline" label={error} tone="expense" />}
 
-        return (
-          <View
-            key={cat.name}
-            style={[
-              styles.budgetCard,
-              { backgroundColor: colors.background.card, borderColor: colors.border.default },
-            ]}
-          >
-            <View style={styles.cardHeader}>
-              <View style={styles.titleRow}>
-                <Text style={styles.icon}>{cat.icon}</Text>
-                <View>
+      {isLoading && budgets.length === 0 ? (
+        <View style={styles.loadingState}>
+          <ActivityIndicator color={colors.brand.primary} />
+          <Text style={[typography.bodySmall, { color: colors.text.tertiary }]}>
+            Loading budget progress
+          </Text>
+        </View>
+      ) : budgets.length === 0 ? (
+        <EmptyState
+          icon="wallet-outline"
+          title="No active budgets"
+          description="Create budgets from real categories before this screen can calculate progress."
+          actionLabel="Add transaction"
+          onAction={() => router.push('/modal')}
+        />
+      ) : (
+        budgets.map((item) => {
+          const percent = Math.min(100, Math.max(0, item.percentSpent));
+          const isOver = item.status === 'over';
+
+          return (
+            <View
+              key={item.id}
+              style={[
+                styles.budgetCard,
+                { backgroundColor: colors.background.card, borderColor: colors.border.default },
+              ]}
+            >
+              <View style={styles.cardHeader}>
+                <View style={styles.titleRow}>
+                  <View style={[styles.iconWrap, { backgroundColor: colors.background.tertiary }]}>
+                    <Ionicons
+                      name={iconForCategory(item.categoryName)}
+                      size={22}
+                      color={colors.text.secondary}
+                    />
+                  </View>
+                  <View>
+                    <Text
+                      style={[
+                        typography.bodyLarge,
+                        { color: colors.text.primary, fontWeight: '600' },
+                      ]}
+                    >
+                      {item.categoryName}
+                    </Text>
+                    <Text
+                      style={[
+                        typography.bodySmall,
+                        { color: isOver ? colors.semantic.expense : colors.text.tertiary },
+                      ]}
+                    >
+                      {budgetStatusLabel(item)}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={{ alignItems: 'flex-end' }}>
                   <Text
                     style={[
                       typography.bodyLarge,
-                      { color: colors.text.primary, fontWeight: '600' },
+                      { color: colors.text.primary, fontWeight: '700' },
                     ]}
                   >
-                    {cat.name}
+                    {formatMoney(item.spent)}
                   </Text>
-                  <Text
-                    style={[
-                      typography.bodySmall,
-                      { color: isOver ? colors.semantic.expense : colors.text.tertiary },
-                    ]}
-                  >
-                    {isOver ? 'Over budget' : `${100 - percent}% remaining`}
+                  <Text style={[typography.bodySmall, { color: colors.text.tertiary }]}>
+                    of {formatMoney(item.limit)}
                   </Text>
                 </View>
               </View>
 
-              <View style={{ alignItems: 'flex-end' }}>
-                <Text
-                  style={[typography.bodyLarge, { color: colors.text.primary, fontWeight: '700' }]}
-                >
-                  {formatMoney(cat.spent)}
-                </Text>
-                <Text style={[typography.bodySmall, { color: colors.text.tertiary }]}>
-                  of {formatMoney(cat.limit)}
-                </Text>
-              </View>
-            </View>
-
-            <View
-              style={[
-                styles.progressTrack,
-                { backgroundColor: colors.background.tertiary, marginTop: spacing.md },
-              ]}
-            >
               <View
                 style={[
-                  styles.progressBar,
-                  {
-                    backgroundColor: isOver
-                      ? colors.semantic.expense
-                      : percent > 80
-                        ? colors.semantic.warning
-                        : colors.brand.primary,
-                    width: `${percent}%`,
-                  },
+                  styles.progressTrack,
+                  { backgroundColor: colors.background.tertiary, marginTop: spacing.md },
                 ]}
-              />
+              >
+                <View
+                  style={[
+                    styles.progressBar,
+                    {
+                      backgroundColor: isOver
+                        ? colors.semantic.expense
+                        : percent > 80
+                          ? colors.semantic.warning
+                          : colors.brand.primary,
+                      width: `${percent}%`,
+                    },
+                  ]}
+                />
+              </View>
             </View>
-          </View>
-        );
-      })}
+          );
+        })
+      )}
     </ScrollView>
   );
 }
@@ -148,8 +189,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
-  icon: {
-    fontSize: 24,
+  iconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   progressTrack: {
     height: 6,
@@ -159,5 +204,11 @@ const styles = StyleSheet.create({
   progressBar: {
     height: '100%',
     borderRadius: 3,
+  },
+  loadingState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    paddingVertical: 40,
   },
 });

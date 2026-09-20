@@ -1,4 +1,3 @@
-import { parseMoney } from '@budgetify/core';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -12,17 +11,24 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { DataNotice } from '../src/components/ui';
+import { createTransaction } from '../src/features/finance/transactions';
+import { useProfile } from '../src/features/profile/profile';
 import { useTheme } from '../src/theme/ThemeProvider';
 
 export default function AddTransactionModal(): React.ReactElement {
   const { colors, typography } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { profile } = useProfile();
+  const currency = profile?.currency ?? 'USD';
 
   const [type, setType] = useState<'expense' | 'income'>('expense');
   const [title, setTitle] = useState('');
   const [amountStr, setAmountStr] = useState('');
   const [category, setCategory] = useState('Food & Dining');
+  const [error, setError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const categories = [
     'Food & Dining',
@@ -33,14 +39,23 @@ export default function AddTransactionModal(): React.ReactElement {
     'Other',
   ];
 
-  const handleSave = () => {
-    if (!title.trim() || !amountStr.trim()) return;
+  const handleSave = async () => {
+    if (!title.trim() || !amountStr.trim() || isSaving) return;
+    setError(null);
+    setIsSaving(true);
     try {
-      // Validate using @budgetify/core
-      parseMoney(amountStr, 'USD');
+      await createTransaction({
+        type,
+        title,
+        amountText: amountStr,
+        categoryName: category,
+        currency,
+      });
       router.back();
-    } catch {
-      // Amount parse error
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : 'Unable to save this transaction.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -105,7 +120,7 @@ export default function AddTransactionModal(): React.ReactElement {
           </Text>
           <TextInput
             style={[styles.amountInput, { color: colors.text.primary }]}
-            placeholder="$0.00"
+            placeholder={`${currency} 0.00`}
             placeholderTextColor={colors.text.muted}
             keyboardType="decimal-pad"
             value={amountStr}
@@ -176,14 +191,24 @@ export default function AddTransactionModal(): React.ReactElement {
           ))}
         </View>
 
+        {error && <DataNotice icon="alert-circle-outline" label={error} tone="expense" />}
+
         {/* Submit button */}
         <TouchableOpacity
-          style={[styles.saveBtn, { backgroundColor: colors.brand.primary, marginTop: 32 }]}
+          disabled={isSaving || !title.trim() || !amountStr.trim()}
+          style={[
+            styles.saveBtn,
+            {
+              backgroundColor: colors.brand.primary,
+              marginTop: 32,
+              opacity: isSaving || !title.trim() || !amountStr.trim() ? 0.45 : 1,
+            },
+          ]}
           onPress={handleSave}
           activeOpacity={0.8}
         >
           <Text style={[typography.bodyLarge, { color: colors.text.inverse, fontWeight: '700' }]}>
-            Save Transaction
+            {isSaving ? 'Saving...' : 'Save Transaction'}
           </Text>
         </TouchableOpacity>
       </ScrollView>

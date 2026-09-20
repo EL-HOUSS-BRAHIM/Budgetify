@@ -4,6 +4,11 @@ import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, Card, DataNotice, Screen } from '../src/components/ui';
+import {
+  useProfile,
+  type FirstSignal,
+  type OnboardingPriority,
+} from '../src/features/profile/profile';
 import { useTheme } from '../src/theme/ThemeProvider';
 
 function Icon(props: React.ComponentProps<typeof Ionicons>): React.ReactElement {
@@ -20,9 +25,31 @@ export default function OnboardingScreen(): React.ReactElement {
   const router = useRouter();
   const { colors, fontFamily, typography } = useTheme();
   const insets = useSafeAreaInsets();
+  const { isSaving, updateProfile } = useProfile();
   const [step, setStep] = useState(1);
   const [done, setDone] = useState(false);
+  const [priority, setPriority] = useState<OnboardingPriority>('safety_net');
+  const [safetyBufferAmount, setSafetyBufferAmount] = useState(50000);
+  const [firstSignal, setFirstSignal] = useState<FirstSignal>('safe_to_spend');
+  const [error, setError] = useState<string | null>(null);
   const steps = ['Your priorities', 'Your safety floor', 'Your first signal'];
+
+  const finish = async () => {
+    setError(null);
+    try {
+      await updateProfile({
+        onboardingPriority: priority,
+        safetyBufferAmount,
+        incomeCadence: 'monthly',
+        firstSignal,
+        onboardingCompletedAt: new Date().toISOString(),
+      });
+      setDone(true);
+    } catch {
+      setError('Setup could not be saved.');
+    }
+  };
+
   return (
     <Screen contentContainerStyle={{ paddingTop: insets.top + 8 }}>
       <View style={styles.header}>
@@ -48,7 +75,7 @@ export default function OnboardingScreen(): React.ReactElement {
       <Text
         style={[styles.eyebrow, { color: colors.semantic.info, fontFamily: fontFamily.semibold }]}
       >
-        INTELLIGENT ONBOARDING · PREVIEW
+        INTELLIGENT ONBOARDING
       </Text>
       <Text style={[typography.h2, { color: colors.text.primary, marginTop: 5 }]}>
         {done ? 'Your operating system is ready' : steps[step - 1]}
@@ -58,11 +85,7 @@ export default function OnboardingScreen(): React.ReactElement {
           ? 'A calm first view, with every decision still under your control.'
           : 'A short setup that starts with context, not account connections.'}
       </Text>
-      <DataNotice
-        icon="eye-outline"
-        label="Design preview · no bank connection or profile was created"
-        tone="info"
-      />
+      {error && <DataNotice icon="alert-circle-outline" label={error} tone="expense" />}
       {done ? (
         <Card style={styles.complete}>
           <View style={[styles.completeIcon, { backgroundColor: colors.semantic.incomeLight }]}>
@@ -74,10 +97,10 @@ export default function OnboardingScreen(): React.ReactElement {
               { color: colors.text.primary, fontFamily: fontFamily.semibold },
             ]}
           >
-            Preview setup complete
+            Setup complete
           </Text>
           <Text style={[styles.small, { color: colors.text.tertiary }]}>
-            Lyvora would now personalize Home, Plan, and Goals from the choices above.
+            Lyvora will now personalize Home, Plan, and Goals from your profile baseline.
           </Text>
         </Card>
       ) : (
@@ -115,47 +138,72 @@ export default function OnboardingScreen(): React.ReactElement {
                 : 'Choose the first signal you want to see.'}
           </Text>
           <View style={styles.choices}>
-            <Choice
-              label={
-                step === 1
-                  ? 'Build my safety net'
-                  : step === 2
-                    ? 'Essential bills and runway'
-                    : 'Safe-to-Spend'
-              }
-              selected
-              onPress={() => {}}
-            />
-            <Choice
-              label={
-                step === 1
-                  ? 'Reach a meaningful goal'
-                  : step === 2
-                    ? 'Goal contributions'
-                    : "Today's commitments"
-              }
-              selected={false}
-              onPress={() => {}}
-            />
-            <Choice
-              label={
-                step === 1
-                  ? 'Understand my patterns'
-                  : step === 2
-                    ? 'A deliberate spending buffer'
-                    : 'One useful insight'
-              }
-              selected={false}
-              onPress={() => {}}
-            />
+            {step === 1 && (
+              <>
+                <Choice
+                  label="Build my safety net"
+                  onPress={() => setPriority('safety_net')}
+                  selected={priority === 'safety_net'}
+                />
+                <Choice
+                  label="Reach a meaningful goal"
+                  onPress={() => setPriority('goal')}
+                  selected={priority === 'goal'}
+                />
+                <Choice
+                  label="Understand my patterns"
+                  onPress={() => setPriority('patterns')}
+                  selected={priority === 'patterns'}
+                />
+              </>
+            )}
+            {step === 2 && (
+              <>
+                <Choice
+                  label="Essential bills and runway"
+                  onPress={() => setSafetyBufferAmount(50000)}
+                  selected={safetyBufferAmount === 50000}
+                />
+                <Choice
+                  label="Goal contributions"
+                  onPress={() => setSafetyBufferAmount(100000)}
+                  selected={safetyBufferAmount === 100000}
+                />
+                <Choice
+                  label="A deliberate spending buffer"
+                  onPress={() => setSafetyBufferAmount(150000)}
+                  selected={safetyBufferAmount === 150000}
+                />
+              </>
+            )}
+            {step === 3 && (
+              <>
+                <Choice
+                  label="Safe-to-Spend"
+                  onPress={() => setFirstSignal('safe_to_spend')}
+                  selected={firstSignal === 'safe_to_spend'}
+                />
+                <Choice
+                  label="Today's commitments"
+                  onPress={() => setFirstSignal('commitments')}
+                  selected={firstSignal === 'commitments'}
+                />
+                <Choice
+                  label="One useful insight"
+                  onPress={() => setFirstSignal('insight')}
+                  selected={firstSignal === 'insight'}
+                />
+              </>
+            )}
           </View>
         </Card>
       )}
       {!done && (
         <Button
           icon={step === 3 ? 'checkmark-outline' : 'arrow-forward-outline'}
-          label={step === 3 ? 'Finish preview setup' : 'Continue'}
-          onPress={() => (step === 3 ? setDone(true) : setStep(step + 1))}
+          label={step === 3 ? 'Finish setup' : 'Continue'}
+          loading={isSaving}
+          onPress={() => (step === 3 ? void finish() : setStep(step + 1))}
           style={styles.action}
         />
       )}

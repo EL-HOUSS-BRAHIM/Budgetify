@@ -4,7 +4,7 @@
 begin;
 set local role postgres;
 set local search_path = public, extensions;
-select plan(18);
+select plan(24);
 
 select has_table('public', 'accounts', 'accounts table exists');
 select has_table('public', 'budgets', 'budgets table exists');
@@ -21,6 +21,12 @@ values
 
 insert into public.accounts (id, user_id, name)
 values ('33333333-3333-3333-3333-333333333333', '22222222-2222-2222-2222-222222222222', 'Bob Checking');
+
+insert into public.budgets (user_id, category_name, amount, start_date, end_date)
+values ('22222222-2222-2222-2222-222222222222', 'Food & Dining', 99000, current_date, current_date + 30);
+
+insert into public.transactions (user_id, category_name, amount, type, description)
+values ('22222222-2222-2222-2222-222222222222', 'Food & Dining', 99000, 'expense', 'Bob private lunch');
 
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
@@ -116,6 +122,41 @@ select is(
 select lives_ok(
   $$ select public.get_monthly_summary(current_date) $$,
   'authenticated users can retrieve their monthly summary'
+);
+
+select is(
+  json_array_length(public.get_budget_progress(current_date)),
+  1,
+  'budget progress returns only the authenticated user budgets'
+);
+
+select is(
+  ((public.get_budget_progress(current_date)->0->>'spent')::int),
+  1800,
+  'budget progress uses only the authenticated user transactions'
+);
+
+select lives_ok(
+  $$ select public.get_goal_strategy(
+       (select id from public.goals where name = 'Emergency fund'),
+       current_date
+     ) $$,
+  'authenticated users can retrieve a goal strategy for their own goal'
+);
+
+select lives_ok(
+  $$ select public.get_salary_allocation(current_date) $$,
+  'authenticated users can retrieve salary allocation recommendations'
+);
+
+select lives_ok(
+  $$ select public.get_financial_health(current_date) $$,
+  'authenticated users can retrieve financial health scoring'
+);
+
+select lives_ok(
+  $$ select public.get_month_end_report(current_date) $$,
+  'authenticated users can retrieve month-end reporting'
 );
 
 select * from finish();

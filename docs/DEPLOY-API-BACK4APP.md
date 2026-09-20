@@ -49,14 +49,14 @@ Never set any service-role or secret Supabase key.
 - Trigger the deploy from the Back4App dashboard (pulls the configured image tag from Docker Hub).
 - To ship a new version: push to `main` so GitHub Actions rebuilds and pushes `:latest` (and `:<short-sha>`), then redeploy the app in Back4App so it pulls the new image — Back4App does not automatically detect new Docker Hub pushes on its own.
 - Confirm the deploy logs show the image was pulled successfully and the container started.
-- Back4App assigns a public HTTPS URL to the app (visible on the app's dashboard page) — use it below as `PUBLIC_API_URL`.
+- Back4App assigns a public HTTPS URL to the app (visible on the app's dashboard page). The current Budgetify AI URL is `https://budgetifyai-qika9xe4.b4a.run`; use it below as `PUBLIC_API_URL` unless a newer deployment replaces it.
 
 ## 5. Public HTTPS smoke checks
 
 Run from repo root in PowerShell:
 
 ```powershell
-$env:PUBLIC_API_URL='https://REPLACE_WITH_BACK4APP_URL'
+$env:PUBLIC_API_URL='https://budgetifyai-qika9xe4.b4a.run'
 $env:SMOKE_USER1_TOKEN='REPLACE_ME'
 $env:SMOKE_USER2_TOKEN='REPLACE_ME'
 node services/ai/public-smoke-t17.mjs

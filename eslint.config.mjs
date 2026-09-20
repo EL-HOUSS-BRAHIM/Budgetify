@@ -100,7 +100,7 @@ export default tseslint.config(
   {
     // Build and tooling config files sit outside the tsconfig projects, so
     // type-aware rules cannot run against them.
-    files: ['**/*.config.{js,mjs,cjs,ts}', 'eslint.config.mjs', '**/*.cjs'],
+    files: ['**/*.config.{js,mjs,cjs,ts}', 'eslint.config.mjs', '*.mjs', '**/*.cjs'],
     extends: [tseslint.configs.disableTypeChecked],
     languageOptions: {
       parserOptions: { projectService: false, project: false },

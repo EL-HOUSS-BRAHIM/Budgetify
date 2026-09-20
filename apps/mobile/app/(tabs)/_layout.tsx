@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Tabs } from 'expo-router';
+import { Redirect, Tabs } from 'expo-router';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { AuthLoadingScreen, useAuth } from '../../src/features/auth/AuthProvider';
 import { useTheme } from '../../src/theme/ThemeProvider';
 
 function HeaderProfileButton(): React.ReactElement {
@@ -23,6 +24,15 @@ function HeaderProfileButton(): React.ReactElement {
 
 export default function TabLayout(): React.ReactElement {
   const { colors, fontFamily } = useTheme();
+  const { session, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <AuthLoadingScreen />;
+  }
+
+  if (!session) {
+    return <Redirect href="/auth/sign-in" />;
+  }
 
   return (
     <Tabs

@@ -23,25 +23,6 @@ interface TransactionView {
   type: 'expense' | 'income';
 }
 
-const previewTransaction: TransactionView = {
-  id: 'TXN-MAR-2023-8849204',
-  merchant: 'Carrefour Market',
-  category: 'Groceries & Household',
-  amount: 42750,
-  currency: 'MAD',
-  date: 'Today, 18:43',
-  account: 'Attijariwafa Card · •••• 4102',
-  type: 'expense',
-};
-const receiptItems = [
-  ['Organic Eggs (30pk)', 'Ferme Du Rif · Qty 1', 4200],
-  ['Whole Milk (6L)', 'Centrale Danone · Pack', 5400],
-  ['Fresh Salmon Fillet', 'Pescherie Poissonnerie · 0.42kg', 7850],
-  ['Extra Virgin Olive Oil 2L', 'Zouitina Gold', 8500],
-  ['Greek Style Yogurt', 'Carrefour Bio · 4x125g', 2800],
-  ['Avocado Hass', 'Produce Local · 1kg', 3600],
-] as const;
-
 function DecorativeIcon(props: React.ComponentProps<typeof Ionicons>): React.ReactElement {
   return (
     <Ionicons
@@ -81,11 +62,9 @@ export default function TransactionDetailScreen(): React.ReactElement {
   const { colors, fontFamily, typography } = useTheme();
   const insets = useSafeAreaInsets();
   const [transaction, setTransaction] = useState<TransactionView | null>(null);
-  const [isPreview, setIsPreview] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setError(null);
@@ -93,9 +72,8 @@ export default function TransactionDetailScreen(): React.ReactElement {
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      if (!session || id === 'preview') {
-        setTransaction(previewTransaction);
-        setIsPreview(true);
+      if (!session || !id) {
+        setTransaction(null);
         return;
       }
       const { data, error: queryError } = await supabase
@@ -105,12 +83,10 @@ export default function TransactionDetailScreen(): React.ReactElement {
         .maybeSingle();
       if (queryError) throw queryError;
       if (!data) {
-        setTransaction(previewTransaction);
-        setIsPreview(true);
+        setTransaction(null);
         return;
       }
       setTransaction(toView(data));
-      setIsPreview(false);
     } catch {
       setError('This transaction could not be loaded. Your existing data was not changed.');
     } finally {
@@ -190,13 +166,6 @@ export default function TransactionDetailScreen(): React.ReactElement {
               <DecorativeIcon name="options-outline" size={20} color={colors.text.primary} />
             </Pressable>
           </View>
-          {isPreview && (
-            <DataNotice
-              icon="eye-outline"
-              label="Design preview · sample transaction"
-              tone="info"
-            />
-          )}
           <View style={styles.hero}>
             <View style={[styles.merchantIcon, { backgroundColor: colors.brand.accentLight }]}>
               <DecorativeIcon name="cart-outline" size={30} color={colors.semantic.info} />
@@ -243,175 +212,18 @@ export default function TransactionDetailScreen(): React.ReactElement {
               value={transaction.account}
             />
             <View style={[styles.divider, { backgroundColor: colors.border.subtle }]} />
-            <DetailRow
-              icon="sparkles"
-              label="AI Category Classification"
-              value={`${transaction.category} · 94% confidence`}
+            <DetailRow icon="pricetag-outline" label="Category" value={transaction.category} />
+          </Card>
+          <Card style={styles.stateCard}>
+            <DataNotice
+              icon="information-circle-outline"
+              label="Receipt OCR, splits, and behavioral insights will appear here only after their backend contracts exist."
+              tone="info"
             />
-          </Card>
-          <Card style={[styles.aiCard, { borderColor: colors.brand.accent }]}>
-            <View style={styles.aiHeader}>
-              <View style={[styles.aiPill, { backgroundColor: colors.brand.accentLight }]}>
-                <DecorativeIcon name="sparkles" size={13} color={colors.semantic.info} />
-                <Text
-                  style={[
-                    styles.aiPillText,
-                    { color: colors.semantic.info, fontFamily: fontFamily.semibold },
-                  ]}
-                >
-                  LYVORA ENGINE
-                </Text>
-              </View>
-              <Text
-                style={[
-                  styles.confidence,
-                  { color: colors.semantic.income, fontFamily: fontFamily.medium },
-                ]}
-              >
-                94% confidence
-              </Text>
-            </View>
-            <Text style={[typography.bodySmall, styles.aiText, { color: colors.text.secondary }]}>
-              Categorized via deep merchant match. The classification is based on comparable
-              category patterns and can be reviewed before any change.
-            </Text>
-            <View style={styles.aiActions}>
-              <Button
-                label="Re-train label"
-                onPress={() => setNotice('Category training review prepared locally.')}
-                style={styles.aiButton}
-                variant="secondary"
-              />
-              <Button
-                label="Split expense"
-                onPress={() => setNotice('Expense split draft prepared locally.')}
-                style={styles.aiButton}
-                variant="text"
-              />
-            </View>
-          </Card>
-          <Text
-            style={[
-              styles.sectionTitle,
-              { color: colors.text.primary, fontFamily: fontFamily.medium },
-            ]}
-          >
-            Behavioral Context
-          </Text>
-          <Card style={styles.contextCard}>
-            <View style={[styles.contextIcon, { backgroundColor: colors.semantic.warningLight }]}>
-              <DecorativeIcon name="trending-up" size={18} color={colors.semantic.warning} />
-            </View>
-            <View style={styles.contextCopy}>
-              <Text
-                style={[
-                  styles.contextTitle,
-                  { color: colors.semantic.warning, fontFamily: fontFamily.semibold },
-                ]}
-              >
-                12% above 30-day grocery average
-              </Text>
-              <Text style={[typography.bodySmall, { color: colors.text.secondary }]}>
-                Your typical basket is {formatAmount(38100, transaction.currency)}. This difference
-                may reflect a larger pantry restock.
-              </Text>
-            </View>
-          </Card>
-          <Card style={[styles.envelopeCard, { backgroundColor: colors.background.tertiary }]}>
-            <View>
-              <Text
-                style={[
-                  styles.envelopeTitle,
-                  { color: colors.text.primary, fontFamily: fontFamily.medium },
-                ]}
-              >
-                Monthly Groceries Envelope
-              </Text>
-              <Text style={[typography.bodySmall, { color: colors.text.tertiary }]}>
-                Healthy burn rate · Refreshes on Oct 1
-              </Text>
-            </View>
-            <Text
-              style={[
-                styles.envelopeAmount,
-                { color: colors.semantic.income, fontFamily: fontFamily.semibold },
-              ]}
-            >
-              {formatAmount(57250, transaction.currency)} left
-            </Text>
-          </Card>
-          <Text
-            style={[
-              styles.sectionTitle,
-              { color: colors.text.primary, fontFamily: fontFamily.medium },
-            ]}
-          >
-            Digital Receipt & OCR
-          </Text>
-          <Card style={styles.receiptCard}>
-            <View style={styles.receiptHeader}>
-              <View>
-                <Text
-                  style={[
-                    styles.receiptTitle,
-                    { color: colors.text.primary, fontFamily: fontFamily.semibold },
-                  ]}
-                >
-                  12 items parsed
-                </Text>
-                <Text style={[styles.receiptMeta, { color: colors.text.tertiary }]}>
-                  OCR matrix · 99.2% match
-                </Text>
-              </View>
-              <Pressable
-                accessibilityLabel="View original receipt scan"
-                accessibilityRole="button"
-                onPress={() =>
-                  setNotice('Original receipt viewing is not connected in this preview.')
-                }
-                style={({ pressed }) => [
-                  styles.scanButton,
-                  { backgroundColor: colors.background.tertiary, opacity: pressed ? 0.72 : 1 },
-                ]}
-              >
-                <DecorativeIcon name="scan-outline" size={17} color={colors.semantic.info} />
-              </Pressable>
-            </View>
-            {receiptItems.map(([name, detail, amount], index) => (
-              <React.Fragment key={name}>
-                <View style={styles.receiptRow}>
-                  <View style={styles.receiptCopy}>
-                    <Text
-                      style={[
-                        styles.receiptName,
-                        { color: colors.text.primary, fontFamily: fontFamily.medium },
-                      ]}
-                    >
-                      {name}
-                    </Text>
-                    <Text style={[styles.receiptDetail, { color: colors.text.tertiary }]}>
-                      {detail}
-                    </Text>
-                  </View>
-                  <Text
-                    style={[
-                      styles.receiptAmount,
-                      { color: colors.text.primary, fontFamily: fontFamily.medium },
-                    ]}
-                  >
-                    {formatAmount(amount, transaction.currency)}
-                  </Text>
-                </View>
-                {index < receiptItems.length - 1 && (
-                  <View style={[styles.divider, { backgroundColor: colors.border.subtle }]} />
-                )}
-              </React.Fragment>
-            ))}
           </Card>
           <Text style={[styles.transactionId, { color: colors.text.muted }]}>
             Transaction ID: {transaction.id} · Synchronized securely
           </Text>
-          {notice && <DataNotice label={notice} tone="info" />}
         </>
       )}
     </Screen>

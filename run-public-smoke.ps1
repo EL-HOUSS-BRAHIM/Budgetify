@@ -1,8 +1,7 @@
 Set-Location "C:\dev\Budgetify"
 
 if (-not $env:PUBLIC_API_URL) {
-  Write-Error "Set PUBLIC_API_URL, e.g. https://budgetify-ai.back4app.io"
-  exit 1
+  $env:PUBLIC_API_URL = 'https://budgetifyai-qika9xe4.b4a.run'
 }
 
 if (-not $env:SMOKE_USER1_TOKEN -or -not $env:SMOKE_USER2_TOKEN) {
