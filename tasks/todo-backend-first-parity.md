@@ -3,6 +3,9 @@
 Date: 2026-09-15
 
 Next-phase plan: `tasks/plan-app-logic-responsive.md`
+Status snapshot: `tasks/progress-app-logic-responsive.md`
+
+P0-P6 committed as `8bbcb95` ("Connect mobile app to real backend contracts"); working tree clean, `origin/main` up to date.
 
 ## Status Key
 
@@ -148,7 +151,8 @@ Rule: backend is now treated as deployed at `https://budgetifyai-qika9xe4.b4a.ru
 
 - [x] DONE - Classify every route as Core, Core secondary, or Preview/Lab.
 - [x] DONE - Move deferred Preview/Lab routes out of core navigation promises.
-- [ ] WAITING - Replace brittle fixed dimensions with tokenized, safe-area-aware responsive layout primitives.
+- [ ] READY - Replace brittle fixed dimensions with tokenized, safe-area-aware responsive layout primitives.
 - [ ] WAITING - Verify dynamic text, small-phone, large-phone/tablet, light-theme, and dark-theme layouts.
 - [x] DONE - Run hardcoded-data scan over mobile source and clear all core-route sample values.
-- [ ] WAITING - Run final `typecheck`, `test`, `expo:check`, and public smoke gates.
+- [x] DONE - Post-commit `typecheck` re-verified clean; `test`, `expo:check` still pending a final re-run after the responsive pass.
+- [ ] WAITING - Run authenticated public smoke gate once test-user tokens are available.

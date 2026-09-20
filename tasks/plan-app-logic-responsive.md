@@ -178,6 +178,10 @@ P0 deployed backend verification
 - 2026-09-20: `npm run db:test` is blocked locally because Docker Desktop is not running; the non-destructive `get_budget_progress` migration was applied to hosted Budgetify via Supabase MCP and verified in migration history.
 - 2026-09-20: Additional hosted migrations applied via Supabase MCP and verified in migration history: `strategy_and_salary_contracts`, `insights_and_preferences`, and `onboarding_baseline`.
 - 2026-09-20: Hardcoded-data scan over `apps/mobile/app` now reports only Settings Lab/Preview grouping plus explicitly deferred Lab/reference routes.
+- 2026-09-20: P0-P6 committed as `8bbcb95` ("Connect mobile app to real backend contracts"); working tree is clean and `origin/main` is up to date.
+- 2026-09-20: Post-commit `npm run typecheck` re-verified clean across `apps/mobile`, `packages/core`, `packages/types`, and `services/ai`.
+
+Status snapshot: `tasks/progress-app-logic-responsive.md`.
 
 ## Open Questions
 
