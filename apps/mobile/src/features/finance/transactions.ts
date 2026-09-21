@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { InsertTables, Tables } from '@budgetify/types';
 import { supabase } from '../../lib/supabase';
 
-export type TransactionType = 'expense' | 'income';
+export type TransactionType = 'expense' | 'income' | 'transfer';
 export type TransactionRow = Tables<'transactions'>;
 
 export interface TransactionListItem {
@@ -21,8 +21,11 @@ export interface CreateTransactionInput {
   title: string;
   amountText: string;
   categoryName: string;
+  categoryId?: string;
   currency: string;
   date?: Date;
+  sourceAccountId?: string;
+  destinationAccountId?: string;
 }
 
 interface TransactionState {
@@ -37,7 +40,8 @@ const LOAD_ERROR = 'Unable to load transactions.';
 const SAVE_ERROR = 'Unable to save this transaction.';
 
 function toTransactionType(value: string): TransactionType {
-  return value === 'income' ? 'income' : 'expense';
+  if (value === 'income' || value === 'transfer') return value;
+  return 'expense';
 }
 
 function formatTransactionDate(value: string): string {
@@ -62,7 +66,7 @@ function toListItem(row: TransactionRow): TransactionListItem {
 }
 
 export function formatTransactionAmount(item: TransactionListItem): string {
-  const sign = item.type === 'expense' ? '-' : '+';
+  const sign = item.type === 'expense' ? '-' : item.type === 'income' ? '+' : '↔';
   return `${sign}${formatMoney(item.amount)}`;
 }
 
@@ -86,13 +90,29 @@ export async function createTransaction(
   const insert: InsertTables<'transactions'> = {
     amount: parsedAmount.amount,
     category_name: input.categoryName.trim() || 'Other',
+    category_id: input.categoryId ?? null,
     currency: parsedAmount.currency,
     date: (input.date ?? new Date()).toISOString(),
     description: input.title.trim(),
     type: input.type,
+    account_id: input.sourceAccountId ?? null,
   };
 
-  const { data, error } = await supabase.from('transactions').insert(insert).select().single();
+  const transferFields = {
+    source_account_id: input.type === 'income' ? null : (input.sourceAccountId ?? null),
+    destination_account_id:
+      input.type === 'income'
+        ? (input.sourceAccountId ?? null)
+        : input.type === 'transfer'
+          ? (input.destinationAccountId ?? null)
+          : null,
+  };
+
+  const { data, error } = await supabase
+    .from('transactions')
+    .insert({ ...insert, ...transferFields } as never)
+    .select()
+    .single();
 
   if (error || !data) {
     throw new Error(SAVE_ERROR);
@@ -101,7 +121,7 @@ export async function createTransaction(
   return toListItem(data);
 }
 
-export function useTransactions(search: string): TransactionState {
+export function useTransactions(search: string, targetDate = new Date()): TransactionState {
   const [transactions, setTransactions] = useState<TransactionListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -122,9 +142,13 @@ export function useTransactions(search: string): TransactionState {
       return;
     }
 
+    const start = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1).toISOString();
+    const end = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 1).toISOString();
     const { data, error: queryError } = await supabase
       .from('transactions')
       .select('*')
+      .gte('date', start)
+      .lt('date', end)
       .order('date', { ascending: false })
       .order('created_at', { ascending: false })
       .limit(100);
@@ -147,7 +171,7 @@ export function useTransactions(search: string): TransactionState {
 
     setTransactions(items);
     setIsLoading(false);
-  }, [search]);
+  }, [search, targetDate]);
 
   useEffect(() => {
     void refresh();

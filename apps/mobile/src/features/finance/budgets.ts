@@ -112,7 +112,7 @@ function toBudgetProgressItem(row: BudgetProgressPayload): BudgetProgressItem {
   };
 }
 
-export function useBudgetProgress(): BudgetProgressState {
+export function useBudgetProgress(targetDate = new Date()): BudgetProgressState {
   const [budgets, setBudgets] = useState<BudgetProgressItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -133,7 +133,9 @@ export function useBudgetProgress(): BudgetProgressState {
       return;
     }
 
-    const { data, error: rpcError } = await supabase.rpc('get_budget_progress');
+    const { data, error: rpcError } = await supabase.rpc('get_budget_progress', {
+      target_date: targetDate.toISOString().slice(0, 10),
+    });
     if (rpcError || !Array.isArray(data)) {
       setBudgets([]);
       setError(LOAD_ERROR);
@@ -149,7 +151,7 @@ export function useBudgetProgress(): BudgetProgressState {
     }, []);
     setBudgets(parsed);
     setIsLoading(false);
-  }, []);
+  }, [targetDate]);
 
   useEffect(() => {
     void refresh();

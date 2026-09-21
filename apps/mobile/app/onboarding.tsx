@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, Card, DataNotice, Screen } from '../src/components/ui';
+import { createAccount } from '../src/features/finance/accounts';
 import {
   useProfile,
   type FirstSignal,
@@ -25,18 +26,35 @@ export default function OnboardingScreen(): React.ReactElement {
   const router = useRouter();
   const { colors, fontFamily, typography } = useTheme();
   const insets = useSafeAreaInsets();
-  const { isSaving, updateProfile } = useProfile();
+  const { profile, isSaving, updateProfile } = useProfile();
   const [step, setStep] = useState(1);
   const [done, setDone] = useState(false);
   const [priority, setPriority] = useState<OnboardingPriority>('safety_net');
   const [safetyBufferAmount, setSafetyBufferAmount] = useState(50000);
   const [firstSignal, setFirstSignal] = useState<FirstSignal>('safe_to_spend');
   const [error, setError] = useState<string | null>(null);
-  const steps = ['Your priorities', 'Your safety floor', 'Your first signal'];
+  const [accountName, setAccountName] = useState('');
+  const [accountBalance, setAccountBalance] = useState('');
+  const steps = ['Your priorities', 'Your safety floor', 'Your first signal', 'Your first account'];
 
   const finish = async () => {
     setError(null);
     try {
+      if (accountName.trim() || accountBalance.trim()) {
+        const balance = Number(accountBalance.replace(',', '.'));
+        if (!accountName.trim() || !Number.isFinite(balance)) {
+          throw new Error(
+            'Enter both an account name and a valid starting balance, or leave both blank.',
+          );
+        }
+        await createAccount({
+          name: accountName.trim(),
+          current_balance: Math.round(balance * 100),
+          currency: profile?.currency ?? 'USD',
+          type: 'checking',
+          is_default: true,
+        });
+      }
       await updateProfile({
         onboardingPriority: priority,
         safetyBufferAmount,
@@ -75,7 +93,7 @@ export default function OnboardingScreen(): React.ReactElement {
       <Text
         style={[styles.eyebrow, { color: colors.semantic.info, fontFamily: fontFamily.semibold }]}
       >
-        INTELLIGENT ONBOARDING
+        CORE V1 SETUP
       </Text>
       <Text style={[typography.h2, { color: colors.text.primary, marginTop: 5 }]}>
         {done ? 'Your operating system is ready' : steps[step - 1]}
@@ -83,7 +101,7 @@ export default function OnboardingScreen(): React.ReactElement {
       <Text style={[typography.bodySmall, { color: colors.text.tertiary, marginTop: 4 }]}>
         {done
           ? 'A calm first view, with every decision still under your control.'
-          : 'A short setup that starts with context, not account connections.'}
+          : 'A short setup for your accounts, budget, and goals.'}
       </Text>
       {error && <DataNotice icon="alert-circle-outline" label={error} tone="expense" />}
       {done ? (
@@ -100,7 +118,7 @@ export default function OnboardingScreen(): React.ReactElement {
             Setup complete
           </Text>
           <Text style={[styles.small, { color: colors.text.tertiary }]}>
-            Lyvora will now personalize Home, Plan, and Goals from your profile baseline.
+            Your core dashboard is ready for real financial data.
           </Text>
         </Card>
       ) : (
@@ -112,7 +130,9 @@ export default function OnboardingScreen(): React.ReactElement {
                   ? 'compass-outline'
                   : step === 2
                     ? 'shield-checkmark-outline'
-                    : 'sparkles-outline'
+                    : step === 3
+                      ? 'calendar-outline'
+                      : 'wallet-outline'
               }
               size={23}
               color={colors.semantic.info}
@@ -128,14 +148,18 @@ export default function OnboardingScreen(): React.ReactElement {
               ? 'What matters most this season?'
               : step === 2
                 ? 'What should never be put at risk?'
-                : 'How should Lyvora begin each day?'}
+                : step === 3
+                  ? 'What should you see first each month?'
+                  : 'Add your first account (optional)'}
           </Text>
           <Text style={[styles.small, { color: colors.text.tertiary }]}>
             {step === 1
               ? 'Pick a starting lens for your financial decisions.'
               : step === 2
                 ? 'Set a conservative boundary before ambition.'
-                : 'Choose the first signal you want to see.'}
+                : step === 3
+                  ? 'Choose the first signal you want to see.'
+                  : 'You can add accounts later from Settings.'}
           </Text>
           <View style={styles.choices}>
             {step === 1 && (
@@ -195,15 +219,40 @@ export default function OnboardingScreen(): React.ReactElement {
                 />
               </>
             )}
+            {step === 4 && (
+              <>
+                <TextInput
+                  value={accountName}
+                  onChangeText={setAccountName}
+                  placeholder="Account name, e.g. CIH Bank"
+                  placeholderTextColor={colors.text.muted}
+                  style={[
+                    styles.input,
+                    { color: colors.text.primary, borderColor: colors.border.default },
+                  ]}
+                />
+                <TextInput
+                  value={accountBalance}
+                  onChangeText={setAccountBalance}
+                  keyboardType="decimal-pad"
+                  placeholder="Current balance"
+                  placeholderTextColor={colors.text.muted}
+                  style={[
+                    styles.input,
+                    { color: colors.text.primary, borderColor: colors.border.default },
+                  ]}
+                />
+              </>
+            )}
           </View>
         </Card>
       )}
       {!done && (
         <Button
           icon={step === 3 ? 'checkmark-outline' : 'arrow-forward-outline'}
-          label={step === 3 ? 'Finish setup' : 'Continue'}
+          label={step === 4 ? 'Finish setup' : 'Continue'}
           loading={isSaving}
-          onPress={() => (step === 3 ? void finish() : setStep(step + 1))}
+          onPress={() => (step === 4 ? void finish() : setStep(step + 1))}
           style={styles.action}
         />
       )}
@@ -275,6 +324,14 @@ const styles = StyleSheet.create({
   question: { marginTop: 16, fontSize: 18, lineHeight: 24 },
   small: { marginTop: 5, fontSize: 10, lineHeight: 15 },
   choices: { marginTop: 18, gap: 8 },
+  input: {
+    minHeight: 48,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    fontSize: 15,
+    marginTop: 10,
+  },
   choice: {
     minHeight: 52,
     borderWidth: 1,

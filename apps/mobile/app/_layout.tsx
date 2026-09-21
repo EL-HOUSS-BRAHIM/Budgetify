@@ -16,6 +16,7 @@ import { StatusBar } from 'expo-status-bar';
 import React, { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from '../src/features/auth/AuthProvider';
+import { refreshAssistantApiUrl } from '../src/lib/api-config';
 import { ThemeProvider, useTheme } from '../src/theme/ThemeProvider';
 
 void SplashScreen.preventAutoHideAsync();
@@ -77,6 +78,14 @@ function RootLayoutNav() {
           }}
         />
         <Stack.Screen
+          name="goal-modal"
+          options={{ presentation: 'modal', headerShown: true, title: 'Create Goal' }}
+        />
+        <Stack.Screen
+          name="budget-modal"
+          options={{ presentation: 'modal', headerShown: true, title: 'Create Budget' }}
+        />
+        <Stack.Screen
           name="settings"
           options={{
             headerShown: true,
@@ -101,6 +110,10 @@ export default function RootLayout(): React.ReactElement | null {
       void SplashScreen.hideAsync();
     }
   }, [fontError, fontsLoaded]);
+
+  useEffect(() => {
+    void refreshAssistantApiUrl();
+  }, []);
 
   if (!fontsLoaded && !fontError) {
     return null;

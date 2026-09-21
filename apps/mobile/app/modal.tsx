@@ -12,7 +12,9 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DataNotice } from '../src/components/ui';
-import { createTransaction } from '../src/features/finance/transactions';
+import { createTransaction, type TransactionType } from '../src/features/finance/transactions';
+import { useAccounts } from '../src/features/finance/accounts';
+import { createCategory, useCategories } from '../src/features/finance/categories';
 import { useProfile } from '../src/features/profile/profile';
 import { useTheme } from '../src/theme/ThemeProvider';
 
@@ -21,23 +23,22 @@ export default function AddTransactionModal(): React.ReactElement {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { profile } = useProfile();
+  const { accounts } = useAccounts();
   const currency = profile?.currency ?? 'USD';
 
-  const [type, setType] = useState<'expense' | 'income'>('expense');
+  const [type, setType] = useState<TransactionType>('expense');
+  const { categories, refresh: refreshCategories } = useCategories(
+    type === 'income' ? 'income' : 'expense',
+  );
   const [title, setTitle] = useState('');
   const [amountStr, setAmountStr] = useState('');
-  const [category, setCategory] = useState('Food & Dining');
+  const [category, setCategory] = useState('Other');
+  const [categoryId, setCategoryId] = useState<string | undefined>();
+  const [newCategory, setNewCategory] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [sourceAccountId, setSourceAccountId] = useState<string | undefined>();
+  const [destinationAccountId, setDestinationAccountId] = useState<string | undefined>();
   const [isSaving, setIsSaving] = useState(false);
-
-  const categories = [
-    'Food & Dining',
-    'Housing',
-    'Transport',
-    'Entertainment',
-    'Shopping',
-    'Other',
-  ];
 
   const handleSave = async () => {
     if (!title.trim() || !amountStr.trim() || isSaving) return;
@@ -50,6 +51,9 @@ export default function AddTransactionModal(): React.ReactElement {
         amountText: amountStr,
         categoryName: category,
         currency,
+        ...(categoryId ? { categoryId } : {}),
+        ...(sourceAccountId ? { sourceAccountId } : {}),
+        ...(destinationAccountId ? { destinationAccountId } : {}),
       });
       router.back();
     } catch (saveError) {
@@ -91,6 +95,25 @@ export default function AddTransactionModal(): React.ReactElement {
               Expense
             </Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.typeTab,
+              type === 'transfer' && { backgroundColor: colors.semantic.infoLight },
+            ]}
+            onPress={() => setType('transfer')}
+          >
+            <Text
+              style={[
+                typography.bodyMedium,
+                {
+                  color: type === 'transfer' ? colors.semantic.info : colors.text.secondary,
+                  fontWeight: '700',
+                },
+              ]}
+            >
+              Transfer
+            </Text>
+          </TouchableOpacity>
 
           <TouchableOpacity
             style={[
@@ -112,6 +135,92 @@ export default function AddTransactionModal(): React.ReactElement {
             </Text>
           </TouchableOpacity>
         </View>
+
+        <Text
+          style={[
+            typography.bodySmall,
+            { color: colors.text.secondary, marginBottom: 8, fontWeight: '600' },
+          ]}
+        >
+          Account
+        </Text>
+        <View style={styles.chipGrid}>
+          {accounts.map((account) => (
+            <TouchableOpacity
+              key={account.id}
+              onPress={() => setSourceAccountId(account.id)}
+              style={[
+                styles.chip,
+                { backgroundColor: colors.background.card, borderColor: colors.border.default },
+                sourceAccountId === account.id && {
+                  backgroundColor: colors.brand.primary,
+                  borderColor: colors.brand.primary,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  typography.bodySmall,
+                  {
+                    color:
+                      sourceAccountId === account.id ? colors.text.inverse : colors.text.primary,
+                    fontWeight: '600',
+                  },
+                ]}
+              >
+                {account.name}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+        {type === 'transfer' && (
+          <>
+            <Text
+              style={[
+                typography.bodySmall,
+                { color: colors.text.secondary, marginTop: 16, marginBottom: 8, fontWeight: '600' },
+              ]}
+            >
+              Destination account
+            </Text>
+            <View style={styles.chipGrid}>
+              {accounts
+                .filter((account) => account.id !== sourceAccountId)
+                .map((account) => (
+                  <TouchableOpacity
+                    key={account.id}
+                    onPress={() => setDestinationAccountId(account.id)}
+                    style={[
+                      styles.chip,
+                      {
+                        backgroundColor: colors.background.card,
+                        borderColor: colors.border.default,
+                      },
+                      destinationAccountId === account.id && {
+                        backgroundColor: colors.brand.primary,
+                        borderColor: colors.brand.primary,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        typography.bodySmall,
+                        {
+                          color:
+                            destinationAccountId === account.id
+                              ? colors.text.inverse
+                              : colors.text.primary,
+                          fontWeight: '600',
+                        },
+                      ]}
+                    >
+                      {account.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+            </View>
+          </>
+        )}
 
         {/* Amount Input */}
         <View style={styles.amountContainer}>
@@ -165,30 +274,65 @@ export default function AddTransactionModal(): React.ReactElement {
         <View style={styles.chipGrid}>
           {categories.map((cat) => (
             <TouchableOpacity
-              key={cat}
+              key={cat.id}
               style={[
                 styles.chip,
                 { backgroundColor: colors.background.card, borderColor: colors.border.default },
-                category === cat && {
+                categoryId === cat.id && {
                   backgroundColor: colors.brand.primary,
                   borderColor: colors.brand.primary,
                 },
               ]}
-              onPress={() => setCategory(cat)}
+              onPress={() => {
+                setCategory(cat.name);
+                setCategoryId(cat.id);
+              }}
             >
               <Text
                 style={[
                   typography.bodySmall,
                   {
-                    color: category === cat ? colors.text.inverse : colors.text.primary,
+                    color: categoryId === cat.id ? colors.text.inverse : colors.text.primary,
                     fontWeight: '600',
                   },
                 ]}
               >
-                {cat}
+                {cat.icon} {cat.name}
               </Text>
             </TouchableOpacity>
           ))}
+          <TextInput
+            value={newCategory}
+            onChangeText={setNewCategory}
+            placeholder="New category"
+            placeholderTextColor={colors.text.muted}
+            style={[
+              styles.categoryInput,
+              { color: colors.text.primary, borderColor: colors.border.default },
+            ]}
+            onSubmitEditing={async () => {
+              if (!newCategory.trim()) return;
+              try {
+                const created = await createCategory({
+                  name: newCategory.trim(),
+                  type: type === 'income' ? 'income' : 'expense',
+                  icon: '📦',
+                  color: '#10B981',
+                  is_system: false,
+                });
+                await refreshCategories();
+                setCategory(created.name);
+                setCategoryId(created.id);
+                setNewCategory('');
+              } catch (categoryError) {
+                setError(
+                  categoryError instanceof Error
+                    ? categoryError.message
+                    : 'Unable to create category.',
+                );
+              }
+            }}
+          />
         </View>
 
         {error && <DataNotice icon="alert-circle-outline" label={error} tone="expense" />}
@@ -263,6 +407,13 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
+  },
+  categoryInput: {
+    minWidth: 130,
+    minHeight: 40,
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingHorizontal: 12,
   },
   saveBtn: {
     height: 52,

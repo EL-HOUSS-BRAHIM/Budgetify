@@ -39,7 +39,8 @@ export default function BudgetsScreen(): React.ReactElement {
   const { colors, spacing, typography } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { budgets, isLoading, error, refresh } = useBudgetProgress();
+  const [monthDate, setMonthDate] = React.useState(() => new Date());
+  const { budgets, isLoading, error, refresh } = useBudgetProgress(monthDate);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -63,6 +64,27 @@ export default function BudgetsScreen(): React.ReactElement {
       <Text style={[typography.h3, { color: colors.text.primary, marginBottom: spacing.md }]}>
         Budgets
       </Text>
+      <View style={styles.monthNav}>
+        <Text
+          onPress={() =>
+            setMonthDate((date) => new Date(date.getFullYear(), date.getMonth() - 1, 1))
+          }
+          style={[typography.bodyLarge, { color: colors.text.primary }]}
+        >
+          ‹
+        </Text>
+        <Text style={[typography.bodySmall, { color: colors.text.secondary }]}>
+          {new Intl.DateTimeFormat(undefined, { month: 'long', year: 'numeric' }).format(monthDate)}
+        </Text>
+        <Text
+          onPress={() =>
+            setMonthDate((date) => new Date(date.getFullYear(), date.getMonth() + 1, 1))
+          }
+          style={[typography.bodyLarge, { color: colors.text.primary }]}
+        >
+          ›
+        </Text>
+      </View>
 
       {error && <DataNotice icon="alert-circle-outline" label={error} tone="expense" />}
 
@@ -78,8 +100,8 @@ export default function BudgetsScreen(): React.ReactElement {
           icon="wallet-outline"
           title="No active budgets"
           description="Create budgets from real categories before this screen can calculate progress."
-          actionLabel="Add transaction"
-          onAction={() => router.push('/modal')}
+          actionLabel="Create budget"
+          onAction={() => router.push('/budget-modal')}
         />
       ) : (
         budgets.map((item) => {
@@ -172,6 +194,12 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
+  },
+  monthNav: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
   },
   budgetCard: {
     borderRadius: 16,

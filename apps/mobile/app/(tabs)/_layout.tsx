@@ -6,19 +6,29 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { AuthLoadingScreen, useAuth } from '../../src/features/auth/AuthProvider';
 import { useTheme } from '../../src/theme/ThemeProvider';
 
-function HeaderProfileButton(): React.ReactElement {
+function HeaderActions(): React.ReactElement {
   const router = useRouter();
   const { colors } = useTheme();
 
   return (
-    <Pressable
-      accessibilityLabel="Open settings"
-      hitSlop={8}
-      onPress={() => router.push('/settings')}
-      style={styles.profileButton}
-    >
-      <Ionicons name="person-circle-outline" size={28} color={colors.text.secondary} />
-    </Pressable>
+    <View style={styles.headerActions}>
+      <Pressable
+        accessibilityLabel="Add transaction"
+        hitSlop={8}
+        onPress={() => router.push('/modal')}
+        style={styles.actionButton}
+      >
+        <Ionicons name="add-circle-outline" size={28} color={colors.brand.primary} />
+      </Pressable>
+      <Pressable
+        accessibilityLabel="Open settings"
+        hitSlop={8}
+        onPress={() => router.push('/settings')}
+        style={styles.actionButton}
+      >
+        <Ionicons name="person-circle-outline" size={28} color={colors.text.secondary} />
+      </Pressable>
+    </View>
   );
 }
 
@@ -60,7 +70,7 @@ export default function TabLayout(): React.ReactElement {
           fontFamily: fontFamily.bold,
           fontSize: 20,
         },
-        headerRight: () => <HeaderProfileButton />,
+        headerRight: () => <HeaderActions />,
       }}
     >
       <Tabs.Screen
@@ -77,45 +87,20 @@ export default function TabLayout(): React.ReactElement {
       <Tabs.Screen
         name="expenses"
         options={{
-          title: 'Money',
-          tabBarAccessibilityLabel: 'Money tab',
+          title: 'Transactions',
+          tabBarAccessibilityLabel: 'Transactions tab',
           tabBarIcon: ({ focused, color }) => (
             <Ionicons name={focused ? 'wallet' : 'wallet-outline'} size={20} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="assistant"
+        name="budgets"
         options={{
-          title: 'AI',
-          tabBarAccessibilityLabel: 'AI assistant tab',
-          tabBarIcon: ({ focused }) => (
-            <View
-              style={[
-                styles.aiTab,
-                {
-                  backgroundColor: focused ? colors.text.primary : colors.background.tertiary,
-                  borderColor: focused ? colors.text.primary : colors.border.strong,
-                },
-              ]}
-            >
-              <Ionicons
-                name="sparkles"
-                size={18}
-                color={focused ? colors.text.inverse : colors.text.primary}
-              />
-            </View>
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="planning"
-        options={{
-          title: 'Plan',
-          headerShown: false,
-          tabBarAccessibilityLabel: 'Plan tab',
+          title: 'Budget',
+          tabBarAccessibilityLabel: 'Budget tab',
           tabBarIcon: ({ focused, color }) => (
-            <Ionicons name={focused ? 'compass' : 'compass-outline'} size={20} color={color} />
+            <Ionicons name={focused ? 'pie-chart' : 'pie-chart-outline'} size={20} color={color} />
           ),
         }}
       />
@@ -130,26 +115,29 @@ export default function TabLayout(): React.ReactElement {
           ),
         }}
       />
-      <Tabs.Screen name="budgets" options={{ href: null }} />
-      <Tabs.Screen name="settings" options={{ href: null }} />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: 'Settings',
+          tabBarAccessibilityLabel: 'Settings tab',
+          tabBarIcon: ({ color }) => <Ionicons name="settings-outline" size={20} color={color} />,
+        }}
+      />
+      <Tabs.Screen name="assistant" options={{ href: null }} />
+      <Tabs.Screen name="planning" options={{ href: null }} />
     </Tabs>
   );
 }
 
 const styles = StyleSheet.create({
-  profileButton: {
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  actionButton: {
     width: 40,
     height: 40,
-    marginRight: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  aiTab: {
-    width: 42,
-    height: 42,
-    marginTop: -16,
-    borderRadius: 21,
-    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -101,10 +101,10 @@ export default function GoalsScreen(): React.ReactElement {
       ) : goals.length === 0 ? (
         <Card>
           <EmptyState
-            actionLabel="Plan a goal with AI"
+            actionLabel="Add your first goal"
             description="Describe what you want, the target amount, and when you need it."
             icon="flag-outline"
-            onAction={() => router.push('/(tabs)/assistant')}
+            onAction={() => router.push('/goal-modal')}
             title="No goals yet"
           />
         </Card>

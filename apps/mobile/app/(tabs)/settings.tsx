@@ -12,6 +12,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, DataNotice } from '../../src/components/ui';
 import { useAuth } from '../../src/features/auth/AuthProvider';
+import { createAccount, useAccounts } from '../../src/features/finance/accounts';
 import { useProfile } from '../../src/features/profile/profile';
 import { supabase } from '../../src/lib/supabase';
 import { useTheme } from '../../src/theme/ThemeProvider';
@@ -22,9 +23,15 @@ export default function SettingsScreen(): React.ReactElement {
   const insets = useSafeAreaInsets();
   const { session } = useAuth();
   const { profile, isLoading, isSaving, error, updateProfile } = useProfile();
+  const { accounts, refresh: refreshAccounts } = useAccounts();
   const [displayName, setDisplayName] = React.useState('');
   const [currency, setCurrency] = React.useState('USD');
   const [notice, setNotice] = React.useState<string | null>(null);
+  const [accountName, setAccountName] = React.useState('');
+  const [accountType, setAccountType] = React.useState<'checking' | 'cash' | 'savings' | 'credit'>(
+    'checking',
+  );
+  const [accountBalance, setAccountBalance] = React.useState('');
 
   React.useEffect(() => {
     setDisplayName(profile?.display_name ?? '');
@@ -44,6 +51,27 @@ export default function SettingsScreen(): React.ReactElement {
   const signOut = async () => {
     await supabase.auth.signOut();
     router.replace('/auth/sign-in');
+  };
+
+  const addAccount = async () => {
+    if (!accountName.trim() || !accountBalance.trim()) return;
+    try {
+      const balance = Number(accountBalance.replace(',', '.'));
+      if (!Number.isFinite(balance)) throw new Error('Enter a valid starting balance.');
+      await createAccount({
+        name: accountName.trim(),
+        type: accountType,
+        currency,
+        current_balance: Math.round(balance * 100),
+        is_default: accounts.length === 0,
+      });
+      setAccountName('');
+      setAccountBalance('');
+      await refreshAccounts();
+      setNotice('Account added.');
+    } catch (accountError) {
+      setNotice(accountError instanceof Error ? accountError.message : 'Unable to add account.');
+    }
   };
 
   return (
@@ -84,6 +112,84 @@ export default function SettingsScreen(): React.ReactElement {
           />
         </View>
       )}
+
+      <Text
+        style={[
+          typography.caption,
+          { color: colors.text.tertiary, marginTop: spacing.lg, marginBottom: 8, marginLeft: 4 },
+        ]}
+      >
+        ACCOUNTS
+      </Text>
+      <View
+        style={[
+          styles.card,
+          { backgroundColor: colors.background.card, borderColor: colors.border.default },
+        ]}
+      >
+        {accounts.map((account, index) => (
+          <React.Fragment key={account.id}>
+            {index > 0 && (
+              <View style={[styles.divider, { backgroundColor: colors.border.subtle }]} />
+            )}
+            <View style={styles.settingRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={[typography.bodyLarge, { color: colors.text.primary }]}>
+                  {account.name}
+                </Text>
+                <Text style={[typography.bodySmall, { color: colors.text.tertiary }]}>
+                  {account.type}
+                </Text>
+              </View>
+              <Text style={[typography.bodyLarge, { color: colors.text.primary }]}>
+                {(account.current_balance / 100).toFixed(2)} {account.currency}
+              </Text>
+            </View>
+          </React.Fragment>
+        ))}
+        <View style={[styles.divider, { backgroundColor: colors.border.subtle }]} />
+        <TextInput
+          onChangeText={setAccountName}
+          placeholder="Account name"
+          placeholderTextColor={colors.text.muted}
+          style={[styles.input, { borderColor: colors.border.default, color: colors.text.primary }]}
+          value={accountName}
+        />
+        <TextInput
+          onChangeText={setAccountBalance}
+          placeholder={`Starting balance (${currency})`}
+          placeholderTextColor={colors.text.muted}
+          keyboardType="decimal-pad"
+          style={[styles.input, { borderColor: colors.border.default, color: colors.text.primary }]}
+          value={accountBalance}
+        />
+        <View style={styles.accountTypes}>
+          {(['checking', 'cash', 'savings', 'credit'] as const).map((type) => (
+            <TouchableOpacity
+              key={type}
+              onPress={() => setAccountType(type)}
+              style={[
+                styles.accountType,
+                { borderColor: colors.border.default },
+                accountType === type && {
+                  backgroundColor: colors.brand.primary,
+                  borderColor: colors.brand.primary,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  typography.caption,
+                  { color: accountType === type ? colors.text.inverse : colors.text.primary },
+                ]}
+              >
+                {type}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+        <Button label="Add account" onPress={addAccount} variant="secondary" />
+      </View>
 
       {/* Preferences */}
       <Text
@@ -178,10 +284,10 @@ export default function SettingsScreen(): React.ReactElement {
       >
         {[
           ['Subscriptions & Bills', '/bills'],
+          ['Recurring transactions', '/recurring'],
           ['Salary Day', '/salary-day'],
-          ['Privacy & AI Access', '/privacy'],
+          ['Privacy', '/privacy'],
           ['End-of-Month Report', '/reports/month-end'],
-          ['AI Personality Settings', '/settings/ai'],
           ['Financial Health Deep-Dive', '/financial-health'],
           ['Intelligent Onboarding', '/onboarding'],
         ].map(([label, route], index) => (
@@ -351,5 +457,17 @@ const styles = StyleSheet.create({
   },
   signOutWrap: {
     marginTop: 16,
+  },
+  accountTypes: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 10,
+  },
+  accountType: {
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
   },
 });

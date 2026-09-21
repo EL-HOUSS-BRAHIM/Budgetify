@@ -33,9 +33,9 @@ const ExpoSecureStoreAdapter = {
   },
 };
 
-const supabaseUrl =
+export const supabaseUrl =
   process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://hnlieepsxoqeebkreugt.supabase.co';
-const supabasePublishableKey =
+export const supabasePublishableKey =
   process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 'missing_publishable_key';
 
 export const supabase = createClient<Database>(supabaseUrl, supabasePublishableKey, {

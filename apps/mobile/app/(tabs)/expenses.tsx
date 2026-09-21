@@ -14,6 +14,7 @@ import { Button, DataNotice, EmptyState } from '../../src/components/ui';
 import {
   formatTransactionAmount,
   type TransactionListItem,
+  type TransactionType,
   useTransactions,
 } from '../../src/features/finance/transactions';
 import { useTheme } from '../../src/theme/ThemeProvider';
@@ -23,7 +24,11 @@ export default function ExpensesScreen(): React.ReactElement {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const [search, setSearch] = useState('');
-  const { transactions, isLoading, error, refresh } = useTransactions(search);
+  const [filter, setFilter] = useState<'all' | TransactionType>('all');
+  const [monthDate, setMonthDate] = useState(() => new Date());
+  const { transactions, isLoading, error, refresh } = useTransactions(search, monthDate);
+  const visibleTransactions =
+    filter === 'all' ? transactions : transactions.filter((item) => item.type === filter);
 
   useFocusEffect(
     useCallback(() => {
@@ -57,7 +62,12 @@ export default function ExpensesScreen(): React.ReactElement {
         style={[
           typography.bodyLarge,
           {
-            color: item.type === 'expense' ? colors.semantic.expense : colors.semantic.income,
+            color:
+              item.type === 'expense'
+                ? colors.semantic.expense
+                : item.type === 'income'
+                  ? colors.semantic.income
+                  : colors.semantic.info,
             fontWeight: '700',
           },
         ]}
@@ -75,6 +85,29 @@ export default function ExpensesScreen(): React.ReactElement {
           { backgroundColor: colors.background.card, borderBottomColor: colors.border.default },
         ]}
       >
+        <View style={styles.monthNav}>
+          <Pressable
+            accessibilityLabel="Previous month"
+            onPress={() =>
+              setMonthDate((date) => new Date(date.getFullYear(), date.getMonth() - 1, 1))
+            }
+          >
+            <Text style={[typography.bodyLarge, { color: colors.text.primary }]}>‹</Text>
+          </Pressable>
+          <Text style={[typography.bodySmall, { color: colors.text.secondary }]}>
+            {new Intl.DateTimeFormat(undefined, { month: 'long', year: 'numeric' }).format(
+              monthDate,
+            )}
+          </Text>
+          <Pressable
+            accessibilityLabel="Next month"
+            onPress={() =>
+              setMonthDate((date) => new Date(date.getFullYear(), date.getMonth() + 1, 1))
+            }
+          >
+            <Text style={[typography.bodyLarge, { color: colors.text.primary }]}>›</Text>
+          </Pressable>
+        </View>
         <TextInput
           style={[
             styles.searchInput,
@@ -89,6 +122,31 @@ export default function ExpensesScreen(): React.ReactElement {
           value={search}
           onChangeText={setSearch}
         />
+        <View style={styles.filters}>
+          {(['all', 'income', 'expense', 'transfer'] as const).map((value) => (
+            <Pressable
+              key={value}
+              onPress={() => setFilter(value)}
+              style={[
+                styles.filter,
+                { borderColor: colors.border.default },
+                filter === value && {
+                  backgroundColor: colors.brand.primary,
+                  borderColor: colors.brand.primary,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  typography.caption,
+                  { color: filter === value ? colors.text.inverse : colors.text.secondary },
+                ]}
+              >
+                {value.charAt(0).toUpperCase() + value.slice(1)}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
       </View>
 
       {error && (
@@ -98,7 +156,7 @@ export default function ExpensesScreen(): React.ReactElement {
       )}
 
       <FlatList
-        data={transactions}
+        data={visibleTransactions}
         keyExtractor={(item) => item.id}
         contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom + 32 }]}
         ListEmptyComponent={
@@ -143,6 +201,23 @@ const styles = StyleSheet.create({
   header: {
     padding: 16,
     borderBottomWidth: 1,
+  },
+  filters: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingTop: 10,
+  },
+  monthNav: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  filter: {
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
   },
   searchInput: {
     height: 44,

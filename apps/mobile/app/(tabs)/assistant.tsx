@@ -14,6 +14,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { z } from 'zod';
 import { supabase } from '../../src/lib/supabase';
+import { getAssistantApiUrl } from '../../src/lib/api-config';
 import { useTheme } from '../../src/theme/ThemeProvider';
 
 interface ChatMessage {
@@ -33,11 +34,6 @@ const quickQueries = [
   'Explain my spending',
   'Scan upcoming bills',
 ];
-
-const assistantUrl = (process.env.EXPO_PUBLIC_AI_SERVICE_URL || 'http://10.0.2.2:8787').replace(
-  /\/$/,
-  '',
-);
 
 function DecorativeIcon(props: React.ComponentProps<typeof Ionicons>): React.ReactElement {
   return (
@@ -162,6 +158,7 @@ export default function AssistantScreen(): React.ReactElement {
         return;
       }
 
+      const assistantUrl = await getAssistantApiUrl();
       const response = await fetch(`${assistantUrl}/api/chat`, {
         method: 'POST',
         headers: {
