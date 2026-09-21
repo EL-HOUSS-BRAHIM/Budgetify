@@ -87,6 +87,19 @@ export async function createTransaction(
     throw new Error('Amount must be greater than zero.');
   }
 
+  if ((input.type === 'expense' || input.type === 'income') && !input.sourceAccountId) {
+    throw new Error('Choose an account for this transaction.');
+  }
+
+  if (input.type === 'transfer') {
+    if (!input.sourceAccountId || !input.destinationAccountId) {
+      throw new Error('Choose source and destination accounts for this transfer.');
+    }
+    if (input.sourceAccountId === input.destinationAccountId) {
+      throw new Error('Transfer accounts must be different.');
+    }
+  }
+
   const insert: InsertTables<'transactions'> = {
     amount: parsedAmount.amount,
     category_name: input.categoryName.trim() || 'Other',
@@ -96,9 +109,6 @@ export async function createTransaction(
     description: input.title.trim(),
     type: input.type,
     account_id: input.sourceAccountId ?? null,
-  };
-
-  const transferFields = {
     source_account_id: input.type === 'income' ? null : (input.sourceAccountId ?? null),
     destination_account_id:
       input.type === 'income'
@@ -108,11 +118,7 @@ export async function createTransaction(
           : null,
   };
 
-  const { data, error } = await supabase
-    .from('transactions')
-    .insert({ ...insert, ...transferFields } as never)
-    .select()
-    .single();
+  const { data, error } = await supabase.from('transactions').insert(insert).select().single();
 
   if (error || !data) {
     throw new Error(SAVE_ERROR);

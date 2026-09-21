@@ -211,8 +211,8 @@ export default function GoalStrategyScreen(): React.ReactElement {
               variant="secondary"
             />
             <Button
-              label="Ask Lyvora"
-              onPress={() => router.push('/(tabs)/assistant')}
+              label="Review budget"
+              onPress={() => router.push('/(tabs)/budgets')}
               style={styles.actionButton}
               variant="text"
             />

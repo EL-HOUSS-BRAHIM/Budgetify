@@ -1,33 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
-import { supabase, supabasePublishableKey, supabaseUrl } from '../../lib/supabase';
+import type { InsertTables, Tables } from '@budgetify/types';
+import { supabase } from '../../lib/supabase';
 
-export interface RecurringTransaction {
-  id: string;
-  name: string;
-  amount: number;
-  currency: string;
-  type: 'income' | 'expense';
-  account_id: string | null;
-  category_name: string;
-  frequency: 'weekly' | 'monthly' | 'yearly';
-  next_date: string;
-  is_active: boolean;
-}
+export type RecurringTransaction = Tables<'recurring_transactions'>;
 
-async function request(path: string, init: RequestInit = {}) {
+async function requireSession(): Promise<void> {
   const {
     data: { session },
+    error,
   } = await supabase.auth.getSession();
-  if (!session) throw new Error('Sign in to manage recurring transactions.');
-  return fetch(`${supabaseUrl}/rest/v1/${path}`, {
-    ...init,
-    headers: {
-      apikey: supabasePublishableKey,
-      Authorization: `Bearer ${session.access_token}`,
-      'Content-Type': 'application/json',
-      ...(init.headers ?? {}),
-    },
-  });
+  if (error || !session) throw new Error('Sign in to manage recurring transactions.');
 }
 
 export function useRecurringTransactions() {
@@ -37,11 +19,14 @@ export function useRecurringTransactions() {
   const refresh = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await request(
-        'recurring_transactions?select=*&is_active=eq.true&order=next_date.asc',
-      );
-      if (!response.ok) throw new Error('Unable to load recurring transactions.');
-      setItems((await response.json()) as RecurringTransaction[]);
+      await requireSession();
+      const { data, error: queryError } = await supabase
+        .from('recurring_transactions')
+        .select('*')
+        .eq('is_active', true)
+        .order('next_date', { ascending: true });
+      if (queryError) throw queryError;
+      setItems(data ?? []);
       setError(null);
     } catch (loadError) {
       setError(
@@ -58,12 +43,11 @@ export function useRecurringTransactions() {
 }
 
 export async function createRecurringTransaction(
-  input: Omit<RecurringTransaction, 'id' | 'is_active'>,
+  input: InsertTables<'recurring_transactions'>,
 ) {
-  const response = await request('recurring_transactions', {
-    method: 'POST',
-    headers: { Prefer: 'return=representation' },
-    body: JSON.stringify({ ...input, is_active: true }),
-  });
-  if (!response.ok) throw new Error('Unable to save recurring transaction.');
+  await requireSession();
+  const { error } = await supabase
+    .from('recurring_transactions')
+    .insert({ ...input, is_active: input.is_active ?? true });
+  if (error) throw new Error('Unable to save recurring transaction.');
 }

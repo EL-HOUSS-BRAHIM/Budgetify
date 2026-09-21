@@ -130,10 +130,10 @@ export default function BillsScreen(): React.ReactElement {
       ) : contracts.length === 0 ? (
         <Card>
           <EmptyState
-            actionLabel="Plan recurring cost with AI"
+            actionLabel="Plan recurring cost"
             description="Recurring plan items will appear here when you add them to your plan."
             icon="receipt-outline"
-            onAction={() => router.push('/(tabs)/assistant')}
+            onAction={() => router.push('/(tabs)/budgets')}
             title="No recurring contracts"
           />
         </Card>

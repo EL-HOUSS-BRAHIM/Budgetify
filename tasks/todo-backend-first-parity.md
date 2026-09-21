@@ -78,6 +78,8 @@ P0-P6 committed as `8bbcb95` ("Connect mobile app to real backend contracts"); w
 
 - DONE: audit + baseline schema/RLS verification
 - DONE: safe remote MCP verification target aligned to Budgetify
+- DONE: Core V1 navigation is limited to Home, Transactions, Budget, Goals, and Settings.
+- DONE: AI assistant and preview access are removed from the primary product flow; future AI remains isolated.
 - READY: begin M1 and M2 implementation in app code immediately
 
 ---

@@ -160,14 +160,14 @@ export function HomeScreen(): React.ReactElement {
             <View key={item.id} style={styles.row}>
               <View style={{ flex: 1 }}>
                 <Text style={[typography.bodyMedium, { color: colors.text.primary }]}>
-                  {item.title}
+                  {item.name}
                 </Text>
                 <Text style={[typography.caption, { color: colors.text.tertiary }]}>
-                  {item.due_date ?? 'No date'}
+                    {item.next_date}
                 </Text>
               </View>
               <Text style={[typography.bodyMedium, { color: colors.text.primary }]}>
-                {amount(item.expected_amount, item.currency)}
+                  {amount(item.amount, item.currency)}
               </Text>
             </View>
           ))

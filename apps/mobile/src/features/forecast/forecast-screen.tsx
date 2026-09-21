@@ -307,18 +307,9 @@ export function ForecastScreen(): React.ReactElement {
           </Text>
           <Text style={[styles.brandSection, { color: colors.text.tertiary }]}>| Forecast</Text>
         </View>
-        <Pressable
-          accessibilityLabel="Open AI Inbox"
-          accessibilityRole="button"
-          hitSlop={6}
-          onPress={() => router.push('/(tabs)/assistant')}
-          style={({ pressed }) => [
-            styles.headerButton,
-            { backgroundColor: colors.background.tertiary, opacity: pressed ? 0.72 : 1 },
-          ]}
-        >
-          <DecorativeIcon name="notifications-outline" size={18} color={colors.text.secondary} />
-        </Pressable>
+        <View style={[styles.headerButton, { backgroundColor: colors.background.tertiary }]}>
+          <DecorativeIcon name="calendar-outline" size={18} color={colors.text.secondary} />
+        </View>
       </View>
 
       {error ? (

@@ -2,8 +2,8 @@ import type { Tables } from '@budgetify/types';
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 
-type PlanItem = Tables<'plan_items'>;
 type Goal = Tables<'goals'>;
+type RecurringTransaction = Tables<'recurring_transactions'>;
 
 export interface HomeViewModel {
   status: 'ready' | 'empty';
@@ -15,7 +15,7 @@ export interface HomeViewModel {
   expenses: number;
   saved: number;
   spendingByCategory: { name: string; amount: number }[];
-  upcoming: PlanItem[];
+  upcoming: RecurringTransaction[];
   goals: Goal[];
 }
 
@@ -54,7 +54,7 @@ export function useHomeData(targetDate = new Date()): HomeDataState {
         setModel(null);
         return;
       }
-      const [profileResult, accountResult, transactionResult, planResult, goalResult] =
+      const [profileResult, accountResult, transactionResult, recurringResult, goalResult] =
         await Promise.all([
           supabase
             .from('profiles')
@@ -69,11 +69,11 @@ export function useHomeData(targetDate = new Date()): HomeDataState {
             .lt('date', bounds.end)
             .order('date', { ascending: false }),
           supabase
-            .from('plan_items')
+            .from('recurring_transactions')
             .select('*')
-            .eq('is_done', false)
-            .gte('due_date', bounds.start.slice(0, 10))
-            .order('due_date', { ascending: true })
+            .eq('is_active', true)
+            .gte('next_date', bounds.start.slice(0, 10))
+            .order('next_date', { ascending: true })
             .limit(5),
           supabase.from('goals').select('*').order('created_at', { ascending: false }).limit(5),
         ]);
@@ -81,7 +81,7 @@ export function useHomeData(targetDate = new Date()): HomeDataState {
         profileResult.error ||
         accountResult.error ||
         transactionResult.error ||
-        planResult.error ||
+        recurringResult.error ||
         goalResult.error;
       if (queryError) throw queryError;
       const currency = profileResult.data?.currency || accountResult.data[0]?.currency || 'USD';
@@ -117,7 +117,7 @@ export function useHomeData(targetDate = new Date()): HomeDataState {
         spendingByCategory: [...spending.entries()]
           .sort((a, b) => b[1] - a[1])
           .map(([name, amount]) => ({ name, amount })),
-        upcoming: planResult.data ?? [],
+        upcoming: recurringResult.data ?? [],
         goals,
       });
     } catch {

@@ -132,16 +132,10 @@ export default function MonthEndReport(): React.ReactElement {
 
           <View style={styles.actions}>
             <Button
-              label="Review next plan"
-              onPress={() => router.push('/(tabs)/planning')}
+              label="Review budget"
+              onPress={() => router.push('/(tabs)/budgets')}
               style={styles.action}
               variant="secondary"
-            />
-            <Button
-              label="Ask Lyvora"
-              onPress={() => router.push('/(tabs)/assistant')}
-              style={styles.action}
-              variant="text"
             />
           </View>
         </>

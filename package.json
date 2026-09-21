@@ -2,7 +2,7 @@
   "name": "budgetify",
   "private": true,
   "version": "2.0.0",
-  "description": "Voice-assisted personal budgeting for Android. Expo + Supabase.",
+  "description": "Manual-first personal budgeting for Android. Expo + Supabase.",
   "license": "MIT",
   "engines": {
     "node": ">=20.19.4",

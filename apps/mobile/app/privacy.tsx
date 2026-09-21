@@ -41,18 +41,6 @@ export default function PrivacyScreen(): React.ReactElement {
     }
   };
 
-  const saveToggle = async (
-    key: 'autoCategorizeEnabled' | 'intelligentAlertsEnabled',
-    value: boolean,
-  ) => {
-    try {
-      await updateProfile({ [key]: value });
-      setNotice('Privacy preference saved.');
-    } catch {
-      setNotice('Privacy preference could not be saved.');
-    }
-  };
-
   return (
     <Screen contentContainerStyle={{ paddingTop: insets.top + 8 }}>
       <View style={styles.header}>
@@ -91,9 +79,9 @@ export default function PrivacyScreen(): React.ReactElement {
         >
           SECURITY & GOVERNANCE
         </Text>
-        <Text style={[typography.h2, { color: colors.text.primary }]}>Privacy & AI Access</Text>
+        <Text style={[typography.h2, { color: colors.text.primary }]}>Privacy & Data Access</Text>
         <Text style={[typography.bodySmall, styles.heroCopy, { color: colors.text.tertiary }]}>
-          Control what Lyvora may inspect when producing explanations and recommendations.
+          Keep your ledger, spending, and savings data under user-controlled manual access.
         </Text>
       </View>
 
@@ -130,14 +118,14 @@ export default function PrivacyScreen(): React.ReactElement {
               { color: colors.text.primary, fontFamily: fontFamily.medium },
             ]}
           >
-            AI Context Scope
+            Data Access Scope
           </Text>
           <Text style={[styles.sectionSubtitle, { color: colors.text.tertiary }]}>
-            Choose what Lyvora can inspect for analysis.
+            Choose the level of financial context available to the manual budgeting experience.
           </Text>
           <ScopeCard
             active={scope === 'full'}
-            description="Balances, goals, salary cycles, and transaction history for liquidity and forecast calculations."
+            description="Use balances, goals, salary timing, and transaction history to track cash flow and plan spending."
             icon="analytics-outline"
             onPress={() => void saveScope('full')}
             title="Full Financial Context"
@@ -145,7 +133,7 @@ export default function PrivacyScreen(): React.ReactElement {
           />
           <ScopeCard
             active={scope === 'limited'}
-            description="Transaction categories only. Lyvora cannot use balances or goals for recommendations."
+            description="Use only transaction and category history while keeping balances and goals private from automatic analysis."
             icon="receipt-outline"
             onPress={() => void saveScope('limited')}
             title="Transactions & Categories Only"
@@ -153,10 +141,10 @@ export default function PrivacyScreen(): React.ReactElement {
           />
           <ScopeCard
             active={scope === 'none'}
-            description="Disables financial AI context. Manual ledger screens continue to work."
+            description="Disable financial context for slow-only manual review. Core account and budget flows remain available."
             icon="hand-left-outline"
             onPress={() => void saveScope('none')}
-            title="No Financial AI"
+            title="Manual Review Only"
             tone="warning"
           />
 
@@ -166,22 +154,34 @@ export default function PrivacyScreen(): React.ReactElement {
               { color: colors.text.primary, fontFamily: fontFamily.medium },
             ]}
           >
-            Automation Permissions
+            Privacy Controls
           </Text>
           <Card style={styles.permissionCard}>
-            <PermissionRow
-              description="High-confidence transaction classification only."
-              label="Auto-categorize transactions"
-              onChange={(value) => void saveToggle('autoCategorizeEnabled', value)}
-              value={profile?.auto_categorize_enabled ?? true}
-            />
-            <View style={[styles.divider, { backgroundColor: colors.border.subtle }]} />
-            <PermissionRow
-              description="Scans recurring charges for fee increases and commitment risk."
-              label="Intelligent push alerts"
-              onChange={(value) => void saveToggle('intelligentAlertsEnabled', value)}
-              value={profile?.intelligent_alerts_enabled ?? true}
-            />
+            <View style={styles.permissionRow}>
+              <View style={styles.permissionCopy}>
+                <Text
+                  style={[
+                    styles.permissionLabel,
+                    { color: colors.text.primary, fontFamily: fontFamily.medium },
+                  ]}
+                >
+                  Manual ledger defaults
+                </Text>
+                <Text style={[styles.permissionDescription, { color: colors.text.tertiary }]}>
+                  Core V1 keeps every transfer, budget, and goal action explicit and user-approved.
+                </Text>
+              </View>
+              <View style={[styles.blockedPill, { backgroundColor: colors.semantic.incomeLight }]}>
+                <Text
+                  style={[
+                    styles.blockedText,
+                    { color: colors.semantic.income, fontFamily: fontFamily.medium },
+                  ]}
+                >
+                  Enabled
+                </Text>
+              </View>
+            </View>
             <View style={[styles.divider, { backgroundColor: colors.border.subtle }]} />
             <View style={styles.permissionRow}>
               <View style={styles.permissionCopy}>
@@ -191,11 +191,10 @@ export default function PrivacyScreen(): React.ReactElement {
                     { color: colors.text.primary, fontFamily: fontFamily.medium },
                   ]}
                 >
-                  Auto-transfer money to savings
+                  Smart automation
                 </Text>
                 <Text style={[styles.permissionDescription, { color: colors.text.tertiary }]}>
-                  Unavailable. Every transfer requires explicit approval and a supported account
-                  connection.
+                  Not included in Core V1. Manual category, budget, and goal edits stay in your control.
                 </Text>
               </View>
               <View style={[styles.blockedPill, { backgroundColor: colors.semantic.warningLight }]}>
@@ -205,7 +204,7 @@ export default function PrivacyScreen(): React.ReactElement {
                     { color: colors.semantic.warning, fontFamily: fontFamily.medium },
                   ]}
                 >
-                  Approval required
+                  Locked
                 </Text>
               </View>
             </View>
@@ -282,43 +281,6 @@ function ScopeCard({
         {active && <View style={[styles.radioFill, { backgroundColor: color }]} />}
       </View>
     </Pressable>
-  );
-}
-
-function PermissionRow({
-  description,
-  label,
-  onChange,
-  value,
-}: {
-  description: string;
-  label: string;
-  onChange: (value: boolean) => void;
-  value: boolean;
-}): React.ReactElement {
-  const { colors, fontFamily } = useTheme();
-  return (
-    <View style={styles.permissionRow}>
-      <View style={styles.permissionCopy}>
-        <Text
-          style={[
-            styles.permissionLabel,
-            { color: colors.text.primary, fontFamily: fontFamily.medium },
-          ]}
-        >
-          {label}
-        </Text>
-        <Text style={[styles.permissionDescription, { color: colors.text.tertiary }]}>
-          {description}
-        </Text>
-      </View>
-      <Switch
-        accessibilityLabel={label}
-        onValueChange={onChange}
-        trackColor={{ false: colors.border.strong, true: colors.semantic.income }}
-        value={value}
-      />
-    </View>
   );
 }
 

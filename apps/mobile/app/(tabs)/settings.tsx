@@ -273,7 +273,7 @@ export default function SettingsScreen(): React.ReactElement {
           { color: colors.text.tertiary, marginTop: spacing.lg, marginBottom: 8, marginLeft: 4 },
         ]}
       >
-        SECONDARY TOOLS
+        FINANCE TOOLS
       </Text>
 
       <View
@@ -283,59 +283,8 @@ export default function SettingsScreen(): React.ReactElement {
         ]}
       >
         {[
-          ['Subscriptions & Bills', '/bills'],
           ['Recurring transactions', '/recurring'],
-          ['Salary Day', '/salary-day'],
-          ['Privacy', '/privacy'],
-          ['End-of-Month Report', '/reports/month-end'],
-          ['Financial Health Deep-Dive', '/financial-health'],
-          ['Intelligent Onboarding', '/onboarding'],
-        ].map(([label, route], index) => (
-          <React.Fragment key={route}>
-            {index > 0 && (
-              <View style={[styles.divider, { backgroundColor: colors.border.subtle }]} />
-            )}
-            <TouchableOpacity
-              accessibilityLabel={`Open ${label}`}
-              accessibilityRole="button"
-              activeOpacity={0.7}
-              onPress={() => router.push(route as never)}
-              style={styles.settingRow}
-            >
-              <Text style={[typography.bodyLarge, { color: colors.text.primary }]}>{label}</Text>
-              <Text style={[typography.bodyLarge, { color: colors.text.tertiary }]}>›</Text>
-            </TouchableOpacity>
-          </React.Fragment>
-        ))}
-      </View>
-
-      <Text
-        style={[
-          typography.caption,
-          { color: colors.text.tertiary, marginTop: spacing.lg, marginBottom: 8, marginLeft: 4 },
-        ]}
-      >
-        LAB / PREVIEW ROUTES
-      </Text>
-
-      <View
-        style={[
-          styles.card,
-          { backgroundColor: colors.background.card, borderColor: colors.border.default },
-        ]}
-      >
-        {[
-          ['Financial Forecast', '/forecast'],
-          ['Irregular Income Mode', '/income-mode'],
-          ['Emergency Lockdown Mode', '/lockdown'],
-          ['Credit Card Hub', '/credit-cards'],
-          ['Capital Allocation Engine', '/allocation'],
-          ['Financial Automation Engine', '/automations'],
-          ['Voice-First Driving Mode', '/driving-mode'],
-          ['Shared Finances & Splitting', '/shared-finances'],
-          ['Document Vault', '/vault'],
-          ['Lock Screen & Dynamic Island Reference', '/platform-surface'],
-          ['Desktop Command Center Reference', '/desktop-reference'],
+          ['Setup guide', '/onboarding'],
         ].map(([label, route], index) => (
           <React.Fragment key={route}>
             {index > 0 && (
