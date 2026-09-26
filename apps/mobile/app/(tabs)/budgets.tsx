@@ -1,4 +1,4 @@
-import { formatMoney, money } from '@budgetify/core';
+import { formatMoney, monthKeyFromDate, monthLabel, shiftMonth, type MonthKey } from '@budgetify/core';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React from 'react';
@@ -11,9 +11,10 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { EmptyState, DataNotice } from '../../src/components/ui';
+import { DataNotice, EmptyState, MonthSwitcher, ProgressBar, StatGrid } from '../../src/components/ui';
 import { type BudgetProgressItem, useBudgetProgress } from '../../src/features/finance/budgets';
 import { useTheme } from '../../src/theme/ThemeProvider';
+import { useResponsiveLayout } from '../../src/theme/useResponsiveLayout';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -28,19 +29,27 @@ function iconForCategory(category: string): IconName {
   return 'pricetag-outline';
 }
 
-function budgetStatusLabel(item: BudgetProgressItem): string {
-  if (item.status === 'over')
-    return `${formatMoney(money(Math.abs(item.remaining.amount), item.remaining.currency))} over`;
-  if (item.status === 'warning') return `${item.percentSpent}% used`;
-  return `${Math.max(0, 100 - item.percentSpent)}% remaining`;
+/** Plain-language budget status. No percentages as the only signal. */
+function budgetStatusLabel(item: BudgetProgressItem, isCurrentMonth: boolean): string {
+  if (item.status === 'over') {
+    return `${formatMoney({ amount: Math.abs(item.remaining.amount), currency: item.limit.currency })} over`;
+  }
+  if (item.status === 'warning') return `${item.percentSpent}% of the limit used`;
+  if (isCurrentMonth && item.dailyAllowance.amount > 0) {
+    return `${formatMoney(item.dailyAllowance)} a day left to spend`;
+  }
+  return `${formatMoney(item.remaining)} left`;
 }
 
 export default function BudgetsScreen(): React.ReactElement {
   const { colors, spacing, typography } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const [monthDate, setMonthDate] = React.useState(() => new Date());
-  const { budgets, isLoading, error, refresh } = useBudgetProgress(monthDate);
+  const responsive = useResponsiveLayout();
+  const [month, setMonth] = React.useState<MonthKey>(() => monthKeyFromDate(new Date()));
+  const currentMonth = monthKeyFromDate(new Date());
+  const isCurrentMonth = month === currentMonth;
+  const { budgets, totals, isLoading, error, refresh } = useBudgetProgress(month);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -48,14 +57,27 @@ export default function BudgetsScreen(): React.ReactElement {
     }, [refresh]),
   );
 
+  const runRefresh = React.useCallback(() => {
+    void refresh();
+  }, [refresh]);
+
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: colors.background.primary }]}
-      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 32 }]}
+      contentContainerStyle={[
+        styles.content,
+        {
+          paddingBottom: insets.bottom + responsive.gutter * 2,
+          paddingHorizontal: responsive.contentPadding,
+          maxWidth: responsive.maxContentWidth + responsive.gutter * 2,
+          alignSelf: 'center',
+          width: '100%',
+        },
+      ]}
       refreshControl={
         <RefreshControl
           colors={[colors.brand.primary]}
-          onRefresh={refresh}
+          onRefresh={runRefresh}
           refreshing={isLoading && budgets.length > 0}
           tintColor={colors.brand.primary}
         />
@@ -64,27 +86,12 @@ export default function BudgetsScreen(): React.ReactElement {
       <Text style={[typography.h3, { color: colors.text.primary, marginBottom: spacing.md }]}>
         Budgets
       </Text>
-      <View style={styles.monthNav}>
-        <Text
-          onPress={() =>
-            setMonthDate((date) => new Date(date.getFullYear(), date.getMonth() - 1, 1))
-          }
-          style={[typography.bodyLarge, { color: colors.text.primary }]}
-        >
-          ‹
-        </Text>
-        <Text style={[typography.bodySmall, { color: colors.text.secondary }]}>
-          {new Intl.DateTimeFormat(undefined, { month: 'long', year: 'numeric' }).format(monthDate)}
-        </Text>
-        <Text
-          onPress={() =>
-            setMonthDate((date) => new Date(date.getFullYear(), date.getMonth() + 1, 1))
-          }
-          style={[typography.bodyLarge, { color: colors.text.primary }]}
-        >
-          ›
-        </Text>
-      </View>
+      <MonthSwitcher
+        canGoNext={month < currentMonth}
+        label={monthLabel(month)}
+        onNext={() => setMonth((value) => shiftMonth(value, 1))}
+        onPrevious={() => setMonth((value) => shiftMonth(value, -1))}
+      />
 
       {error && <DataNotice icon="alert-circle-outline" label={error} tone="expense" />}
 
@@ -97,126 +104,129 @@ export default function BudgetsScreen(): React.ReactElement {
         </View>
       ) : budgets.length === 0 ? (
         <EmptyState
-          icon="wallet-outline"
-          title="No active budgets"
-          description="Create budgets from real categories before this screen can calculate progress."
           actionLabel="Create budget"
+          description={`Set a monthly limit per category. Progress for ${monthLabel(month)} appears here once you have budgets.`}
+          icon="wallet-outline"
           onAction={() => router.push('/budget-modal')}
+          title="No active budgets"
         />
       ) : (
-        budgets.map((item) => {
-          const percent = Math.min(100, Math.max(0, item.percentSpent));
-          const isOver = item.status === 'over';
-
-          return (
-            <View
-              key={item.id}
-              style={[
-                styles.budgetCard,
-                { backgroundColor: colors.background.card, borderColor: colors.border.default },
+        <>
+          <View style={styles.totals}>
+            <StatGrid
+              tiles={[
+                { label: 'Total limit', value: formatMoney(totals.limit) },
+                {
+                  label: 'Spent',
+                  value: formatMoney(totals.spent),
+                  color: colors.semantic.expense,
+                },
+                {
+                  label: totals.remaining.amount < 0 ? 'Over by' : 'Left to spend',
+                  value: formatMoney({
+                    amount: Math.abs(totals.remaining.amount),
+                    currency: totals.remaining.currency,
+                  }),
+                  color:
+                    totals.remaining.amount < 0 ? colors.semantic.expense : colors.semantic.income,
+                },
               ]}
-            >
-              <View style={styles.cardHeader}>
-                <View style={styles.titleRow}>
-                  <View style={[styles.iconWrap, { backgroundColor: colors.background.tertiary }]}>
-                    <Ionicons
-                      name={iconForCategory(item.categoryName)}
-                      size={22}
-                      color={colors.text.secondary}
-                    />
-                  </View>
-                  <View>
-                    <Text
-                      style={[
-                        typography.bodyLarge,
-                        { color: colors.text.primary, fontWeight: '600' },
-                      ]}
-                    >
-                      {item.categoryName}
-                    </Text>
-                    <Text
-                      style={[
-                        typography.bodySmall,
-                        { color: isOver ? colors.semantic.expense : colors.text.tertiary },
-                      ]}
-                    >
-                      {budgetStatusLabel(item)}
-                    </Text>
-                  </View>
-                </View>
+            />
+          </View>
 
-                <View style={{ alignItems: 'flex-end' }}>
-                  <Text
-                    style={[
-                      typography.bodyLarge,
-                      { color: colors.text.primary, fontWeight: '700' },
-                    ]}
-                  >
-                    {formatMoney(item.spent)}
-                  </Text>
-                  <Text style={[typography.bodySmall, { color: colors.text.tertiary }]}>
-                    of {formatMoney(item.limit)}
-                  </Text>
-                </View>
-              </View>
+          {budgets.map((item) => {
+            const percent = Math.min(100, Math.max(0, item.percentSpent));
+            const isOver = item.status === 'over';
 
+            return (
               <View
+                key={item.id}
                 style={[
-                  styles.progressTrack,
-                  { backgroundColor: colors.background.tertiary, marginTop: spacing.md },
+                  styles.budgetCard,
+                  { backgroundColor: colors.background.card, borderColor: colors.border.default },
                 ]}
               >
-                <View
-                  style={[
-                    styles.progressBar,
-                    {
-                      backgroundColor: isOver
+                <View style={styles.cardHeader}>
+                  <View style={styles.titleRow}>
+                    <View style={[styles.iconWrap, { backgroundColor: colors.background.tertiary }]}>
+                      <Ionicons
+                        name={iconForCategory(item.categoryName)}
+                        size={22}
+                        color={colors.text.secondary}
+                      />
+                    </View>
+                    <View style={styles.titleCopy}>
+                      <Text
+                        numberOfLines={1}
+                        style={[typography.bodyLarge, { color: colors.text.primary, fontWeight: '600' }]}
+                      >
+                        {item.categoryName}
+                      </Text>
+                      <Text
+                        numberOfLines={2}
+                        style={[
+                          typography.bodySmall,
+                          { color: isOver ? colors.semantic.expense : colors.text.tertiary },
+                        ]}
+                      >
+                        {budgetStatusLabel(item, isCurrentMonth)}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.amounts}>
+                    <Text
+                      style={[typography.bodyLarge, { color: colors.text.primary, fontWeight: '700' }]}
+                    >
+                      {formatMoney(item.spent)}
+                    </Text>
+                    <Text style={[typography.bodySmall, { color: colors.text.tertiary }]}>
+                      of {formatMoney(item.limit)}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={{ marginTop: spacing.md }}>
+                  <ProgressBar
+                    accessibilityLabel={`${item.categoryName}: ${item.percentSpent}% of the limit used`}
+                    color={
+                      isOver
                         ? colors.semantic.expense
                         : percent > 80
                           ? colors.semantic.warning
-                          : colors.brand.primary,
-                      width: `${percent}%`,
-                    },
-                  ]}
-                />
+                          : colors.brand.primary
+                    }
+                    percent={percent}
+                    trackColor={colors.background.tertiary}
+                  />
+                </View>
               </View>
-            </View>
-          );
-        })
+            );
+          })}
+        </>
       )}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  content: {
-    padding: 16,
-  },
-  monthNav: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
+  container: { flex: 1 },
+  content: { paddingTop: 16, flexGrow: 1 },
+  totals: { marginTop: 16, marginBottom: 4 },
   budgetCard: {
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    marginBottom: 12,
+    marginTop: 12,
   },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: 12,
   },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 },
+  titleCopy: { flex: 1, minWidth: 0 },
   iconWrap: {
     width: 44,
     height: 44,
@@ -224,15 +234,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  progressTrack: {
-    height: 6,
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  progressBar: {
-    height: '100%',
-    borderRadius: 3,
-  },
+  amounts: { alignItems: 'flex-end' },
   loadingState: {
     alignItems: 'center',
     justifyContent: 'center',

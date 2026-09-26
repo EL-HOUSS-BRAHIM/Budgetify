@@ -28,7 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }): React
   useEffect(() => {
     let isMounted = true;
 
-    supabase.auth
+    void supabase.auth
       .getSession()
       .then(({ data }) => {
         if (isMounted) {

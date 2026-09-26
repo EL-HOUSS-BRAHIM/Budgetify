@@ -90,7 +90,7 @@ export default function SignInScreen(): React.ReactElement {
             disabled={!email.trim() || !password}
             label="Sign in"
             loading={isSubmitting}
-            onPress={signIn}
+            onPress={() => void signIn()}
           />
         </Card>
         <View style={styles.links}>

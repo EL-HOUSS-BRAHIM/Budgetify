@@ -42,7 +42,10 @@ function chunkIntoWeeks(days: ForecastCalendarDay[]): ForecastCalendarDay[][] {
   return weeks;
 }
 
-function toneColor(tone: CalendarDayTone | undefined, colors: ReturnType<typeof useTheme>['colors']): string {
+function toneColor(
+  tone: CalendarDayTone | undefined,
+  colors: ReturnType<typeof useTheme>['colors'],
+): string {
   switch (tone) {
     case 'income':
       return colors.semantic.income;
@@ -88,7 +91,10 @@ function CalendarCell({ day, isSelected, onSelect }: CalendarCellProps): React.R
           styles.dayNumber,
           {
             color,
-            fontFamily: day.highlighted || day.tone === 'projected' ? fontFamily.semibold : fontFamily.regular,
+            fontFamily:
+              day.highlighted || day.tone === 'projected'
+                ? fontFamily.semibold
+                : fontFamily.regular,
           },
         ]}
       >
@@ -96,7 +102,12 @@ function CalendarCell({ day, isSelected, onSelect }: CalendarCellProps): React.R
       </Text>
       {day.emoji && <Text style={styles.dayEmoji}>{day.emoji}</Text>}
       {day.glyph && (
-        <Text style={[styles.dayGlyph, { color: colors.semantic.info, fontFamily: fontFamily.semibold }]}>
+        <Text
+          style={[
+            styles.dayGlyph,
+            { color: colors.semantic.info, fontFamily: fontFamily.semibold },
+          ]}
+        >
           {day.glyph}
         </Text>
       )}
@@ -157,12 +168,17 @@ function EventRow({
         <View style={styles.eventTitleRow}>
           <Text
             numberOfLines={1}
-            style={[styles.eventTitle, { color: colors.text.primary, fontFamily: fontFamily.medium }]}
+            style={[
+              styles.eventTitle,
+              { color: colors.text.primary, fontFamily: fontFamily.medium },
+            ]}
           >
             {event.title}
           </Text>
           <View style={[styles.eventBadge, { backgroundColor: colors.background.tertiary }]}>
-            <Text style={[styles.eventBadgeText, { color: badgeColor, fontFamily: fontFamily.medium }]}>
+            <Text
+              style={[styles.eventBadgeText, { color: badgeColor, fontFamily: fontFamily.medium }]}
+            >
               {event.dateLabel}
             </Text>
           </View>
@@ -171,9 +187,7 @@ function EventRow({
           {event.subtitle}
         </Text>
       </View>
-      <Text
-        style={[styles.eventAmount, { color: amountColor, fontFamily: fontFamily.semibold }]}
-      >
+      <Text style={[styles.eventAmount, { color: amountColor, fontFamily: fontFamily.semibold }]}>
         {formatAmount(signedAmount, event.currency, true)}
       </Text>
     </Pressable>
@@ -204,7 +218,10 @@ function ForecastEngineCard({ model }: { model: ForecastViewModel }): React.Reac
           </Text>
           <View style={styles.engineScoreRow}>
             <Text
-              style={[typography.h2, { color: colors.text.primary, fontFamily: fontFamily.semibold }]}
+              style={[
+                typography.h2,
+                { color: colors.text.primary, fontFamily: fontFamily.semibold },
+              ]}
             >
               {model.forecastConfidence}%
             </Text>
@@ -249,7 +266,10 @@ function ForecastEngineCard({ model }: { model: ForecastViewModel }): React.Reac
         <View style={[styles.overdraftPill, { backgroundColor: colors.background.tertiary }]}>
           <DecorativeIcon name="checkmark-circle" size={15} color={colors.semantic.income} />
           <Text
-            style={[styles.overdraftText, { color: colors.text.primary, fontFamily: fontFamily.medium }]}
+            style={[
+              styles.overdraftText,
+              { color: colors.text.primary, fontFamily: fontFamily.medium },
+            ]}
           >
             {model.overdraftRiskLabel}
           </Text>
@@ -332,7 +352,9 @@ export function ForecastScreen(): React.ReactElement {
 
           <View style={styles.monthRow}>
             <View style={[styles.monthPill, { backgroundColor: colors.background.tertiary }]}>
-              <Text style={[typography.h4, { color: colors.text.primary }]}>{model.monthLabel}</Text>
+              <Text style={[typography.h4, { color: colors.text.primary }]}>
+                {model.monthLabel}
+              </Text>
               <DecorativeIcon name="chevron-down" size={16} color={colors.semantic.info} />
             </View>
             <Pressable
@@ -345,7 +367,9 @@ export function ForecastScreen(): React.ReactElement {
               ]}
             >
               <DecorativeIcon name="options-outline" size={14} color={colors.semantic.info} />
-              <Text style={[styles.legendToggleText, { color: colors.text.secondary }]}>Legend</Text>
+              <Text style={[styles.legendToggleText, { color: colors.text.secondary }]}>
+                Legend
+              </Text>
             </Pressable>
           </View>
 
@@ -431,7 +455,9 @@ function LegendChip({ color, label }: { color: string; label: string }): React.R
   return (
     <View style={[styles.legendChip, { backgroundColor: colors.background.tertiary }]}>
       <View style={[styles.legendDot, { backgroundColor: color }]} />
-      <Text style={[styles.legendLabel, { color: colors.text.primary, fontFamily: fontFamily.medium }]}>
+      <Text
+        style={[styles.legendLabel, { color: colors.text.primary, fontFamily: fontFamily.medium }]}
+      >
         {label}
       </Text>
     </View>

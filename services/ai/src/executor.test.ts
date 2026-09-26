@@ -31,11 +31,11 @@ describe('executeToolCall', () => {
       'https://project.supabase.co',
       'sb_publishable_test',
       expect.objectContaining({
-        accessToken: expect.any(Function),
+        accessToken: expect.any(Function) as unknown,
       }),
     );
 
-    const options = createClient.mock.calls[0]?.[2] as {
+    const options = createClient.mock.calls[0]?.[2] as unknown as {
       accessToken: () => Promise<string>;
     };
     await expect(options.accessToken()).resolves.toBe(userJwt);

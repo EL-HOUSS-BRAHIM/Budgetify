@@ -1,26 +1,44 @@
-import { formatMoney, money } from '@budgetify/core';
+import {
+  formatMoney,
+  monthKeyFromDate,
+  shiftMonth,
+  type Money,
+  type MonthKey,
+} from '@budgetify/core';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Button, Card, DataNotice, EmptyState, Screen } from '../../components/ui';
+import {
+  Button,
+  Card,
+  DataNotice,
+  EmptyState,
+  MonthSwitcher,
+  ProgressBar,
+  Screen,
+  StatGrid,
+} from '../../components/ui';
 import { useTheme } from '../../theme/ThemeProvider';
+import { useResponsiveLayout } from '../../theme/useResponsiveLayout';
 import { useHomeData } from './use-home-data';
 
-function amount(value: number, currency: string): string {
-  return formatMoney(money(value, currency), { compactZeroFraction: false });
+function format(amount: Money, compactZeroFraction = false): string {
+  return formatMoney(amount, { compactZeroFraction });
 }
 
 export function HomeScreen(): React.ReactElement {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors, typography } = useTheme();
-  const [monthDate, setMonthDate] = React.useState(() => new Date());
-  const { model, isLoading, isRefreshing, error, refresh } = useHomeData(monthDate);
+  const responsive = useResponsiveLayout();
+  const [month, setMonth] = React.useState<MonthKey>(() => monthKeyFromDate(new Date()));
+  const currentMonth = monthKeyFromDate(new Date());
+  const { model, isLoading, isRefreshing, error, refresh } = useHomeData(month);
 
   if (isLoading && !model)
     return (
-      <Screen>
+      <Screen topInset>
         <Text style={[typography.bodyMedium, { color: colors.text.secondary }]}>
           Loading your money...
         </Text>
@@ -28,64 +46,77 @@ export function HomeScreen(): React.ReactElement {
     );
   if (error && !model)
     return (
-      <Screen>
+      <Screen topInset>
         <DataNotice icon="alert-circle-outline" label={error} tone="expense" />
         <Button label="Retry" onPress={refresh} variant="secondary" />
       </Screen>
     );
   if (!model || model.status === 'empty') {
     return (
-      <Screen>
+      <Screen topInset>
         <Text style={[typography.h2, { color: colors.text.primary }]}>Your money, clearly.</Text>
         <Text style={[typography.bodyMedium, { color: colors.text.secondary, marginTop: 8 }]}>
-          Start by adding an account, then record your first transaction.
+          Start by adding an account in Settings, then record your first transaction.
         </Text>
-        <Button label="Open Settings" onPress={() => router.push('/settings')} variant="primary" />
-        <Button label="Add transaction" onPress={() => router.push('/modal')} variant="secondary" />
+        <Button
+          label="Open Settings"
+          onPress={() => router.push('/(tabs)/settings')}
+          variant="primary"
+        />
+        <Button
+          label="Add transaction"
+          onPress={() => router.push('/modal')}
+          style={styles.spaced}
+          variant="secondary"
+        />
       </Screen>
     );
   }
 
+  const { summary, goals, upcoming } = model;
+  const netIsNegative = summary.net.amount < 0;
+
   return (
     <ScrollView
       style={{ backgroundColor: colors.background.primary }}
-      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 32 }]}
+      contentContainerStyle={[
+        styles.content,
+        {
+          paddingTop: insets.top + responsive.gutter / 2,
+          paddingBottom: insets.bottom + responsive.gutter * 2,
+          paddingHorizontal: responsive.contentPadding,
+          maxWidth: responsive.maxContentWidth + responsive.gutter * 2,
+          alignSelf: 'center',
+          width: '100%',
+        },
+      ]}
       refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={refresh} />}
     >
       <View style={styles.header}>
-        <View style={{ flex: 1 }}>
-          <Text style={[typography.caption, { color: colors.text.tertiary }]}>
-            LYVORA · {model.monthLabel}
-          </Text>
+        <View style={styles.headerCopy}>
+          <Text style={[typography.caption, { color: colors.text.tertiary }]}>LYVORA</Text>
           <Text style={[typography.h2, { color: colors.text.primary, marginTop: 6 }]}>
-            Good morning, {model.displayName}
+            {model.displayName}
           </Text>
         </View>
-        <Pressable accessibilityLabel="Add transaction" onPress={() => router.push('/modal')}>
-          <Text style={[styles.add, { color: colors.brand.primary }]}>＋</Text>
+        <Pressable
+          accessibilityLabel="Add transaction"
+          accessibilityRole="button"
+          hitSlop={12}
+          onPress={() => router.push('/modal')}
+          style={styles.addButton}
+        >
+          <Text style={[styles.addGlyph, { color: colors.brand.primary }]}>＋</Text>
         </Pressable>
       </View>
-      <View style={styles.monthNav}>
-        <Pressable
-          accessibilityLabel="Previous month"
-          onPress={() =>
-            setMonthDate((date) => new Date(date.getFullYear(), date.getMonth() - 1, 1))
-          }
-        >
-          <Text style={[typography.bodyLarge, { color: colors.text.primary }]}>‹</Text>
-        </Pressable>
-        <Text style={[typography.bodyMedium, { color: colors.text.secondary }]}>
-          {model.monthLabel}
-        </Text>
-        <Pressable
-          accessibilityLabel="Next month"
-          onPress={() =>
-            setMonthDate((date) => new Date(date.getFullYear(), date.getMonth() + 1, 1))
-          }
-        >
-          <Text style={[typography.bodyLarge, { color: colors.text.primary }]}>›</Text>
-        </Pressable>
-      </View>
+
+      <MonthSwitcher
+        canGoNext={month < currentMonth}
+        label={model.monthLabel}
+        onNext={() => setMonth((current) => shiftMonth(current, 1))}
+        onPrevious={() => setMonth((current) => shiftMonth(current, -1))}
+      />
+
       <Card
         style={[
           styles.balanceCard,
@@ -93,57 +124,69 @@ export function HomeScreen(): React.ReactElement {
         ]}
       >
         <Text style={[typography.caption, { color: colors.text.tertiary }]}>TOTAL BALANCE</Text>
-        <Text style={[styles.balance, { color: colors.text.primary }]}>
-          {amount(model.balance, model.currency)}
+        <Text
+          adjustsFontSizeToFit
+          numberOfLines={1}
+          style={[styles.balance, { color: colors.text.primary }]}
+        >
+          {format(model.balance)}
         </Text>
         <Text style={[typography.bodySmall, { color: colors.text.tertiary }]}>
-          Across your accounts
+          Across your {model.currency} accounts
         </Text>
       </Card>
-      <View style={styles.statGrid}>
-        {[
-          ['Income', model.income, colors.semantic.income],
-          ['Expenses', model.expenses, colors.semantic.expense],
-          ['Saved', model.saved, colors.semantic.info],
-        ].map(([label, value, color]) => (
-          <Card
-            key={String(label)}
-            style={[
-              styles.statCard,
-              { backgroundColor: colors.background.card, borderColor: colors.border.default },
-            ]}
-          >
-            <Text style={[typography.caption, { color: colors.text.tertiary }]}>{label}</Text>
-            <Text style={[styles.statValue, { color: color as string }]}>
-              {amount(value as number, model.currency)}
-            </Text>
-          </Card>
-        ))}
-      </View>
-      <SectionTitle title="Spending this month" />
+
+      <StatGrid
+        tiles={[
+          {
+            label: model.isCurrentMonth ? 'Income this month' : `Income in ${model.monthLabel}`,
+            value: format(summary.income),
+            color: colors.semantic.income,
+          },
+          {
+            label: 'Expenses',
+            value: format(summary.expenses),
+            color: colors.semantic.expense,
+          },
+          {
+            label: netIsNegative ? 'Overspent' : 'Saved',
+            value: format({ amount: Math.abs(summary.net.amount), currency: model.currency }),
+            color: netIsNegative ? colors.semantic.expense : colors.semantic.info,
+          },
+        ]}
+      />
+
+      <SectionTitle title={model.isCurrentMonth ? 'Spending this month' : 'Spending that month'} />
       <Card
         style={[
           styles.sectionCard,
           { backgroundColor: colors.background.card, borderColor: colors.border.default },
         ]}
       >
-        {model.spendingByCategory.length === 0 ? (
+        {summary.spendingByCategory.length === 0 ? (
           <Text style={[typography.bodyMedium, { color: colors.text.secondary }]}>
-            No expenses recorded this month.
+            No expenses recorded in {model.monthLabel}.
           </Text>
         ) : (
-          model.spendingByCategory.map((item) => (
+          summary.spendingByCategory.map((item) => (
             <View key={item.name} style={styles.row}>
-              <Text style={[typography.bodyMedium, { color: colors.text.primary }]}>
+              <Text numberOfLines={1} style={[styles.rowLabel, { color: colors.text.primary }]}>
                 {item.name}
               </Text>
-              <Text style={[typography.bodyMedium, { color: colors.text.primary }]}>
-                {amount(item.amount, model.currency)}
+              <Text style={[styles.rowValue, { color: colors.text.primary }]}>
+                {format(item.amount)}
               </Text>
             </View>
           ))
         )}
+        {summary.foreignCurrencyCount > 0 && (
+          <DataNotice
+            label={`${summary.foreignCurrencyCount} transaction(s) in another currency are not included in these totals.`}
+            tone="warning"
+          />
+        )}
       </Card>
+
       <SectionTitle title="Upcoming" />
       <Card
         style={[
@@ -151,74 +194,75 @@ export function HomeScreen(): React.ReactElement {
           { backgroundColor: colors.background.card, borderColor: colors.border.default },
         ]}
       >
-        {model.upcoming.length === 0 ? (
+        {upcoming.length === 0 ? (
           <Text style={[typography.bodyMedium, { color: colors.text.secondary }]}>
-            No upcoming transactions.
+            Nothing scheduled. Add a recurring transaction to see it here.
           </Text>
         ) : (
-          model.upcoming.map((item) => (
+          upcoming.map((item) => (
             <View key={item.id} style={styles.row}>
-              <View style={{ flex: 1 }}>
-                <Text style={[typography.bodyMedium, { color: colors.text.primary }]}>
+              <View style={styles.rowCopy}>
+                <Text
+                  numberOfLines={1}
+                  style={[typography.bodyMedium, { color: colors.text.primary }]}
+                >
                   {item.name}
                 </Text>
                 <Text style={[typography.caption, { color: colors.text.tertiary }]}>
-                    {item.next_date}
+                  {item.needsAttention
+                    ? 'Overdue'
+                    : item.daysUntil === 0
+                      ? 'Due today'
+                      : `Due ${item.nextDate}`}
                 </Text>
               </View>
-              <Text style={[typography.bodyMedium, { color: colors.text.primary }]}>
-                  {amount(item.amount, item.currency)}
+              <Text style={[styles.rowValue, { color: colors.text.primary }]}>
+                {formatMoney(
+                  { amount: item.amount, currency: item.currency },
+                  { compactZeroFraction: true },
+                )}
               </Text>
             </View>
           ))
         )}
       </Card>
+
       <SectionTitle title="Goals" />
-      {model.goals.length === 0 ? (
+      {goals.goalCount === 0 ? (
         <EmptyState
-          icon="flag-outline"
-          title="No goals yet"
-          description="Create a goal to start tracking progress."
           actionLabel="Open Goals"
+          description="Create a savings goal to start tracking what you are putting aside."
+          icon="flag-outline"
           onAction={() => router.push('/(tabs)/goals')}
+          title="No goals yet"
         />
       ) : (
-        model.goals.map((goal) => {
-          const progress = Math.min(
-            100,
-            Math.round((goal.current_amount / goal.target_amount) * 100),
-          );
-          return (
-            <Card
-              key={goal.id}
-              style={[
-                styles.sectionCard,
-                { backgroundColor: colors.background.card, borderColor: colors.border.default },
-              ]}
-            >
-              <View style={styles.row}>
-                <Text style={[typography.bodyLarge, { color: colors.text.primary, flex: 1 }]}>
-                  {goal.name}
-                </Text>
-                <Text style={[typography.caption, { color: colors.text.secondary }]}>
-                  {progress}%
-                </Text>
-              </View>
-              <Text style={[typography.caption, { color: colors.text.tertiary, marginTop: 6 }]}>
-                {amount(goal.current_amount, goal.currency)} of{' '}
-                {amount(goal.target_amount, goal.currency)}
-              </Text>
-              <View style={[styles.progressTrack, { backgroundColor: colors.border.subtle }]}>
-                <View
-                  style={[
-                    styles.progressFill,
-                    { width: `${progress}%`, backgroundColor: colors.brand.primary },
-                  ]}
-                />
-              </View>
-            </Card>
-          );
-        })
+        <Card
+          style={[
+            styles.sectionCard,
+            { backgroundColor: colors.background.card, borderColor: colors.border.default },
+          ]}
+        >
+          <Text style={[typography.caption, { color: colors.text.tertiary }]}>
+            {goals.fundedCount} of {goals.goalCount} funded
+          </Text>
+          <Text style={[styles.goalAmount, { color: colors.text.primary }]}>
+            {format(goals.saved)}{' '}
+            <Text style={{ color: colors.text.tertiary }}>of {format(goals.target)}</Text>
+          </Text>
+          <ProgressBar
+            accessibilityLabel={`${goals.percentComplete}% of your savings goals funded`}
+            color={colors.semantic.income}
+            percent={goals.percentComplete}
+            trackColor={colors.border.subtle}
+          />
+          {goals.excludedCount > 0 && (
+            <DataNotice
+              label={`${goals.excludedCount} goal(s) use another currency and are excluded from this total.`}
+              tone="warning"
+            />
+          )}
+        </Card>
       )}
     </ScrollView>
   );
@@ -234,22 +278,18 @@ function SectionTitle({ title }: { title: string }): React.ReactElement {
 }
 
 const styles = StyleSheet.create({
-  content: { padding: 16 },
-  header: { flexDirection: 'row', alignItems: 'center', marginBottom: 18 },
-  monthNav: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  add: { fontSize: 38, lineHeight: 40 },
-  balanceCard: { padding: 20, borderWidth: 1, borderRadius: 18 },
+  content: { flexGrow: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', marginBottom: 18, gap: 12 },
+  headerCopy: { flex: 1, minWidth: 0 },
+  addButton: { minWidth: 48, minHeight: 48, alignItems: 'flex-end', justifyContent: 'center' },
+  addGlyph: { fontSize: 32, lineHeight: 36 },
+  balanceCard: { padding: 20, borderWidth: 1, borderRadius: 18, marginTop: 12 },
   balance: { fontSize: 32, fontWeight: '800', marginVertical: 8 },
-  statGrid: { flexDirection: 'row', gap: 8, marginTop: 10 },
-  statCard: { flex: 1, padding: 12, borderWidth: 1, borderRadius: 14 },
-  statValue: { fontSize: 15, fontWeight: '700', marginTop: 6 },
   sectionCard: { padding: 14, borderWidth: 1, borderRadius: 16, gap: 12 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  progressTrack: { height: 8, borderRadius: 4, overflow: 'hidden', marginTop: 10 },
-  progressFill: { height: '100%', borderRadius: 4 },
+  rowCopy: { flex: 1, minWidth: 0 },
+  rowLabel: { flex: 1, minWidth: 0, fontSize: 14, lineHeight: 20 },
+  rowValue: { fontSize: 14, lineHeight: 20, fontVariant: ['tabular-nums'] },
+  goalAmount: { fontSize: 18, fontWeight: '700' },
+  spaced: { marginTop: 12 },
 });

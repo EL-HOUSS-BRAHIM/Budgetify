@@ -4,6 +4,32 @@ import type { Database } from '@budgetify/types';
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const TOOL_EXECUTION_ERROR = 'Unable to complete this action';
 
+/**
+ * Tool arguments arrive from a language model, so a field can be any JSON
+ * value. Coercing an object with `String()` would persist "[object Object]"
+ * into a user's ledger. Only primitives are accepted; anything else falls
+ * back rather than being silently mangled.
+ */
+function textArg(value: unknown, fallback: string): string {
+  if (typeof value === 'string' && value.trim() !== '') return value;
+  if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+  if (typeof value === 'boolean') return String(value);
+  return fallback;
+}
+
+function isoDateArg(value: unknown): string {
+  const raw = textArg(value, '');
+  if (raw === '') return new Date().toISOString();
+  const parsed = new Date(raw);
+  return Number.isNaN(parsed.getTime()) ? new Date().toISOString() : parsed.toISOString();
+}
+
+function minorUnitsArg(value: unknown): number {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) return 0;
+  return Math.round(parsed * 100);
+}
+
 export interface ExecutionContext {
   supabaseUrl: string;
   supabasePublishableKey: string;
@@ -16,7 +42,7 @@ export async function executeToolCall(
   ctx: ExecutionContext,
 ): Promise<{ success: boolean; data?: unknown; error?: string }> {
   const supabase = createClient<Database>(ctx.supabaseUrl, ctx.supabasePublishableKey, {
-    accessToken: async () => ctx.userJwt,
+    accessToken: () => Promise.resolve(ctx.userJwt),
     auth: {
       autoRefreshToken: false,
       detectSessionInUrl: false,
@@ -27,13 +53,10 @@ export async function executeToolCall(
   try {
     switch (toolName) {
       case 'record_expense': {
-        const amountDollars = Number(args['amount'] || 0);
-        const amountCents = Math.round(amountDollars * 100);
-        const category = String(args['category'] || 'Other');
-        const description = String(args['description'] || 'Expense');
-        const date = args['date']
-          ? new Date(String(args['date'])).toISOString()
-          : new Date().toISOString();
+        const amountCents = minorUnitsArg(args['amount']);
+        const category = textArg(args['category'], 'Other');
+        const description = textArg(args['description'], 'Expense');
+        const date = isoDateArg(args['date']);
 
         const { data, error } = await supabase
           .from('transactions')
@@ -52,13 +75,10 @@ export async function executeToolCall(
       }
 
       case 'record_income': {
-        const amountDollars = Number(args['amount'] || 0);
-        const amountCents = Math.round(amountDollars * 100);
-        const category = String(args['category'] || 'Salary & Income');
-        const description = String(args['description'] || 'Income');
-        const date = args['date']
-          ? new Date(String(args['date'])).toISOString()
-          : new Date().toISOString();
+        const amountCents = minorUnitsArg(args['amount']);
+        const category = textArg(args['category'], 'Salary & Income');
+        const description = textArg(args['description'], 'Income');
+        const date = isoDateArg(args['date']);
 
         const { data, error } = await supabase
           .from('transactions')
@@ -77,11 +97,11 @@ export async function executeToolCall(
       }
 
       case 'add_planned_item': {
-        const amountDollars = Number(args['expected_amount'] || 0);
-        const amountCents = Math.round(amountDollars * 100);
-        const title = String(args['title'] || 'Planned Item');
-        const category = String(args['category'] || 'General');
-        const dueDate = args['due_date'] ? String(args['due_date']) : null;
+        const amountCents = minorUnitsArg(args['expected_amount']);
+        const title = textArg(args['title'], 'Planned Item');
+        const category = textArg(args['category'], 'General');
+        const dueDateArg = textArg(args['due_date'], '');
+        const dueDate = dueDateArg === '' ? null : dueDateArg;
         const isRecurring = Boolean(args['is_recurring']);
         const isUnplanned = Boolean(args['is_unplanned']);
 
@@ -104,12 +124,10 @@ export async function executeToolCall(
       }
 
       case 'toggle_plan_item_status': {
-        const titleOrId = String(args['title_or_id'] || '');
+        const titleOrId = textArg(args['title_or_id'], '');
         const isDone = Boolean(args['is_done']);
 
-        const query = supabase
-          .from('plan_items')
-          .select('id, title, is_done');
+        const query = supabase.from('plan_items').select('id, title, is_done');
         const itemLookup = UUID_PATTERN.test(titleOrId)
           ? query.eq('id', titleOrId)
           : query.ilike('title', `%${titleOrId.replace(/[\\%_]/g, '\\$&')}%`);

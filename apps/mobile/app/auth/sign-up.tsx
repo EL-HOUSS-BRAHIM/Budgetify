@@ -98,7 +98,7 @@ export default function SignUpScreen(): React.ReactElement {
             disabled={!email.trim() || password.length < 6}
             label="Create account"
             loading={isSubmitting}
-            onPress={signUp}
+            onPress={() => void signUp()}
           />
         </Card>
         <Link

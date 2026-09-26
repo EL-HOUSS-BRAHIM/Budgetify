@@ -1,190 +1,111 @@
-# Plan: App Logic, Real Data, and Responsive Release
+# LYVORA Core V1 End-Phase Plan
 
-Date: 2026-09-20
-Public API URL: `https://budgetifyai-qika9xe4.b4a.run`
+Date: 2026-09-26
+Status: RELEASE_CANDIDATE_BLOCKED
+Canonical runbook: `tasks/path-to-end-backend-first.md`
 
-Assumption: the hosted backend is deployed. Health is verified; authenticated public smoke still needs test-user access tokens entered outside chat.
+## Objective
 
-## Goal
+Finish and release the existing manual finance foundation as LYVORA Core V1. This plan contains only the remaining end phase. The completed account, ledger, budget, goal, recurring, onboarding, monthly dashboard, auth, migration, and RLS implementation is recorded in the runbook and must not be restarted.
 
-Turn the current Expo app from a polished preview into a production-ready personal finance app: every core money screen uses Supabase-backed data, every user action persists or clearly routes to a real backend contract, and layouts hold up across small phones, large phones, tablets, dynamic text, safe areas, and theme modes.
+## Release Boundary
 
-## Non-Negotiables
+Primary tabs: Home, Transactions, Budget, Goals, Settings.
 
-1. No fake financial numbers in core routes. Empty states are allowed; preview values are not.
-2. Backend contracts are the source of truth for money logic, calculations, persistence, and AI actions.
-3. The app keeps the current five-tab product shape: Home, Money, Plan, Goals, AI.
-4. Every financial write is authenticated, user-scoped, RLS-protected, and reflected in the UI without restarting the app.
-5. Responsive behavior is verified on multiple viewport classes before release.
-6. Deferred innovation screens must be explicitly grouped as Preview/Lab and cannot look like production-backed functionality.
+In scope for the final acceptance journey:
 
-## Dependency Graph
+- authenticated user creates a profile and at least one manual account;
+- user records income, expense, and transfer transactions;
+- categories appear on transactions;
+- user creates a monthly budget and sees real progress;
+- user creates a savings goal and sees real progress;
+- user creates a basic recurring transaction and sees it in upcoming items;
+- user moves between current and historical months and sees month-scoped calculations;
+- a second user cannot read or mutate the first user's financial rows;
+- the five core screens remain usable on Android compact and expanded layouts.
 
-```text
-P0 deployed backend verification
-  └─ P1 app data/auth foundation
-       ├─ P2 onboarding + profile preferences
-       └─ P3 ledger write/read loop
-            ├─ P4 money + budgets + planning parity
-            ├─ P5 goals + bills + salary + transaction details
-            └─ P6 insights + assistant + settings persistence
-                 └─ P7 responsive and hardcoded-data release gate
-```
+Out of scope: AI, voice, connected banks, OCR, imports, forecasting, automatic categorization, smart advice, automation, investments, crypto, payments, and shared-finance extensions.
 
-## Architecture Decisions
+## Remaining Phases
 
-- Add shared feature hooks for backend reads and writes before touching individual screens. Screens should render view models, not query tables directly in every component.
-- Keep domain math in `packages/core` or Supabase RPCs. The mobile app formats and presents results; it does not silently invent financial calculations.
-- Use real empty, loading, error, and offline-ish retry states for every core route. Do not fall back from backend failure to sample data.
-- Prefer responsive tokens and reusable layout primitives over one-off dimensions in route files.
-- Treat responsiveness and hardcoded-data cleanup as testable gates: scan source, typecheck, run tests, and verify key screens on at least compact and expanded device sizes.
+### Phase 1 - Database proof
 
-## Phase Plan
+Owner: Backend/RLS
 
-### P0 - Deployment and Contract Lock
+Deliverable: explicit pgTAP result for the hosted project, including every file in `supabase/tests`.
 
-**Description:** Confirm the deployed backend URL, Supabase project ref, public smoke status, and mobile environment variables before wiring more app logic.
+Acceptance:
 
-**Acceptance criteria:**
-- [x] Public `/health` returns 200 over HTTPS.
-- [ ] Authenticated public smoke test passes against the deployed API.
-- [x] Mobile environment files point at the same Supabase project and AI API base URL.
-- [x] No service-role or secret key exists in mobile code or committed config.
+- linked target is `hnlieepsxoqeebkreugt`;
+- all intended SQL test files execute;
+- cross-user reads/writes are denied;
+- transfer constraints and balance trigger behave correctly;
+- no reset or destructive command is used.
 
-**Verification:** `npm run smoke:public`, `npm run typecheck --workspace services/ai`, env/example diff review.
+Failure explanation: `npm run db:test` currently hangs while initializing the remote login role. This is a CLI/session/network problem, so SQL correctness remains unproven until the command returns.
 
-**Evidence:** 2026-09-20 `GET https://budgetifyai-qika9xe4.b4a.run/health` returned `{"status":"ok","service":"budgetify-ai"}`. A mobile/service scan found no service-role or secret-key usage beyond warning comments in env examples.
+### Phase 2 - Public API proof
 
-**Supabase MCP:** 2026-09-20 retargeted VS Code `mcp.json` to `project_ref=hnlieepsxoqeebkreugt`; `get_project_url` now returns `https://hnlieepsxoqeebkreugt.supabase.co`.
+Owner: Backend/API
 
-### P1 - App Logic Foundation
+Deliverable: authenticated `npm run smoke:public` result using two locally supplied test-user tokens.
 
-**Description:** Create the reusable client-side pattern for authenticated queries, mutations, cache refresh, money formatting, and honest loading/empty/error states.
+Acceptance:
 
-**Acceptance criteria:**
-- Shared finance data hooks exist for accounts, transactions, budgets, plan items, goals, and profile preferences.
-- Mutation helpers return typed success/error results and refresh affected reads.
-- Currency formatting uses user/profile currency and integer minor units.
-- No core screen uses preview data as an error fallback.
+- HTTPS health returns success;
+- unauthenticated API access is rejected;
+- user 1 write/read succeeds;
+- user 2 cannot access user 1 data;
+- output contains no token or financial payload.
 
-**Verification:** mobile typecheck, focused hook tests where practical, manual auth/session refresh check.
+Failure explanation: no test-user access tokens are currently supplied. A health check alone cannot prove authentication or RLS isolation.
 
-**Progress 2026-09-20:** Added authenticated profile, account, transaction, budget progress, planning, goal strategy, salary allocation, financial health, and month-end report hooks. Money, Budgets, Plan, Goals, Bills, Assistant, Salary Day, Financial Health, Month-End Report, and transaction detail now render loading/empty/error states instead of sample financial fallback data. Shared mutation helpers exist for transactions, profile/settings, accounts, budgets, plan items, and goals. Verified with workspace typecheck, lint, tests, and Expo check.
+### Phase 3 - Android acceptance
 
-### P2 - Identity, Onboarding, and Preferences
+Owner: Mobile QA
 
-**Description:** Replace preview-session behavior with real Supabase Auth screens and persisted profile setup.
+Deliverable: a compact/expanded Android review record with screenshots or equivalent evidence.
 
-**Acceptance criteria:**
-- User can sign up, sign in, sign out, reset password, and restore a session from secure storage.
-- Core financial tabs are guarded when unauthenticated.
-- Onboarding persists display name, currency, locale, income cadence, and safety buffer.
-- Settings/profile changes survive app restart and re-login.
+Acceptance:
 
-**Verification:** mobile typecheck, Supabase auth manual flow, profile row inspection through authenticated reads.
+- Home month navigation and aggregate cards fit;
+- Transactions search, filters, modal, transfer fields, keyboard, and empty states fit;
+- Budget progress and create flow fit;
+- Goals progress and create flow fit;
+- Settings account/profile/onboarding/recurring actions fit;
+- light, dark, large-text, loading, error, and no-data states fit;
+- no overlap, clipped text, or unsafe touch target remains.
 
-**Progress 2026-09-20:** Added Supabase sign-in, sign-up, reset-password, sign-out, session restore, and guarded core tab navigation. Profile display name, currency, AI personality, privacy preferences, onboarding priority, monthly income cadence, safety buffer, and first signal are persisted through the `profiles` table.
+Failure explanation: responsive implementation exists, but static checks cannot certify runtime Android layout behavior and no final device evidence is recorded.
 
-### P3 - Ledger Write/Read Loop
+### Phase 4 - Final verification and release artifact
 
-**Description:** Make the transaction modal and Money tab prove the basic production loop: create money movement, read it back, search it, and open details.
+Owner: Release
 
-**Acceptance criteria:**
-- `apps/mobile/app/modal.tsx` writes a real transaction.
-- `apps/mobile/app/(tabs)/expenses.tsx` reads real transactions with search and pagination-ready ordering.
-- `apps/mobile/app/transaction/[id].tsx` reads only real transaction details or an empty/not-found state.
-- New records appear in the feed without restarting the app.
+Deliverable: green verification log, reviewed commit, and annotated `v1.0.0` tag.
 
-**Verification:** create/read manual smoke on device, mobile typecheck, RLS denial check from backend tests.
+Acceptance:
 
-**Progress 2026-09-20:** Transaction modal writes real rows; Money tab reads/searches real transactions ordered by date; transaction detail reads real rows only; Money refreshes on focus after writes.
+- `npm run verify` passes after the latest changes;
+- `npm run db:test` passes explicitly over the full test directory;
+- `npm run smoke:public` passes;
+- source scan finds no fake financial data in Core V1 routes;
+- no secrets/debug files are included;
+- worktree is clean before tagging;
+- `v1.0.0` points to the reviewed release commit.
 
-### P4 - Budgets and Planning Parity
+Failure explanation: the current branch is dirty and the database/public smoke gates are unresolved. Tagging now would create an incomplete or non-reproducible V1 marker.
 
-**Description:** Replace static budget categories and planning preview values with backend-derived progress and commitment data.
+## Roles
 
-**Acceptance criteria:**
-- Budget progress contract returns limit, spent, remaining, period, and status per category.
-- Planning screen derives bills, subscriptions, flexible-spending status, and correction proposals from real contracts.
-- Local-only correction messages are removed or replaced by persisted/reviewable actions.
+| Role | Responsibility | Current state |
+|---|---|---|
+| Product/Scope | Protect the Core V1 boundary and approve release scope | Needed for final signoff; deferred features must remain deferred |
+| Mobile | Fix runtime layout defects and keep all writes connected to real hooks | Implementation is largely present; runtime device evidence is missing |
+| Backend/RLS | Prove migrations, RPCs, ownership, and hosted database behavior | Blocked on remote pgTAP login initialization |
+| API | Prove public HTTPS auth and two-user isolation | Blocked on locally supplied user tokens |
+| QA/Release | Run gates, inspect diff/secrets, commit, and tag | Cannot sign off while any required gate is unresolved |
 
-**Verification:** `npm run db:test`, mobile typecheck, manual seeded-data check on Budgets and Plan.
+## Required Handoff
 
-**Progress 2026-09-20:** Added and remotely applied `get_budget_progress`; regenerated hosted Supabase types; Budgets and Plan consume the typed contract. pgTAP coverage was added, but local `npm run db:test` is blocked by Docker Desktop not running.
-
-### P5 - Goals, Bills, Salary, and Detail Screens
-
-**Description:** Finish mixed real/preview screens so goal strategy, bills, salary allocation, and transaction context are backed by contracts.
-
-**Acceptance criteria:**
-- Goal strategy screen uses real goal strategy output or a no-data state.
-- Bills screen uses real recurring plan items without preview contracts.
-- Salary-day recommendations come from backend/core logic and persist applied choices.
-- Receipt/OCR blocks are either backed by real metadata or removed from core detail UI.
-
-**Verification:** mobile typecheck, manual screen review with empty and seeded accounts.
-
-**Progress 2026-09-20:** Added and remotely applied `get_goal_strategy` and `get_salary_allocation`; regenerated hosted Supabase types. Goal Strategy and Salary Day now consume typed backend contracts. Transaction detail receipt/OCR preview blocks were removed; Bills now uses recurring plan items only; Goals tab renders real goals with no sample what-if simulator.
-
-### P6 - Insights, Assistant, and Settings Persistence
-
-**Description:** Convert analytical and AI-adjacent surfaces from samples/local state to persisted, explainable data.
-
-**Acceptance criteria:**
-- Financial health score and month-end report are computed from backend contracts.
-- Assistant startup state is persisted or server-provided, not seeded by local sample messages.
-- AI personality and privacy settings persist to the backend.
-- Assistant proposals remain reviewable before writes.
-
-**Verification:** service tests, mobile typecheck, public API smoke, manual assistant/settings restart check.
-
-**Progress 2026-09-20:** Added and remotely applied `get_financial_health`, `get_month_end_report`, and profile preference columns; regenerated hosted Supabase types. Financial Health and Month-End Report consume typed backend contracts. AI personality and privacy settings persist to `profiles`. Assistant startup sample messages and fake metric cards were removed; it now renders actual deployed API responses only. Chat history persistence is deferred from the current parity release.
-
-### P7 - Responsive and Hardcoded-Data Release Gate
-
-**Description:** Run a full source cleanup and responsive pass after the core logic is real.
-
-**Acceptance criteria:**
-- No `preview`, `sample`, `mock`, or local-only financial data remains in core production routes.
-- Fixed dimensions are replaced with tokenized, safe-area-aware, wrapping layouts where they can break small/large screens.
-- Touch targets meet the design guide minimums.
-- Dynamic text does not overlap controls on compact screens.
-- Deferred routes are moved behind an explicit Preview/Lab entry point.
-
-**Verification:** hardcoded-data scan, mobile typecheck, Expo check, Android compact-device review, Android large-screen/tablet review, light/dark theme review.
-
-## Route Priority
-
-1. Core now: `index`, `expenses`, `budgets`, `planning`, `goals`, `assistant`, `settings`, `modal`, onboarding/auth.
-2. Core secondary: `forecast`, `bills`, `salary-day`, `transaction/[id]`, `financial-health`, `reports/month-end`, `settings/ai`, `privacy`.
-3. Defer or Lab: `allocation`, `automations`, `credit-cards`, `driving-mode`, `income-mode`, `lockdown`, `shared-finances`, `vault`, `platform-surface`, `desktop-reference`.
-
-## Release Gates
-
-- `npm run typecheck`
-- `npm run test`
-- `npm run expo:check`
-- `npm run smoke:public`
-- hardcoded-data scan over `apps/mobile/app` and `apps/mobile/src`
-- manual responsive review on compact phone and expanded/tablet viewport
-
-## Verification Log
-
-- 2026-09-20: `npm run typecheck` passed.
-- 2026-09-20: `npm run lint` passed.
-- 2026-09-20: `npm run test` passed: 65 core tests and 14 AI service tests.
-- 2026-09-20: `npm run expo:check` passed.
-- 2026-09-20: Targeted Prettier check passed for touched TS/TSX/MD files.
-- 2026-09-20: `npm run db:test` is blocked locally because Docker Desktop is not running; the non-destructive `get_budget_progress` migration was applied to hosted Budgetify via Supabase MCP and verified in migration history.
-- 2026-09-20: Additional hosted migrations applied via Supabase MCP and verified in migration history: `strategy_and_salary_contracts`, `insights_and_preferences`, and `onboarding_baseline`.
-- 2026-09-20: Hardcoded-data scan over `apps/mobile/app` now reports only Settings Lab/Preview grouping plus explicitly deferred Lab/reference routes.
-- 2026-09-20: P0-P6 committed as `8bbcb95` ("Connect mobile app to real backend contracts"); working tree is clean and `origin/main` is up to date.
-- 2026-09-20: Post-commit `npm run typecheck` re-verified clean across `apps/mobile`, `packages/core`, `packages/types`, and `services/ai`.
-
-Status snapshot: `tasks/progress-app-logic-responsive.md`.
-
-## Open Questions
-
-- Chat history persistence is not in the first parity release; AI begins stateless with server-provided responses only.
-- Should deferred Preview/Lab routes remain installed but hidden, or be removed from the shipped route tree until their backend contracts exist?
-- Which two seeded demo accounts should be used for repeatable public smoke and RLS checks?
+Every completed phase must record: command, date, exact result, environment/target, and any remaining limitation. Do not write “done” from source inspection alone when the acceptance requires runtime or remote evidence.

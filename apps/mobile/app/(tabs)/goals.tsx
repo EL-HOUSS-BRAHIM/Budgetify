@@ -1,18 +1,21 @@
-import { formatMoney, money } from '@budgetify/core';
+import { formatMoney, type GoalProgress, type Money } from '@budgetify/core';
 import { Ionicons } from '@expo/vector-icons';
-import type { Tables } from '@budgetify/types';
 import { useFocusEffect, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback } from 'react';
 import { ActivityIndicator, RefreshControl, StyleSheet, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Button, Card, DataNotice, EmptyState, Screen } from '../../src/components/ui';
-import { supabase } from '../../src/lib/supabase';
+import {
+  Button,
+  Card,
+  DataNotice,
+  EmptyState,
+  ProgressBar,
+  Screen,
+} from '../../src/components/ui';
+import { useGoals } from '../../src/features/finance/goals';
 import { useTheme } from '../../src/theme/ThemeProvider';
 
-type Goal = Tables<'goals'>;
-
-function formatAmount(amount: number, currency: string): string {
-  return formatMoney(money(amount, currency), { compactZeroFraction: true });
+function format(amount: Money): string {
+  return formatMoney(amount, { compactZeroFraction: true });
 }
 
 function formatDeadline(deadline: string | null): string {
@@ -22,72 +25,58 @@ function formatDeadline(deadline: string | null): string {
   );
 }
 
+/** One honest sentence about pace. Never a bare percentage with no meaning. */
+function statusLine(goal: GoalProgress): string {
+  switch (goal.status) {
+    case 'funded':
+      return 'Funded. This goal is done.';
+    case 'overdue':
+      return 'Past its target date and not yet funded.';
+    case 'not_started':
+      return goal.monthlyContribution.amount > 0
+        ? `Nothing saved yet. ${format(goal.monthlyContribution)} a month would get you there.`
+        : 'Nothing saved yet.';
+    case 'at_risk':
+      return `Behind pace. ${format(goal.monthlyContribution)} a month to reach the target.`;
+    default:
+      return goal.monthlyContribution.amount > 0
+        ? `On track at ${format(goal.monthlyContribution)} a month.`
+        : 'On track.';
+  }
+}
+
+function statusColor(goal: GoalProgress, colors: ReturnType<typeof useTheme>['colors']): string {
+  if (goal.status === 'funded') return colors.semantic.income;
+  if (goal.status === 'overdue' || goal.status === 'at_risk') return colors.semantic.expense;
+  return colors.semantic.info;
+}
+
 export default function GoalsScreen(): React.ReactElement {
   const router = useRouter();
   const { colors, fontFamily, typography } = useTheme();
-  const insets = useSafeAreaInsets();
-  const [goals, setGoals] = useState<Goal[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  const loadGoals = useCallback(async () => {
-    setError(null);
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) {
-        setGoals([]);
-        return;
-      }
-      const { data, error: queryError } = await supabase
-        .from('goals')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (queryError) throw queryError;
-      setGoals(data ?? []);
-    } catch {
-      setError('Goals could not be loaded. Your existing data was not changed.');
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void loadGoals();
-  }, [loadGoals]);
+  const { goals, aggregate, isLoading, isRefreshing, error, refresh } = useGoals();
 
   useFocusEffect(
     useCallback(() => {
-      void loadGoals();
-    }, [loadGoals]),
+      void refresh();
+    }, [refresh]),
   );
 
-  const refresh = () => {
-    setIsRefreshing(true);
-    void loadGoals();
-  };
-
-  const currency = goals[0]?.currency ?? 'USD';
-  const sameCurrencyGoals = goals.filter((goal) => goal.currency === currency);
-  const totalCurrent = sameCurrencyGoals.reduce((sum, goal) => sum + goal.current_amount, 0);
-  const totalTarget = sameCurrencyGoals.reduce((sum, goal) => sum + goal.target_amount, 0);
-  const totalProgress =
-    totalTarget > 0 ? Math.min(100, Math.round((totalCurrent / totalTarget) * 100)) : 0;
+  const runRefresh = useCallback(() => {
+    void refresh();
+  }, [refresh]);
 
   return (
     <Screen
-      contentContainerStyle={{ paddingTop: insets.top + 8 }}
       refreshControl={
         <RefreshControl
           colors={[colors.semantic.info]}
-          onRefresh={refresh}
+          onRefresh={runRefresh}
           refreshing={isRefreshing}
           tintColor={colors.semantic.info}
         />
       }
+      topInset
     >
       {isLoading ? (
         <View accessibilityLabel="Loading goals" style={styles.loading}>
@@ -96,7 +85,7 @@ export default function GoalsScreen(): React.ReactElement {
       ) : error ? (
         <Card style={styles.stateCard}>
           <DataNotice icon="alert-circle-outline" label={error} tone="expense" />
-          <Button label="Try again" onPress={refresh} variant="secondary" />
+          <Button label="Try again" onPress={runRefresh} variant="secondary" />
         </Card>
       ) : goals.length === 0 ? (
         <Card>
@@ -111,20 +100,18 @@ export default function GoalsScreen(): React.ReactElement {
       ) : (
         <>
           <View style={styles.header}>
-            <View style={styles.brandRow}>
-              <View style={[styles.brandMark, { borderColor: colors.semantic.income }]}>
-                <Ionicons name="sparkles" size={13} color={colors.semantic.income} />
-              </View>
-              <Text
-                style={[
-                  styles.brandName,
-                  { color: colors.text.primary, fontFamily: fontFamily.bold },
-                ]}
-              >
-                Lyvora
-              </Text>
-              <Text style={[styles.brandSection, { color: colors.text.tertiary }]}>| Goals</Text>
+            <View style={[styles.brandMark, { borderColor: colors.semantic.income }]}>
+              <Ionicons name="sparkles" size={13} color={colors.semantic.income} />
             </View>
+            <Text
+              style={[
+                styles.brandName,
+                { color: colors.text.primary, fontFamily: fontFamily.bold },
+              ]}
+            >
+              Lyvora
+            </Text>
+            <Text style={[styles.brandSection, { color: colors.text.tertiary }]}>| Goals</Text>
           </View>
 
           <View style={styles.titleRow}>
@@ -154,27 +141,21 @@ export default function GoalsScreen(): React.ReactElement {
                 { color: colors.text.primary, fontFamily: fontFamily.semibold },
               ]}
             >
-              {formatAmount(totalCurrent, currency)}{' '}
-              <Text style={[styles.aggregateOf, { color: colors.text.tertiary }]}>
-                / {formatAmount(totalTarget, currency)}
-              </Text>
+              {format(aggregate.saved)}{' '}
+              <Text style={{ color: colors.text.tertiary }}>/ {format(aggregate.target)}</Text>
             </Text>
-            <View
-              accessibilityLabel={`${totalProgress}% cumulative progress`}
-              accessibilityRole="progressbar"
-              accessibilityValue={{ min: 0, max: 100, now: totalProgress }}
-              style={[styles.progressTrack, { backgroundColor: colors.border.subtle }]}
-            >
-              <View
-                style={[
-                  styles.progressFill,
-                  { backgroundColor: colors.semantic.income, width: `${totalProgress}%` },
-                ]}
-              />
-            </View>
-            {sameCurrencyGoals.length !== goals.length && (
+            <ProgressBar
+              accessibilityLabel={`${aggregate.percentComplete}% of your savings goals funded`}
+              color={colors.semantic.income}
+              percent={aggregate.percentComplete}
+              trackColor={colors.border.subtle}
+            />
+            <Text style={[typography.bodySmall, { color: colors.text.tertiary }]}>
+              {aggregate.fundedCount} of {aggregate.goalCount} funded
+            </Text>
+            {aggregate.excludedCount > 0 && (
               <DataNotice
-                label="Some goals use another currency and are excluded from this aggregate."
+                label={`${aggregate.excludedCount} goal(s) use another currency and are excluded from this aggregate.`}
                 tone="warning"
               />
             )}
@@ -199,24 +180,26 @@ export default function GoalsScreen(): React.ReactElement {
   );
 }
 
-function GoalCard({ goal }: { goal: Goal }): React.ReactElement {
+function GoalCard({ goal }: { goal: GoalProgress }): React.ReactElement {
   const router = useRouter();
   const { colors, fontFamily, typography } = useTheme();
-  const progress = Math.min(100, Math.round((goal.current_amount / goal.target_amount) * 100));
+  const accent = statusColor(goal, colors);
+
   return (
     <Card style={styles.goalCard}>
       <View style={styles.goalTop}>
         <View style={[styles.goalIcon, { backgroundColor: colors.brand.accentLight }]}>
-          <Ionicons name="flag-outline" size={20} color={colors.semantic.info} />
+          <Ionicons name="flag-outline" size={20} color={accent} />
         </View>
         <View style={styles.goalCopy}>
           <Text
+            numberOfLines={2}
             style={[typography.h4, { color: colors.text.primary, fontFamily: fontFamily.semibold }]}
           >
             {goal.name}
           </Text>
           <Text style={[typography.bodySmall, { color: colors.text.tertiary }]}>
-            Target date · {formatDeadline(goal.deadline)}
+            Target date · {formatDeadline(goal.deadline ?? null)}
           </Text>
         </View>
       </View>
@@ -227,25 +210,19 @@ function GoalCard({ goal }: { goal: Goal }): React.ReactElement {
             { color: colors.text.primary, fontFamily: fontFamily.semibold },
           ]}
         >
-          {formatAmount(goal.current_amount, goal.currency)}
+          {format(goal.saved)}
         </Text>
         <Text style={[styles.goalTarget, { color: colors.text.tertiary }]}>
-          of {formatAmount(goal.target_amount, goal.currency)}
+          of {format(goal.target)}
         </Text>
       </View>
-      <View
-        accessibilityLabel={`${progress}% progress for ${goal.name}`}
-        accessibilityRole="progressbar"
-        accessibilityValue={{ min: 0, max: 100, now: progress }}
-        style={[styles.progressTrack, { backgroundColor: colors.border.subtle }]}
-      >
-        <View
-          style={[
-            styles.progressFill,
-            { backgroundColor: colors.semantic.info, width: `${progress}%` },
-          ]}
-        />
-      </View>
+      <ProgressBar
+        accessibilityLabel={`${goal.percentComplete}% progress for ${goal.name}`}
+        color={accent}
+        percent={goal.percentComplete}
+        trackColor={colors.border.subtle}
+      />
+      <Text style={[typography.bodySmall, { color: accent }]}>{statusLine(goal)}</Text>
       <Button
         label="Review strategy"
         onPress={() => router.push(`/goals/${goal.id}/strategy`)}
@@ -256,15 +233,14 @@ function GoalCard({ goal }: { goal: Goal }): React.ReactElement {
 }
 
 const styles = StyleSheet.create({
-  loading: { minHeight: 320, alignItems: 'center', justifyContent: 'center' },
+  loading: { minHeight: 240, alignItems: 'center', justifyContent: 'center' },
   stateCard: { padding: 16, gap: 16 },
   header: {
     minHeight: 44,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: 7,
   },
-  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   brandMark: {
     width: 24,
     height: 24,
@@ -275,15 +251,12 @@ const styles = StyleSheet.create({
   },
   brandName: { fontSize: 14, lineHeight: 20 },
   brandSection: { fontSize: 12, lineHeight: 18 },
-  titleRow: { marginTop: 18, flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
-  titleCopy: { flex: 1, gap: 3 },
-  eyebrow: { fontSize: 10, lineHeight: 14, letterSpacing: 0 },
+  titleRow: { marginTop: 18, flexDirection: 'row', gap: 12 },
+  titleCopy: { flex: 1, gap: 3, minWidth: 0 },
+  eyebrow: { fontSize: 10, lineHeight: 14 },
   aggregateCard: { marginTop: 16, padding: 14, gap: 10 },
   aggregateLabel: { fontSize: 10, lineHeight: 14 },
   aggregateAmount: { fontSize: 26, lineHeight: 32, fontVariant: ['tabular-nums'] },
-  aggregateOf: { fontSize: 14, lineHeight: 20 },
-  progressTrack: { height: 6, borderRadius: 3, overflow: 'hidden' },
-  progressFill: { height: 6, borderRadius: 3 },
   sectionTitle: { marginTop: 20, marginBottom: 10, fontSize: 16, lineHeight: 22 },
   goalList: { gap: 12 },
   goalCard: { padding: 14, gap: 12 },

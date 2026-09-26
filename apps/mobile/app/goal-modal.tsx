@@ -102,7 +102,7 @@ export default function GoalModal(): React.ReactElement {
           label="Create goal"
           loading={saving}
           disabled={saving}
-          onPress={save}
+          onPress={() => void save()}
           variant="primary"
         />
       </ScrollView>

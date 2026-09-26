@@ -57,13 +57,17 @@ export default function PlanningScreen(): React.ReactElement {
     }, [refresh]),
   );
 
+  const runRefresh = React.useCallback(() => {
+    void refresh();
+  }, [refresh]);
+
   return (
     <Screen
       contentContainerStyle={{ paddingTop: insets.top + 8 }}
       refreshControl={
         <RefreshControl
           colors={[colors.semantic.info]}
-          onRefresh={refresh}
+          onRefresh={runRefresh}
           refreshing={isLoading && !!data}
           tintColor={colors.semantic.info}
         />

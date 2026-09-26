@@ -67,7 +67,7 @@ export default function ResetPasswordScreen(): React.ReactElement {
             disabled={!email.trim()}
             label="Send reset email"
             loading={isSubmitting}
-            onPress={resetPassword}
+            onPress={() => void resetPassword()}
           />
         </Card>
         <Link

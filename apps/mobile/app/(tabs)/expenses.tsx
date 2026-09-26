@@ -1,3 +1,4 @@
+import { formatMoney, monthKeyFromDate, monthLabel, shiftMonth, type MonthKey } from '@budgetify/core';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import {
@@ -10,23 +11,40 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Button, DataNotice, EmptyState } from '../../src/components/ui';
+import {
+  Button,
+  DataNotice,
+  EmptyState,
+  MonthSwitcher,
+  StatGrid,
+} from '../../src/components/ui';
 import {
   formatTransactionAmount,
   type TransactionListItem,
-  type TransactionType,
   useTransactions,
 } from '../../src/features/finance/transactions';
 import { useTheme } from '../../src/theme/ThemeProvider';
+import { useResponsiveLayout } from '../../src/theme/useResponsiveLayout';
+import { layout } from '../../src/theme/tokens';
 
-export default function ExpensesScreen(): React.ReactElement {
+const FILTERS = ['all', 'income', 'expense', 'transfer'] as const;
+type Filter = (typeof FILTERS)[number];
+
+function filterLabel(value: Filter): string {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+export default function TransactionsScreen(): React.ReactElement {
   const { colors, typography } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const responsive = useResponsiveLayout();
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<'all' | TransactionType>('all');
-  const [monthDate, setMonthDate] = useState(() => new Date());
-  const { transactions, isLoading, error, refresh } = useTransactions(search, monthDate);
+  const [filter, setFilter] = useState<Filter>('all');
+  const [month, setMonth] = useState<MonthKey>(() => monthKeyFromDate(new Date()));
+  const currentMonth = monthKeyFromDate(new Date());
+  const { transactions, totals, isLoading, error, refresh } = useTransactions(search, month);
+
   const visibleTransactions =
     filter === 'all' ? transactions : transactions.filter((item) => item.type === filter);
 
@@ -36,12 +54,17 @@ export default function ExpensesScreen(): React.ReactElement {
     }, [refresh]),
   );
 
+  const runRefresh = useCallback(() => {
+    void refresh();
+  }, [refresh]);
+
   const renderTransaction = ({ item }: { item: TransactionListItem }) => (
     <Pressable
+      accessibilityLabel={`${item.title}, ${formatTransactionAmount(item)}, ${item.dateLabel}`}
       accessibilityRole="button"
       onPress={() => router.push(`/transaction/${item.id}`)}
       style={({ pressed }) => [
-        styles.expenseCard,
+        styles.row,
         {
           backgroundColor: colors.background.card,
           borderColor: colors.border.default,
@@ -49,18 +72,26 @@ export default function ExpensesScreen(): React.ReactElement {
         },
       ]}
     >
-      <View style={styles.transactionCopy}>
-        <Text style={[typography.bodyLarge, { color: colors.text.primary, fontWeight: '600' }]}>
+      <View style={styles.rowCopy}>
+        <Text
+          numberOfLines={2}
+          style={[typography.bodyLarge, { color: colors.text.primary, fontWeight: '600' }]}
+        >
           {item.title}
         </Text>
-        <Text style={[typography.bodySmall, { color: colors.text.tertiary, marginTop: 4 }]}>
+        <Text
+          numberOfLines={1}
+          style={[typography.bodySmall, { color: colors.text.tertiary, marginTop: 4 }]}
+        >
           {item.category} • {item.dateLabel}
+          {item.isForeignCurrency ? ' • other currency' : ''}
         </Text>
       </View>
 
       <Text
         style={[
           typography.bodyLarge,
+          styles.amount,
           {
             color:
               item.type === 'expense'
@@ -82,33 +113,24 @@ export default function ExpensesScreen(): React.ReactElement {
       <View
         style={[
           styles.header,
-          { backgroundColor: colors.background.card, borderBottomColor: colors.border.default },
+          {
+            backgroundColor: colors.background.card,
+            borderBottomColor: colors.border.default,
+            paddingHorizontal: responsive.contentPadding,
+          },
         ]}
       >
-        <View style={styles.monthNav}>
-          <Pressable
-            accessibilityLabel="Previous month"
-            onPress={() =>
-              setMonthDate((date) => new Date(date.getFullYear(), date.getMonth() - 1, 1))
-            }
-          >
-            <Text style={[typography.bodyLarge, { color: colors.text.primary }]}>‹</Text>
-          </Pressable>
-          <Text style={[typography.bodySmall, { color: colors.text.secondary }]}>
-            {new Intl.DateTimeFormat(undefined, { month: 'long', year: 'numeric' }).format(
-              monthDate,
-            )}
-          </Text>
-          <Pressable
-            accessibilityLabel="Next month"
-            onPress={() =>
-              setMonthDate((date) => new Date(date.getFullYear(), date.getMonth() + 1, 1))
-            }
-          >
-            <Text style={[typography.bodyLarge, { color: colors.text.primary }]}>›</Text>
-          </Pressable>
-        </View>
+        <MonthSwitcher
+          canGoNext={month < currentMonth}
+          label={monthLabel(month)}
+          onNext={() => setMonth((value) => shiftMonth(value, 1))}
+          onPrevious={() => setMonth((value) => shiftMonth(value, -1))}
+        />
         <TextInput
+          accessibilityLabel="Search transactions"
+          onChangeText={setSearch}
+          placeholder="Search transactions..."
+          placeholderTextColor={colors.text.muted}
           style={[
             styles.searchInput,
             {
@@ -117,22 +139,22 @@ export default function ExpensesScreen(): React.ReactElement {
               borderColor: colors.border.default,
             },
           ]}
-          placeholder="Search transactions..."
-          placeholderTextColor={colors.text.muted}
           value={search}
-          onChangeText={setSearch}
         />
         <View style={styles.filters}>
-          {(['all', 'income', 'expense', 'transfer'] as const).map((value) => (
+          {FILTERS.map((value) => (
             <Pressable
+              accessibilityLabel={`Show ${filterLabel(value)} only`}
+              accessibilityRole="button"
+              accessibilityState={{ selected: filter === value }}
               key={value}
               onPress={() => setFilter(value)}
-              style={[
+              style={({ pressed }) => [
                 styles.filter,
-                { borderColor: colors.border.default },
-                filter === value && {
-                  backgroundColor: colors.brand.primary,
-                  borderColor: colors.brand.primary,
+                {
+                  borderColor: filter === value ? colors.brand.primary : colors.border.default,
+                  backgroundColor: filter === value ? colors.brand.primary : 'transparent',
+                  opacity: pressed ? 0.7 : 1,
                 },
               ]}
             >
@@ -142,23 +164,52 @@ export default function ExpensesScreen(): React.ReactElement {
                   { color: filter === value ? colors.text.inverse : colors.text.secondary },
                 ]}
               >
-                {value.charAt(0).toUpperCase() + value.slice(1)}
+                {filterLabel(value)}
               </Text>
             </Pressable>
           ))}
         </View>
+        <View style={styles.totals}>
+          <StatGrid
+            tiles={[
+              { label: 'Income', value: formatMoney(totals.income), color: colors.semantic.income },
+              {
+                label: 'Expenses',
+                value: formatMoney(totals.expenses),
+                color: colors.semantic.expense,
+              },
+              {
+                label: totals.net.amount < 0 ? 'Overspent' : 'Net',
+                value: formatMoney({
+                  amount: Math.abs(totals.net.amount),
+                  currency: totals.net.currency,
+                }),
+                color: totals.net.amount < 0 ? colors.semantic.expense : colors.semantic.info,
+              },
+            ]}
+          />
+        </View>
       </View>
 
       {error && (
-        <View style={styles.noticeWrap}>
+        <View style={[styles.noticeWrap, { paddingHorizontal: responsive.contentPadding }]}>
           <DataNotice icon="alert-circle-outline" label={error} tone="expense" />
         </View>
       )}
 
       <FlatList
+        contentContainerStyle={[
+          styles.listContent,
+          {
+            paddingHorizontal: responsive.contentPadding,
+            paddingBottom: insets.bottom + responsive.gutter * 2,
+            maxWidth: responsive.maxContentWidth + responsive.gutter * 2,
+            alignSelf: 'center',
+            width: '100%',
+          },
+        ]}
         data={visibleTransactions}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom + 32 }]}
         ListEmptyComponent={
           isLoading ? (
             <View style={styles.loadingState}>
@@ -169,15 +220,15 @@ export default function ExpensesScreen(): React.ReactElement {
             </View>
           ) : (
             <EmptyState
-              icon="receipt-outline"
-              title={search.trim() ? 'No matching transactions' : 'No transactions yet'}
+              actionLabel="Add transaction"
               description={
                 search.trim()
                   ? 'Try another search term.'
-                  : 'Add a real transaction to start building your ledger.'
+                  : `Nothing recorded in ${monthLabel(month)} yet.`
               }
-              actionLabel="Add transaction"
+              icon="receipt-outline"
               onAction={() => router.push('/modal')}
+              title={search.trim() ? 'No matching transactions' : 'No transactions yet'}
             />
           )
         }
@@ -186,7 +237,7 @@ export default function ExpensesScreen(): React.ReactElement {
             <Button label="Add transaction" icon="add" onPress={() => router.push('/modal')} />
           ) : null
         }
-        onRefresh={refresh}
+        onRefresh={runRefresh}
         refreshing={isLoading && transactions.length > 0}
         renderItem={renderTransaction}
       />
@@ -195,43 +246,27 @@ export default function ExpensesScreen(): React.ReactElement {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    padding: 16,
-    borderBottomWidth: 1,
-  },
-  filters: {
-    flexDirection: 'row',
-    gap: 8,
-    paddingTop: 10,
-  },
-  monthNav: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
+  container: { flex: 1 },
+  header: { paddingTop: 12, paddingBottom: 12, borderBottomWidth: 1, gap: 10 },
+  filters: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   filter: {
     borderWidth: 1,
-    borderRadius: 16,
-    paddingHorizontal: 10,
-    paddingVertical: 7,
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    minHeight: layout.minTouchTarget - 12,
+    justifyContent: 'center',
   },
   searchInput: {
-    height: 44,
+    minHeight: layout.minTouchTarget,
     borderRadius: 12,
     borderWidth: 1,
     paddingHorizontal: 14,
     fontSize: 15,
   },
-  listContent: {
-    padding: 16,
-    gap: 12,
-    flexGrow: 1,
-  },
-  expenseCard: {
+  totals: { marginTop: 2 },
+  listContent: { paddingTop: 12, gap: 12, flexGrow: 1 },
+  row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -240,14 +275,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     gap: 12,
   },
-  transactionCopy: {
-    flex: 1,
-    minWidth: 0,
-  },
-  noticeWrap: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
-  },
+  rowCopy: { flex: 1, minWidth: 0 },
+  amount: { textAlign: 'right' },
+  noticeWrap: { paddingTop: 12 },
   loadingState: {
     alignItems: 'center',
     justifyContent: 'center',

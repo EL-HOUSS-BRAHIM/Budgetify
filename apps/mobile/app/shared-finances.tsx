@@ -90,9 +90,7 @@ export default function SharedFinancesScreen(): React.ReactElement {
           >
             {amount(30000)}
           </Text>
-          <Text style={[styles.small, { color: colors.text.tertiary }]}>
-            Mehdi · Padel booking
-          </Text>
+          <Text style={[styles.small, { color: colors.text.tertiary }]}>Mehdi · Padel booking</Text>
         </Card>
         <Card style={styles.duoCard}>
           <Text style={[styles.label, { color: colors.text.tertiary }]}>YOU OWE</Text>
@@ -407,8 +405,7 @@ function LedgerRow({
         style={[
           styles.statusDot,
           {
-            backgroundColor:
-              tone === 'income' ? colors.semantic.income : colors.semantic.warning,
+            backgroundColor: tone === 'income' ? colors.semantic.income : colors.semantic.warning,
           },
         ]}
       />
@@ -496,7 +493,13 @@ const styles = StyleSheet.create({
   action: { marginTop: 12 },
   confirmation: { marginTop: 12, padding: 14 },
   ledgerPersonRow: { minHeight: 64, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  avatar: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
+  avatar: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   avatarText: { fontSize: 12, lineHeight: 16 },
   qrCard: { marginTop: 14, marginBottom: 8, padding: 14, flexDirection: 'row', gap: 10 },
 });

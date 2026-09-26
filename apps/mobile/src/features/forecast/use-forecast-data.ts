@@ -157,16 +157,28 @@ const previewModel: ForecastViewModel = {
   overdraftRiskLabel: 'Zero overdraft risk detected before next pay cycle',
 };
 
-function emojiForEntry(categoryName: string, isIncome: boolean): { emoji: string; tone: CalendarDayTone } {
+function emojiForEntry(
+  categoryName: string,
+  isIncome: boolean,
+): { emoji: string; tone: CalendarDayTone } {
   if (isIncome) return { emoji: '💰', tone: 'income' };
   const name = categoryName.toLowerCase();
   if (name.includes('goal') || name.includes('vault') || name.includes('saving')) {
     return { emoji: '🎯', tone: 'goal' };
   }
-  if (name.includes('subscription') || name.includes('entertainment') || name.includes('streaming')) {
+  if (
+    name.includes('subscription') ||
+    name.includes('entertainment') ||
+    name.includes('streaming')
+  ) {
     return { emoji: '📺', tone: 'neutral' };
   }
-  if (name.includes('utilit') || name.includes('internet') || name.includes('telecom') || name.includes('phone')) {
+  if (
+    name.includes('utilit') ||
+    name.includes('internet') ||
+    name.includes('telecom') ||
+    name.includes('phone')
+  ) {
     return { emoji: '🌐', tone: 'neutral' };
   }
   if (name.includes('transport') || name.includes('car') || name.includes('fuel')) {
@@ -271,8 +283,7 @@ export function useForecastData(): ForecastDataState {
 
       const transactions: Transaction[] = transactionResult.data ?? [];
       const planItems: PlanItem[] = planResult.data ?? [];
-      const currency =
-        transactions[0]?.currency || planItems[0]?.currency || 'USD';
+      const currency = transactions[0]?.currency || planItems[0]?.currency || 'USD';
 
       const eventByDay = new Map<
         number,
@@ -280,7 +291,10 @@ export function useForecastData(): ForecastDataState {
       >();
       for (const transaction of transactions) {
         const day = new Date(`${transaction.date}T00:00:00`).getDate();
-        const { emoji, tone } = emojiForEntry(transaction.category_name, transaction.type === 'income');
+        const { emoji, tone } = emojiForEntry(
+          transaction.category_name,
+          transaction.type === 'income',
+        );
         eventByDay.set(day, { emoji, tone, eventId: transaction.id });
       }
 

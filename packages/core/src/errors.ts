@@ -56,3 +56,22 @@ export class InvalidAllocationError extends BudgetifyError {
     super(`Cannot allocate: ${reason}`);
   }
 }
+
+export class InvalidMonthError extends BudgetifyError {
+  readonly code = 'INVALID_MONTH';
+
+  constructor(readonly value: unknown) {
+    super(`"${String(value)}" is not a month in YYYY-MM form.`);
+  }
+}
+
+export class InvalidFrequencyError extends BudgetifyError {
+  readonly code = 'INVALID_FREQUENCY';
+
+  constructor(
+    readonly value: unknown,
+    reason: string,
+  ) {
+    super(`Invalid recurrence ${String(value)}: ${reason}`);
+  }
+}

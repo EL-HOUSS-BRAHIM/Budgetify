@@ -4,7 +4,14 @@ import { supabase } from '../../lib/supabase';
 
 export type CategoryRow = Tables<'categories'>;
 
-export function useCategories(type: 'expense' | 'income' = 'expense') {
+export interface CategoriesState {
+  categories: CategoryRow[];
+  isLoading: boolean;
+  error: string | null;
+  refresh: () => Promise<void>;
+}
+
+export function useCategories(type: 'expense' | 'income' = 'expense'): CategoriesState {
   const [categories, setCategories] = useState<CategoryRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

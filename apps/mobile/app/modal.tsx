@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -17,11 +17,13 @@ import { useAccounts } from '../src/features/finance/accounts';
 import { createCategory, useCategories } from '../src/features/finance/categories';
 import { useProfile } from '../src/features/profile/profile';
 import { useTheme } from '../src/theme/ThemeProvider';
+import { useResponsiveLayout } from '../src/theme/useResponsiveLayout';
 
 export default function AddTransactionModal(): React.ReactElement {
   const { colors, typography } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const responsive = useResponsiveLayout();
   const { profile } = useProfile();
   const { accounts } = useAccounts();
   const currency = profile?.currency ?? 'USD';
@@ -36,9 +38,40 @@ export default function AddTransactionModal(): React.ReactElement {
   const [categoryId, setCategoryId] = useState<string | undefined>();
   const [newCategory, setNewCategory] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [sourceAccountId, setSourceAccountId] = useState<string | undefined>();
+  const [sourceAccountId, setSourceAccountId] = useState<string | undefined>(
+    accounts.find((account) => account.is_default)?.id ?? accounts[0]?.id,
+  );
   const [destinationAccountId, setDestinationAccountId] = useState<string | undefined>();
   const [isSaving, setIsSaving] = useState(false);
+
+  // Keep the default account selected as accounts load in, but never overwrite
+  // a choice the user has already made.
+  useEffect(() => {
+    if (!sourceAccountId && accounts.length > 0) {
+      setSourceAccountId(accounts.find((account) => account.is_default)?.id ?? accounts[0]?.id);
+    }
+  }, [accounts, sourceAccountId]);
+
+  const createNewCategory = async () => {
+    if (!newCategory.trim()) return;
+    try {
+      const created = await createCategory({
+        name: newCategory.trim(),
+        type: type === 'income' ? 'income' : 'expense',
+        icon: '📦',
+        color: '#10B981',
+        is_system: false,
+      });
+      await refreshCategories();
+      setCategory(created.name);
+      setCategoryId(created.id);
+      setNewCategory('');
+    } catch (categoryError) {
+      setError(
+        categoryError instanceof Error ? categoryError.message : 'Unable to create category.',
+      );
+    }
+  };
 
   const handleSave = async () => {
     if (!title.trim() || !amountStr.trim() || isSaving) return;
@@ -68,7 +101,19 @@ export default function AddTransactionModal(): React.ReactElement {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={[styles.container, { backgroundColor: colors.background.primary }]}
     >
-      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.content,
+          {
+            paddingBottom: insets.bottom + responsive.gutter * 2,
+            paddingHorizontal: responsive.contentPadding,
+            maxWidth: responsive.maxContentWidth + responsive.gutter * 2,
+            alignSelf: 'center',
+            width: '100%',
+          },
+        ]}
+        keyboardShouldPersistTaps="handled"
+      >
         {/* Type Selector */}
         <View
           style={[
@@ -310,28 +355,7 @@ export default function AddTransactionModal(): React.ReactElement {
               styles.categoryInput,
               { color: colors.text.primary, borderColor: colors.border.default },
             ]}
-            onSubmitEditing={async () => {
-              if (!newCategory.trim()) return;
-              try {
-                const created = await createCategory({
-                  name: newCategory.trim(),
-                  type: type === 'income' ? 'income' : 'expense',
-                  icon: '📦',
-                  color: '#10B981',
-                  is_system: false,
-                });
-                await refreshCategories();
-                setCategory(created.name);
-                setCategoryId(created.id);
-                setNewCategory('');
-              } catch (categoryError) {
-                setError(
-                  categoryError instanceof Error
-                    ? categoryError.message
-                    : 'Unable to create category.',
-                );
-              }
-            }}
+            onSubmitEditing={() => void createNewCategory()}
           />
         </View>
 
@@ -348,7 +372,7 @@ export default function AddTransactionModal(): React.ReactElement {
               opacity: isSaving || !title.trim() || !amountStr.trim() ? 0.45 : 1,
             },
           ]}
-          onPress={handleSave}
+          onPress={() => void handleSave()}
           activeOpacity={0.8}
         >
           <Text style={[typography.bodyLarge, { color: colors.text.inverse, fontWeight: '700' }]}>

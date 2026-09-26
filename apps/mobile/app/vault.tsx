@@ -81,7 +81,10 @@ export default function VaultScreen(): React.ReactElement {
           </Text>
         </View>
         <Text
-          style={[styles.status, { color: colors.semantic.income, fontFamily: fontFamily.semibold }]}
+          style={[
+            styles.status,
+            { color: colors.semantic.income, fontFamily: fontFamily.semibold },
+          ]}
         >
           SECURE
         </Text>
@@ -99,7 +102,10 @@ export default function VaultScreen(): React.ReactElement {
           </View>
           <View style={styles.flex}>
             <Text
-              style={[styles.title, { color: colors.text.primary, fontFamily: fontFamily.semibold }]}
+              style={[
+                styles.title,
+                { color: colors.text.primary, fontFamily: fontFamily.semibold },
+              ]}
             >
               Apartment Lease Agreement.pdf
             </Text>
@@ -307,7 +313,13 @@ const styles = StyleSheet.create({
   section: { marginTop: 22, fontSize: 16, lineHeight: 22 },
   card: { marginTop: 8, padding: 12 },
   docHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  docIcon: { width: 38, height: 38, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  docIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   confidenceRow: {
     marginTop: 10,
     borderWidth: 1,

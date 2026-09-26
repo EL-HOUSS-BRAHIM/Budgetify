@@ -80,7 +80,7 @@ export default function BudgetModal(): React.ReactElement {
           label="Create budget"
           loading={saving}
           disabled={saving}
-          onPress={save}
+          onPress={() => void save()}
           variant="primary"
         />
       </ScrollView>

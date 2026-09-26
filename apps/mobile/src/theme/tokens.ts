@@ -143,6 +143,34 @@ export const spacing = {
   huge: 48,
 } as const;
 
+/**
+ * Width breakpoints in dp, named for the device class rather than the number so
+ * a screen reads as an intent. `compact` is the smallest phone worth designing
+ * for (a 320 dp device with the OS font scale turned up); `expanded` is where a
+ * single column stops being the right shape and content needs a max width.
+ */
+export const breakpoints = {
+  compact: 360,
+  medium: 480,
+  expanded: 840,
+} as const;
+
+export type Breakpoint = keyof typeof breakpoints;
+
+/** Widest a single column of reading content is allowed to get, in dp. */
+export const layout = {
+  /** Full-width horizontal padding on a compact phone. */
+  gutter: spacing.lg,
+  /** Full-width horizontal padding once there is room to breathe. */
+  gutterWide: spacing.xxl,
+  /** Content column cap, so text is not a 900 dp line on a tablet. */
+  maxContentWidth: 640,
+  /** Two-up grid cap, used by the dashboard stat tiles. */
+  maxGridWidth: 720,
+  /** Minimum touch target. Below this, a control is hard to hit one-handed. */
+  minTouchTarget: 48,
+} as const;
+
 export const radius = {
   none: 0,
   xs: 4,

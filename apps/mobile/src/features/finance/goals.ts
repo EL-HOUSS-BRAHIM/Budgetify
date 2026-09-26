@@ -1,9 +1,120 @@
-import { money, type Money } from '@budgetify/core';
+import {
+  aggregateGoals,
+  goalProgress,
+  money,
+  type GoalAggregate,
+  type GoalProgress,
+  type Money,
+} from '@budgetify/core';
 import { useCallback, useEffect, useState } from 'react';
 import type { InsertTables, Tables, UpdateTables } from '@budgetify/types';
 import { supabase } from '../../lib/supabase';
 
 export type GoalRow = Tables<'goals'>;
+
+export interface GoalsState {
+  goals: GoalProgress[];
+  aggregate: GoalAggregate;
+  currency: string;
+  isLoading: boolean;
+  isRefreshing: boolean;
+  error: string | null;
+  refresh: () => Promise<void>;
+}
+
+function localDayIso(date: Date): string {
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  return `${date.getFullYear()}-${month < 10 ? `0${month}` : month}-${day < 10 ? `0${day}` : day}`;
+}
+
+const GOALS_LOAD_ERROR = 'Goals could not be loaded. Nothing you saved was changed.';
+
+/**
+ * Reads the caller's goals and derives their progress through core, so the
+ * Goals tab and the Home summary can never disagree about how funded a goal is.
+ */
+export function useGoals(): GoalsState {
+  const [goals, setGoals] = useState<GoalProgress[]>([]);
+  const [currency, setCurrency] = useState('USD');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const refresh = useCallback(async () => {
+    setError(null);
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) {
+        setGoals([]);
+        setIsLoading(false);
+        setIsRefreshing(false);
+        return;
+      }
+
+      const [profileResult, goalResult] = await Promise.all([
+        supabase.from('profiles').select('currency').maybeSingle(),
+        supabase.from('goals').select('*').order('created_at', { ascending: false }),
+      ]);
+      if (goalResult.error) throw goalResult.error;
+
+      const today = localDayIso(new Date());
+      const rows = goalResult.data ?? [];
+      const viewCurrency = (profileResult.data?.currency ?? rows[0]?.currency ?? 'USD').toUpperCase();
+
+      setCurrency(viewCurrency);
+      setGoals(
+        rows
+          .filter((row) => row.currency === viewCurrency)
+          .map((row) =>
+            goalProgress(
+              {
+                id: row.id,
+                name: row.name,
+                targetAmount: row.target_amount,
+                currentAmount: row.current_amount,
+                currency: row.currency,
+                deadline: row.deadline,
+                createdAt: row.created_at,
+              },
+              today,
+            ),
+          ),
+      );
+    } catch {
+      setError(GOALS_LOAD_ERROR);
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  return {
+    goals,
+    aggregate: aggregateGoals(
+      goals.map((goal) => ({
+        id: goal.id,
+        name: goal.name,
+        targetAmount: goal.target.amount,
+        currentAmount: goal.saved.amount,
+        currency: goal.currency,
+        deadline: null,
+      })),
+      currency,
+    ),
+    currency,
+    isLoading,
+    isRefreshing,
+    error,
+    refresh,
+  };
+}
 
 type GoalStrategyStatus = 'funded' | 'no_deadline' | 'on_track' | 'behind' | 'blocked';
 

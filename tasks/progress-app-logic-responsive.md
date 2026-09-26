@@ -1,70 +1,81 @@
-# Progress Snapshot: App Logic, Real Data, and Responsive Release
+# LYVORA Core V1 End-Phase Progress
 
-Date: 2026-09-20
-Plan: `tasks/plan-app-logic-responsive.md` · Execution board: `tasks/todo-backend-first-parity.md`
-Commit: `8bbcb95` "Connect mobile app to real backend contracts" (working tree clean, `origin/main` up to date)
+Date: 2026-09-26
+Status: RELEASE_CANDIDATE_BLOCKED
+Runbook: `tasks/path-to-end-backend-first.md`
 
-## Phase Status
+## Delivered Baseline
 
-| Phase | Scope | Status |
+The following work is complete enough that it must not be reopened as a planning task:
+
+- Supabase auth lifecycle and guarded core routes.
+- Profile/onboarding persistence, currency, income cadence, safety buffer, and account setup.
+- Manual accounts, categories, income/expense/transfer transactions, search, details, and refresh-after-write.
+- Monthly budgets with real progress, savings goals, basic recurring transactions, and account balance synchronization.
+- Historical month-scoped Home calculations for balance, income, expenses, net, category spending, upcoming recurring entries, and goal aggregate.
+- Hosted migrations, generated database types, RLS policies, transfer constraints, balance trigger, and finance RPCs.
+- Core V1 navigation: Home, Transactions, Budget, Goals, Settings.
+- AI removed from the primary product flow; deferred AI/Lab routes remain outside the release boundary.
+
+## Current Evidence
+
+| Check | Latest observed state | Meaning |
 |---|---|---|
-| P0 | Deployment and contract lock | DONE (auth smoke still needs test-user tokens) |
-| P1 | App logic foundation (shared hooks/mutations) | DONE |
-| P2 | Identity, onboarding, preferences | DONE |
-| P3 | Ledger write/read loop | DONE |
-| P4 | Budgets and planning parity | DONE (pgTAP now verified against hosted DB via explicit path) |
-| P5 | Goals, bills, salary, detail screens | DONE |
-| P6 | Insights, assistant, settings persistence | DONE |
-| P7 | Responsive and hardcoded-data release gate | PARTIAL — hardcoded-data scan clean; fixed-dimension/responsive pass not started |
-| P8 | Public app_config table (non-secret runtime config) | DONE |
+| Core unit suite | PASS: 180 tests | Domain dashboard, money, calendar, recurring, and related core logic pass |
+| AI service suite | Previously PASS: 14 tests | Service tests passed before the latest documentation-only pass |
+| Lint | PASS after finance fixes | No current ESLint findings were reported |
+| Editor diagnostics | PASS | No diagnostics reported for the touched finance/dashboard files |
+| Expo dependency check | PASS in the current session | Expo dependencies were reported up to date |
+| Formatting | PASS on the latest reported files | Prettier cleared the files reported by the gate |
+| Hosted pgTAP | BLOCKED | CLI stalls during remote login-role initialization |
+| Authenticated public smoke | BLOCKED | `SMOKE_USER1_TOKEN` and `SMOKE_USER2_TOKEN` are not supplied |
+| Android runtime QA | NOT RUN | No final emulator/device evidence is recorded |
+| Release tag | NOT CREATED | Required gates and clean commit are not complete |
 
-## What Is Real Now
+## Active Blockers
 
-- Auth: Supabase sign-in/sign-up/reset-password/sign-out/session-restore; core tabs gated behind session (`apps/mobile/src/features/auth/AuthProvider.tsx`).
-- Ledger: transaction modal writes real rows; Money tab reads/searches/paginates real transactions; transaction detail is real-row-only.
-- Budgets/Planning: `get_budget_progress` RPC backs both tabs; no local preview/correction data remains.
-- Goals/Salary: `get_goal_strategy` and `get_salary_allocation` RPCs back their screens.
-- Insights: `get_financial_health` and `get_month_end_report` RPCs back their screens.
-- Settings: AI personality, privacy scope/toggles, and onboarding baseline (priority, safety buffer, cadence, first signal) persist to `profiles`.
-- Bills: recurring `plan_items` only, no preview contracts.
-- Assistant: no seeded sample chat or fake metric cards; renders only real `/api/chat` responses.
+### B1 - Hosted pgTAP does not return
 
-## Backend Contracts Shipped (hosted Supabase, applied via MCP)
+Owner: Backend/RLS
 
-- `supabase/migrations/20260920000000_budget_progress.sql`
-- `supabase/migrations/20260920010000_strategy_and_salary_contracts.sql`
-- `supabase/migrations/20260920020000_insights_and_preferences.sql`
-- `supabase/migrations/20260920030000_onboarding_baseline.sql`
-- `supabase/migrations/20260920040000_app_config.sql` — public-read, trusted-write-only runtime config table.
-- `supabase/migrations/20260920050000_app_config_revoke_writes.sql` — forward-fix revoking default anon/authenticated write grants (see Bug Found below).
-- Types regenerated in `packages/types/src/database.ts` after each migration.
-- RLS/pgTAP coverage extended in `supabase/tests/ledger_rls_test.sql` and added in `supabase/tests/app_config_rls_test.sql`.
+Observed output: `Initialising login role...` / `Connecting to remote database...`.
 
-## Bug Found and Fixed: app_config Write Grants
+Why blocked: remote CLI login/session/network/test-role initialization does not complete, so the command gives no trustworthy SQL result.
 
-Running the new `app_config_rls_test.sql` against the hosted database (not just typecheck/lint) surfaced a real gap: `anon`/`authenticated` had Supabase's default INSERT/UPDATE/DELETE table grants, so RLS with only a SELECT policy silently filtered writes to zero rows instead of denying them with `42501`. Fixed with a forward migration (`app_config_revoke_writes`) that explicitly revokes those grants, matching the existing `revoke all ... grant execute` pattern already used for RPC functions. The test file's `plan(7)` also didn't match its 6 actual assertions; corrected to `plan(6)`. Re-ran pgTAP after both fixes: all 6 assertions pass.
+Next action: verify linked ref and URL, run Supabase CLI debug output, re-authenticate through the supported flow if needed, then run `npm run db:test` with the explicit `supabase/tests` directory.
 
-## Verification Evidence
+Exit evidence: all intended pgTAP files report PASS.
 
-- `npm run typecheck` — pass (re-verified post-commit and after `app_config`).
-- `npm run lint` — pass.
-- `npm run test` — pass (65 core tests, 14 AI service tests).
-- `npm run expo:check` — pass.
-- Targeted Prettier check on touched files — pass.
-- Hardcoded-data scan over `apps/mobile/app` — clean except explicit Settings "Lab/Preview" grouping and routes already classified as deferred Lab/reference.
-- `supabase test db --linked supabase/tests` — pass against hosted Budgetify: `Files=3, Tests=39, Result: PASS` (default file discovery only picked up one file; passing the directory explicitly ran all three test files).
-- `git diff --check` — pass (no whitespace errors) before applying `app_config`.
+### B2 - Public authenticated smoke has no credentials
 
-## Remaining Work (P7 + gates)
+Owner: API
 
-1. Responsive pass: replace brittle fixed dimensions with tokenized, safe-area-aware, wrapping layouts (compact phone → tablet).
-2. Manual verification: dynamic text scaling, small-phone, large-phone/tablet, light theme, dark theme.
-3. Re-run `npm run test` and `npm run expo:check` after the responsive pass (typecheck/lint already re-verified post-commit).
-4. Run authenticated `npm run smoke:public` once `SMOKE_USER1_TOKEN` / `SMOKE_USER2_TOKEN` are supplied outside chat.
-5. Investigate why `supabase test db --linked` without an explicit path only discovers one of three test files, so CI/local runs don't silently skip coverage.
+Why blocked: health does not exercise caller authentication or two-user RLS isolation; access tokens cannot be invented or placed in source control.
 
-## Open Questions (unchanged)
+Next action: provide two dedicated local test-user tokens through ignored environment variables, then run `npm run smoke:public`.
 
-- Chat history persistence is deferred; AI stays stateless for this release.
-- Whether deferred Preview/Lab routes stay installed-but-hidden or are removed from the shipped route tree.
-- Which two seeded demo accounts to standardize on for repeatable public smoke and RLS checks.
+Exit evidence: redacted output showing health, 401 unauthenticated rejection, user-scoped write/read, and cross-user denial.
+
+### B3 - Android runtime review is missing
+
+Owner: Mobile QA
+
+Why blocked: static checks cannot prove small-screen wrapping, safe areas, keyboard behavior, theme contrast, or large-text layout.
+
+Next action: review compact phone, large phone/tablet, light/dark, large text, loading/empty/error, and populated historical-month states.
+
+Exit evidence: dated QA matrix and screenshots or equivalent device notes.
+
+### B4 - Final verify and tag are pending
+
+Owner: QA/Release
+
+Why blocked: the full gate has not been captured green after all latest edits, and the worktree is dirty.
+
+Next action: rerun `npm run verify`, inspect the release diff, commit only reviewed release files, then create annotated `v1.0.0`.
+
+Exit evidence: clean `git status`, commit hash, tag hash, and green gate log.
+
+## Deferred, Not Blocked
+
+Forecast preview fallback, assistant, AI settings, voice, bank connections, OCR/imports, forecasting, automation, smart advice, investments, crypto, payments, shared finance, vault, and credit-card extensions are deliberately not Core V1 work. Do not convert these into release blockers.

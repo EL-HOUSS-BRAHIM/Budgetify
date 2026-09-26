@@ -2,5 +2,7 @@ legacy/
 node_modules/
 **/dist/
 **/.expo/
+**/android/
+**/ios/
 packages/types/src/database.ts
 *.md

@@ -89,10 +89,14 @@ describe('health', () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(
-        async () =>
-          new Response(JSON.stringify({ id: 'user-1' }), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
+        () =>
+          new Promise<Response>((resolve) => {
+            resolve(
+              new Response(JSON.stringify({ id: 'user-1' }), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' },
+              }),
+            );
           }),
       ),
     );

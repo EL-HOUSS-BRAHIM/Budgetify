@@ -111,6 +111,7 @@ function toBudgetProgressItem(row: BudgetProgressPayload): BudgetProgressItem {
     period: row.period,
     startDate: row.start_date,
     endDate: row.end_date,
+    dailyAllowance: { amount: 0, currency: row.currency },
   };
 }
 

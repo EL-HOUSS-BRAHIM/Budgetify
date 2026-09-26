@@ -1,4 +1,13 @@
-import { formatMoney, money, parseMoney, type Money } from '@budgetify/core';
+import {
+  formatMoney,
+  money,
+  monthKeyFromDate,
+  parseMoney,
+  summarizeMonth,
+  type LedgerEntry,
+  type Money,
+  type MonthKey,
+} from '@budgetify/core';
 import { useCallback, useEffect, useState } from 'react';
 import type { InsertTables, Tables } from '@budgetify/types';
 import { supabase } from '../../lib/supabase';
@@ -14,6 +23,8 @@ export interface TransactionListItem {
   type: TransactionType;
   dateIso: string;
   dateLabel: string;
+  /** True when the entry's currency differs from the viewer's selected currency. */
+  isForeignCurrency: boolean;
 }
 
 export interface CreateTransactionInput {
@@ -32,6 +43,8 @@ interface TransactionState {
   transactions: TransactionListItem[];
   isLoading: boolean;
   error: string | null;
+  /** Totals for the month on screen, in the viewer's currency. */
+  totals: { income: Money; expenses: Money; net: Money };
   refresh: () => Promise<void>;
 }
 
@@ -44,6 +57,16 @@ function toTransactionType(value: string): TransactionType {
   return 'expense';
 }
 
+function toLedgerEntry(row: TransactionRow): LedgerEntry {
+  return {
+    amount: row.amount,
+    currency: row.currency,
+    type: toTransactionType(row.type),
+    categoryName: row.category_name,
+    date: row.date,
+  };
+}
+
 function formatTransactionDate(value: string): string {
   return new Intl.DateTimeFormat('en-US', {
     month: 'short',
@@ -52,7 +75,7 @@ function formatTransactionDate(value: string): string {
   }).format(new Date(value));
 }
 
-function toListItem(row: TransactionRow): TransactionListItem {
+function toListItem(row: TransactionRow, viewerCurrency: string): TransactionListItem {
   const category = row.category_name || 'Uncategorized';
   return {
     id: row.id,
@@ -62,6 +85,7 @@ function toListItem(row: TransactionRow): TransactionListItem {
     type: toTransactionType(row.type),
     dateIso: row.date,
     dateLabel: formatTransactionDate(row.date),
+    isForeignCurrency: row.currency !== viewerCurrency,
   };
 }
 
@@ -124,13 +148,29 @@ export async function createTransaction(
     throw new Error(SAVE_ERROR);
   }
 
-  return toListItem(data);
+  return toListItem(data, input.currency.toUpperCase());
 }
 
-export function useTransactions(search: string, targetDate = new Date()): TransactionState {
+function monthWindow(month: MonthKey): { start: string; end: string } {
+  const [year, monthNumber] = month.split('-') as [string, string];
+  return {
+    start: new Date(Number(year), Number(monthNumber) - 1, 1).toISOString(),
+    end: new Date(Number(year), Number(monthNumber), 1).toISOString(),
+  };
+}
+
+export function useTransactions(
+  search: string,
+  month: MonthKey = monthKeyFromDate(new Date()),
+): TransactionState {
   const [transactions, setTransactions] = useState<TransactionListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [totals, setTotals] = useState<TransactionState['totals']>({
+    income: money(0, 'USD'),
+    expenses: money(0, 'USD'),
+    net: money(0, 'USD'),
+  });
 
   const refresh = useCallback(async () => {
     setIsLoading(true);
@@ -148,40 +188,54 @@ export function useTransactions(search: string, targetDate = new Date()): Transa
       return;
     }
 
-    const start = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1).toISOString();
-    const end = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 1).toISOString();
-    const { data, error: queryError } = await supabase
-      .from('transactions')
-      .select('*')
-      .gte('date', start)
-      .lt('date', end)
-      .order('date', { ascending: false })
-      .order('created_at', { ascending: false })
-      .limit(100);
+    const window = monthWindow(month);
+    const [profileResult, queryResult] = await Promise.all([
+      supabase.from('profiles').select('currency').maybeSingle(),
+      supabase
+        .from('transactions')
+        .select('*')
+        .gte('date', window.start)
+        .lt('date', window.end)
+        .order('date', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(200)
+        .returns<TransactionRow[]>(),
+    ]);
 
-    if (queryError) {
+    if (queryResult.error) {
       setTransactions([]);
       setError(LOAD_ERROR);
       setIsLoading(false);
       return;
     }
 
+    const viewerCurrency = (profileResult.data?.currency ?? 'USD').toUpperCase();
+    const rows = queryResult.data ?? [];
+    const summary = summarizeMonth(rows.map(toLedgerEntry), month, viewerCurrency);
+
     const normalizedSearch = search.trim().toLowerCase();
-    const items = (data ?? []).map(toListItem).filter((item) => {
-      if (!normalizedSearch) return true;
-      return (
-        item.title.toLowerCase().includes(normalizedSearch) ||
-        item.category.toLowerCase().includes(normalizedSearch)
-      );
-    });
+    const items = rows
+      .map((row) => toListItem(row, viewerCurrency))
+      .filter((item) => {
+        if (!normalizedSearch) return true;
+        return (
+          item.title.toLowerCase().includes(normalizedSearch) ||
+          item.category.toLowerCase().includes(normalizedSearch)
+        );
+      });
 
     setTransactions(items);
+    setTotals({
+      income: summary.income,
+      expenses: summary.expenses,
+      net: summary.net,
+    });
     setIsLoading(false);
-  }, [search, targetDate]);
+  }, [search, month]);
 
   useEffect(() => {
     void refresh();
   }, [refresh]);
 
-  return { transactions, isLoading, error, refresh };
+  return { transactions, isLoading, error, totals, refresh };
 }
