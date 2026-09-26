@@ -3,8 +3,12 @@ import { Redirect, Tabs } from 'expo-router';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthLoadingScreen, useAuth } from '../../src/features/auth/AuthProvider';
 import { useTheme } from '../../src/theme/ThemeProvider';
+
+/** Tab bar height above the device safe area, in dp. */
+const TAB_BAR_HEIGHT = 66;
 
 function HeaderActions(): React.ReactElement {
   const router = useRouter();
@@ -35,6 +39,7 @@ function HeaderActions(): React.ReactElement {
 export default function TabLayout(): React.ReactElement {
   const { colors, fontFamily } = useTheme();
   const { session, isLoading } = useAuth();
+  const insets = useSafeAreaInsets();
 
   if (isLoading) {
     return <AuthLoadingScreen />;
@@ -52,13 +57,15 @@ export default function TabLayout(): React.ReactElement {
         tabBarStyle: {
           backgroundColor: colors.background.primary,
           borderTopColor: colors.border.subtle,
-          height: 74,
-          paddingBottom: 9,
+          // Height follows the safe area so the bar is not clipped behind a
+          // gesture bar or a three-button nav on tall devices.
+          height: TAB_BAR_HEIGHT + insets.bottom,
+          paddingBottom: insets.bottom + 6,
           paddingTop: 7,
         },
         tabBarLabelStyle: {
           fontFamily: fontFamily.medium,
-          fontSize: 10,
+          fontSize: 11,
         },
         tabBarHideOnKeyboard: true,
         headerStyle: {

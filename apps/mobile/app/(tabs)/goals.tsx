@@ -3,14 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback } from 'react';
 import { ActivityIndicator, RefreshControl, StyleSheet, Text, View } from 'react-native';
-import {
-  Button,
-  Card,
-  DataNotice,
-  EmptyState,
-  ProgressBar,
-  Screen,
-} from '../../src/components/ui';
+import { Button, Card, DataNotice, EmptyState, ProgressBar, Screen } from '../../src/components/ui';
 import { useGoals } from '../../src/features/finance/goals';
 import { useTheme } from '../../src/theme/ThemeProvider';
 

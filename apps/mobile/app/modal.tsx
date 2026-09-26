@@ -389,7 +389,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    padding: 20,
+    paddingTop: 20,
+    flexGrow: 1,
   },
   typeSelector: {
     flexDirection: 'row',

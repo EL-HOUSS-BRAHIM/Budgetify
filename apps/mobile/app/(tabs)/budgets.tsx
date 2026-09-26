@@ -1,4 +1,10 @@
-import { formatMoney, monthKeyFromDate, monthLabel, shiftMonth, type MonthKey } from '@budgetify/core';
+import {
+  formatMoney,
+  monthKeyFromDate,
+  monthLabel,
+  shiftMonth,
+  type MonthKey,
+} from '@budgetify/core';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React from 'react';
@@ -11,7 +17,13 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { DataNotice, EmptyState, MonthSwitcher, ProgressBar, StatGrid } from '../../src/components/ui';
+import {
+  DataNotice,
+  EmptyState,
+  MonthSwitcher,
+  ProgressBar,
+  StatGrid,
+} from '../../src/components/ui';
 import { type BudgetProgressItem, useBudgetProgress } from '../../src/features/finance/budgets';
 import { useTheme } from '../../src/theme/ThemeProvider';
 import { useResponsiveLayout } from '../../src/theme/useResponsiveLayout';
@@ -148,7 +160,9 @@ export default function BudgetsScreen(): React.ReactElement {
               >
                 <View style={styles.cardHeader}>
                   <View style={styles.titleRow}>
-                    <View style={[styles.iconWrap, { backgroundColor: colors.background.tertiary }]}>
+                    <View
+                      style={[styles.iconWrap, { backgroundColor: colors.background.tertiary }]}
+                    >
                       <Ionicons
                         name={iconForCategory(item.categoryName)}
                         size={22}
@@ -158,7 +172,10 @@ export default function BudgetsScreen(): React.ReactElement {
                     <View style={styles.titleCopy}>
                       <Text
                         numberOfLines={1}
-                        style={[typography.bodyLarge, { color: colors.text.primary, fontWeight: '600' }]}
+                        style={[
+                          typography.bodyLarge,
+                          { color: colors.text.primary, fontWeight: '600' },
+                        ]}
                       >
                         {item.categoryName}
                       </Text>
@@ -176,7 +193,10 @@ export default function BudgetsScreen(): React.ReactElement {
 
                   <View style={styles.amounts}>
                     <Text
-                      style={[typography.bodyLarge, { color: colors.text.primary, fontWeight: '700' }]}
+                      style={[
+                        typography.bodyLarge,
+                        { color: colors.text.primary, fontWeight: '700' },
+                      ]}
                     >
                       {formatMoney(item.spent)}
                     </Text>

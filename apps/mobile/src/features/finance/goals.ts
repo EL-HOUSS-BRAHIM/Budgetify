@@ -37,6 +37,7 @@ const GOALS_LOAD_ERROR = 'Goals could not be loaded. Nothing you saved was chang
 export function useGoals(): GoalsState {
   const [goals, setGoals] = useState<GoalProgress[]>([]);
   const [currency, setCurrency] = useState('USD');
+  const [aggregate, setAggregate] = useState<GoalAggregate>(() => aggregateGoals([], 'USD'));
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,6 +50,7 @@ export function useGoals(): GoalsState {
       } = await supabase.auth.getSession();
       if (!session) {
         setGoals([]);
+        setAggregate(aggregateGoals([], 'USD'));
         setIsLoading(false);
         setIsRefreshing(false);
         return;
@@ -62,26 +64,27 @@ export function useGoals(): GoalsState {
 
       const today = localDayIso(new Date());
       const rows = goalResult.data ?? [];
-      const viewCurrency = (profileResult.data?.currency ?? rows[0]?.currency ?? 'USD').toUpperCase();
+      const viewCurrency = (
+        profileResult.data?.currency ??
+        rows[0]?.currency ??
+        'USD'
+      ).toUpperCase();
+      const goalInputs = rows.map((row) => ({
+        id: row.id,
+        name: row.name,
+        targetAmount: row.target_amount,
+        currentAmount: row.current_amount,
+        currency: row.currency,
+        deadline: row.deadline,
+        createdAt: row.created_at,
+      }));
 
       setCurrency(viewCurrency);
+      setAggregate(aggregateGoals(goalInputs, viewCurrency));
       setGoals(
-        rows
-          .filter((row) => row.currency === viewCurrency)
-          .map((row) =>
-            goalProgress(
-              {
-                id: row.id,
-                name: row.name,
-                targetAmount: row.target_amount,
-                currentAmount: row.current_amount,
-                currency: row.currency,
-                deadline: row.deadline,
-                createdAt: row.created_at,
-              },
-              today,
-            ),
-          ),
+        goalInputs
+          .filter((goal) => goal.currency === viewCurrency)
+          .map((goal) => goalProgress(goal, today)),
       );
     } catch {
       setError(GOALS_LOAD_ERROR);
@@ -97,17 +100,7 @@ export function useGoals(): GoalsState {
 
   return {
     goals,
-    aggregate: aggregateGoals(
-      goals.map((goal) => ({
-        id: goal.id,
-        name: goal.name,
-        targetAmount: goal.target.amount,
-        currentAmount: goal.saved.amount,
-        currency: goal.currency,
-        deadline: null,
-      })),
-      currency,
-    ),
+    aggregate,
     currency,
     isLoading,
     isRefreshing,

@@ -45,15 +45,10 @@ function AccountRowView({ account }: { account: AccountRow }): React.ReactElemen
   return (
     <View style={styles.settingRow}>
       <View style={styles.rowCopy}>
-        <Text
-          numberOfLines={1}
-          style={[typography.bodyLarge, { color: colors.text.primary }]}
-        >
+        <Text numberOfLines={1} style={[typography.bodyLarge, { color: colors.text.primary }]}>
           {account.name}
         </Text>
-        <Text style={[typography.bodySmall, { color: colors.text.tertiary }]}>
-          {account.type}
-        </Text>
+        <Text style={[typography.bodySmall, { color: colors.text.tertiary }]}>{account.type}</Text>
       </View>
       <Text style={[typography.bodyLarge, { color: colors.text.primary }]}>
         {formatMoney(money(account.current_balance, account.currency))}
@@ -140,16 +135,10 @@ export default function SettingsScreen(): React.ReactElement {
             </Text>
           </View>
           <View style={styles.rowCopy}>
-            <Text
-              numberOfLines={1}
-              style={[typography.h4, { color: colors.text.primary }]}
-            >
+            <Text numberOfLines={1} style={[typography.h4, { color: colors.text.primary }]}>
               {profile?.display_name || session?.user.email?.split('@')[0] || 'LYVORA user'}
             </Text>
-            <Text
-              numberOfLines={1}
-              style={[typography.bodySmall, { color: colors.text.tertiary }]}
-            >
+            <Text numberOfLines={1} style={[typography.bodySmall, { color: colors.text.tertiary }]}>
               {session?.user.email ?? 'Signed in'}
             </Text>
           </View>
@@ -186,10 +175,7 @@ export default function SettingsScreen(): React.ReactElement {
           onChangeText={setAccountName}
           placeholder="Account name"
           placeholderTextColor={colors.text.muted}
-          style={[
-            styles.input,
-            { borderColor: colors.border.default, color: colors.text.primary },
-          ]}
+          style={[styles.input, { borderColor: colors.border.default, color: colors.text.primary }]}
           value={accountName}
         />
         <TextInput
@@ -198,10 +184,7 @@ export default function SettingsScreen(): React.ReactElement {
           onChangeText={setAccountBalance}
           placeholder={`Starting balance (${currency})`}
           placeholderTextColor={colors.text.muted}
-          style={[
-            styles.input,
-            { borderColor: colors.border.default, color: colors.text.primary },
-          ]}
+          style={[styles.input, { borderColor: colors.border.default, color: colors.text.primary }]}
           value={accountBalance}
         />
         <View style={styles.accountTypes}>
@@ -216,8 +199,7 @@ export default function SettingsScreen(): React.ReactElement {
                 styles.accountType,
                 {
                   borderColor: accountType === type ? colors.brand.primary : colors.border.default,
-                  backgroundColor:
-                    accountType === type ? colors.brand.primary : 'transparent',
+                  backgroundColor: accountType === type ? colors.brand.primary : 'transparent',
                   opacity: pressed ? 0.7 : 1,
                 },
               ]}
@@ -305,10 +287,7 @@ export default function SettingsScreen(): React.ReactElement {
               accessibilityLabel={`Open ${label}`}
               accessibilityRole="button"
               onPress={() => router.push(route as never)}
-              style={({ pressed }) => [
-                styles.settingRow,
-                { opacity: pressed ? 0.7 : 1 },
-              ]}
+              style={({ pressed }) => [styles.settingRow, { opacity: pressed ? 0.7 : 1 }]}
             >
               <Text style={[typography.bodyLarge, { color: colors.text.primary }]}>{label}</Text>
               <Ionicons name="chevron-forward" size={18} color={colors.text.tertiary} />

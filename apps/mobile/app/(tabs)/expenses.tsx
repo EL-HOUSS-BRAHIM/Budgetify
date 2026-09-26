@@ -1,4 +1,10 @@
-import { formatMoney, monthKeyFromDate, monthLabel, shiftMonth, type MonthKey } from '@budgetify/core';
+import {
+  formatMoney,
+  monthKeyFromDate,
+  monthLabel,
+  shiftMonth,
+  type MonthKey,
+} from '@budgetify/core';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import {
@@ -11,13 +17,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import {
-  Button,
-  DataNotice,
-  EmptyState,
-  MonthSwitcher,
-  StatGrid,
-} from '../../src/components/ui';
+import { Button, DataNotice, EmptyState, MonthSwitcher, StatGrid } from '../../src/components/ui';
 import {
   formatTransactionAmount,
   type TransactionListItem,

@@ -39,8 +39,7 @@ function toRecurringEntry(row: RecurringTransaction): RecurringEntry {
     amount: row.amount,
     currency: row.currency,
     type: row.type === 'income' ? 'income' : 'expense',
-    frequency:
-      row.frequency === 'weekly' || row.frequency === 'yearly' ? row.frequency : 'monthly',
+    frequency: row.frequency === 'weekly' || row.frequency === 'yearly' ? row.frequency : 'monthly',
     nextDate: row.next_date,
     isActive: row.is_active,
   };
@@ -91,11 +90,7 @@ export function useRecurringTransactions(limit = 50): RecurringState {
       await requireSession();
       const row = items.find((item) => item.id === id);
       if (!row) throw new Error(LOAD_ERROR);
-      const nextDate = nextOccurrence(
-        row.nextDate,
-        row.frequency,
-        localDayIso(new Date()),
-      );
+      const nextDate = nextOccurrence(row.nextDate, row.frequency, localDayIso(new Date()));
       const { error: updateError } = await supabase
         .from('recurring_transactions')
         .update({ next_date: nextDate })

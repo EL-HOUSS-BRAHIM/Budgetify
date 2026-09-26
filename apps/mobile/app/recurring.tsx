@@ -1,4 +1,4 @@
-import { formatMoney, money, type ScheduledRecurringEntry } from '@budgetify/core';
+import { formatMoney, money, parseMoney, type ScheduledRecurringEntry } from '@budgetify/core';
 import React, { useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -57,11 +57,14 @@ export default function RecurringScreen(): React.ReactElement {
 
   const save = async () => {
     setFormError(null);
-    const value = Number(amount.replace(',', '.'));
     if (!name.trim()) return setFormError('Give this recurring entry a name.');
-    if (!Number.isFinite(value) || value <= 0) {
+    let amountMinor: number;
+    try {
+      amountMinor = parseMoney(amount.trim(), currency).amount;
+    } catch {
       return setFormError('Enter an amount greater than zero.');
     }
+    if (amountMinor <= 0) return setFormError('Enter an amount greater than zero.');
     if (!DATE_PATTERN.test(date.trim())) {
       return setFormError('Use a date in YYYY-MM-DD form.');
     }
@@ -69,7 +72,7 @@ export default function RecurringScreen(): React.ReactElement {
     try {
       await createRecurringTransaction({
         name: name.trim(),
-        amount: Math.round(value * 100),
+        amount: amountMinor,
         currency,
         type: 'expense',
         account_id: null,
@@ -180,11 +183,7 @@ export default function RecurringScreen(): React.ReactElement {
                     onPress={() => void markHandled(item.id)}
                     variant="secondary"
                   />
-                  <Button
-                    label="Delete"
-                    onPress={() => void remove(item.id)}
-                    variant="text"
-                  />
+                  <Button label="Delete" onPress={() => void remove(item.id)} variant="text" />
                 </View>
               </Card>
             ))}
@@ -192,10 +191,7 @@ export default function RecurringScreen(): React.ReactElement {
         )}
 
         <Text
-          style={[
-            typography.h4,
-            { color: colors.text.primary, marginTop: 28, marginBottom: 8 },
-          ]}
+          style={[typography.h4, { color: colors.text.primary, marginTop: 28, marginBottom: 8 }]}
         >
           Add one
         </Text>
